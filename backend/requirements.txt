@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pyautogen             # multi-agent runtime
+openai
+qdrant-client
+redis
+minio
+python-multipart      # file uploads
+tiktoken
+python-dotenv
