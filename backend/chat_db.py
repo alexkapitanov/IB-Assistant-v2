@@ -1,7 +1,12 @@
-import sqlite3, contextlib, os, pathlib
+import sqlite3, contextlib, os, pathlib, tempfile
 
 # Путь к базе данных - используем переменную окружения для тестов
-DB_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/chatlog.db"))
+default_path = "/data/chatlog.db"
+if not os.access("/data", os.W_OK):
+    # Если нет доступа к /data, используем временную директорию
+    default_path = os.path.join(tempfile.gettempdir(), "chatlog.db")
+
+DB_PATH = pathlib.Path(os.getenv("DB_PATH", default_path))
 # Создаем директорию для хранения базы, если отсутствует
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 

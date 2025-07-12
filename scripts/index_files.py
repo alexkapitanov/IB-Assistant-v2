@@ -44,7 +44,6 @@ def ensure_collection(col: str = BUCKET_DEF):
             col,
             vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
         )
-ensure_collection()
 
 def extract_text_from_file(path: pathlib.Path) -> str:
     mime = mimetypes.guess_type(str(path))[0] or ""
@@ -71,6 +70,7 @@ def vector_exists(s3_key: str) -> bool:
     return bool(res)
 
 def ingest_path(path: pathlib.Path, bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> bool:
+    ensure_collection(bucket)  # Создаем коллекцию если нужно
     key = f"{prefix}{path.name}"
     if not mc.bucket_exists(bucket):
         mc.make_bucket(bucket)
