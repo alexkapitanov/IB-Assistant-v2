@@ -1,5 +1,10 @@
 import os
+import sys
 import pytest
+
+# Add project root to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
 from agents.local_search import local_search
 
 def test_local_search_returns_hits():

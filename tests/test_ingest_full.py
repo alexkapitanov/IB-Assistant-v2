@@ -17,6 +17,10 @@ def _service_available(host: str, port: int) -> bool:
     except Exception:
         return False
 
+# Skip tests if OpenAI API key is not available (required for embedding)
+if not os.getenv("OPENAI_API_KEY"):
+    pytest.skip("OPENAI_API_KEY not set, skipping indexing tests that require OpenAI", allow_module_level=True)
+
 minio_host, minio_port = os.getenv("MINIO_ENDPOINT", "minio:9000").split(":")
 qdrant_host = os.getenv("QDRANT_HOST", "qdrant")
 qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
