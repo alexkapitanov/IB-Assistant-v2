@@ -19,14 +19,12 @@ from typing import List
 
 from minio import Minio
 from qdrant_client import QdrantClient, models
-import openai
+from backend.embedding import get as embed
 import pdfminer.high_level
 import docx
 from tqdm import tqdm
 
 # Configuration
-openai.api_key = os.getenv("OPENAI_API_KEY")
-EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
 BUCKET_DEF = "ib-docs"
 PREFIX_DEF = "questionnaires/"
 
@@ -61,18 +59,6 @@ def extract_text_from_file(path: pathlib.Path) -> str:
         # Fallback to text if file parsing fails
         pass
     return path.read_text(encoding="utf-8", errors="ignore")
-
-def embed(text: str) -> List[float]:
-    """
-    Получить embedding: если API ключ не задан, возвращаем нулевой вектор.
-    """
-    # Длина вектора соответствует size в VectorParams
-    default_size = 1536
-    if not openai.api_key:
-        return [0.0] * default_size
-    # Используем новый API openai>=1.0
-    resp = openai.embeddings.create(model=EMBED_MODEL, input=text[:16384])
-    return resp["data"][0]["embedding"]
 
 def vector_exists(s3_key: str) -> bool:
     res, _ = qc.scroll(

@@ -4,21 +4,26 @@ from backend.agents.local_search import local_search
 from backend.agents.planner import ask_planner
 from backend.openai_helpers import call_llm
 
-INTENT_SYSTEM = "Ты классификатор. Верни одно слово: get_file/simple_faq/complex."
+from backend.memory import get_mem, save_mem
+from backend.agents.file_retrieval import get_file_link
+from backend.agents.local_search import local_search
+from backend.agents.planner import ask_planner
+from backend.openai_helpers import call_llm
 
-def classify(user_q, slots):
-    prompt = f"{INTENT_SYSTEM}\nQ: {user_q}\nA:"
-    res, _ = call_llm("o3-mini", prompt)
+DEF_INTENT_PROMPT = """
+Ты классификатор. Категории: get_file, simple_faq, complex.
+Верни ровно одно слово.
+"""
+
+def classify(user_q:str, slots:dict)->str:
+    prompt = f"{DEF_INTENT_PROMPT}\nQ: {user_q}\nA:"
+    res,_ = call_llm("o3-mini", prompt)
     return res.strip()
 
-def cheap_faq_answer(q, frags):
+def cheap_faq_answer(q:str, frags:list):
     ctx = "\n".join(f["text"] for f in frags)
-    prompt = (
-        f"Ответь кратко на русском, используя факты:\n"
-        f"### Контекст\n{ctx}\n"
-        f"### Вопрос\n{q}"
-    )
-    ans, _ = call_llm("o3-mini", prompt, temperature=0.3)
+    prompt = f"Ответь коротко на русском, используя факты:\n===КОНТЕКСТ===\n{ctx}\n===ВОПРОС===\n{q}\n"
+    ans,_ = call_llm("o3-mini", prompt, temperature=0.2)
     return ans
 
 async def handle_message(thread_id: str, user_q: str) -> dict:

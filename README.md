@@ -46,4 +46,17 @@ flowchart TD
   FileRetrieval --> Response[send_json]
   FAQ --> Response
   Expert --> Response
-```  
+```
+
+## Frontend dev  
+```bash
+cd frontend
+npm i
+npm run dev
+```
+
+Фронтенд использует:
+- React + TypeScript
+- Tailwind CSS для стилизации
+- WebSocket для real-time общения с бэкендом
+- Роли сообщений: `user`, `assistant`, `assistant(f/u)` для follow-up ответов

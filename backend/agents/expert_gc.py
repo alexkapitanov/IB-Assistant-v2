@@ -7,9 +7,11 @@ async def run_expert_gc(thread_id, user_q, slots):
     critic = autogen.AssistantAgent("Critic", llm_config={"model": "gpt-4o-mini"})
     search = autogen.AssistantAgent("Search", llm_config={"model": "o3-mini"})
 
-    @search.register_function
-    def local(query: str) -> str:
-        hits = local_search(query, 5)
+    @search.register_function(name="local_search")
+    def _search_tool(prompt:str)->str:
+        # prompt: "search for: ... k=5"
+        q = prompt.replace("search for:","").strip()
+        hits = local_search(q, 5)
         return "\n".join(h["text"] for h in hits)
 
     gc = autogen.GroupChat([expert, critic, search], max_rounds=4, context=slots)
