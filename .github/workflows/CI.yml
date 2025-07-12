@@ -22,7 +22,7 @@ jobs:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
         options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -f http://localhost:9000/minio/health/ready || exit 1"
           --health-interval 30s
           --health-timeout 10s
           --health-retries 5
@@ -38,13 +38,20 @@ jobs:
           python-version: "3.11"
 
       - name: Install backend deps
-        run: pip install -r backend/requirements.txt --quiet
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y netcat-openbsd
+          pip install -r backend/requirements.txt --quiet
 
       - name: Wait for services
         run: |
+          echo "Waiting for Qdrant..."
           timeout 60s bash -c 'until curl -f http://localhost:6333/collections; do sleep 2; done'
-          timeout 60s bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
-          timeout 60s bash -c 'until redis-cli -h localhost ping; do sleep 2; done'
+          echo "Waiting for MinIO..."
+          timeout 60s bash -c 'until curl -f http://localhost:9000/minio/health/ready; do sleep 2; done'
+          echo "Waiting for Redis..."
+          timeout 60s bash -c 'until nc -z localhost 6379; do sleep 2; done'
+          echo "All services are ready!"
 
       - name: Run pytest
         env:
