@@ -1,6 +1,9 @@
 def test_memory_and_sqlite():
-    from backend.memory import save_mem, get_mem
-    from backend.chat_db import log_message, _conn
+    import sys, os
+    # Ensure backend module can be found
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend')))
+    from memory import save_mem, get_mem
+    from chat_db import log_message, _conn
     # Test memory save and retrieve
     tid = "t123"
     save_mem(tid, {"product": "Infowatch"})

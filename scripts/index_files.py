@@ -1,104 +1,140 @@
-#!/usr/bin/env python3
-import sys
+#!/usr/bin/env python
+"""
+Ingest local files OR re-index objects already stored in MinIO.
+Usage examples:
+
+# 1. локальные файлы → bucket=ib-docs/questionnaires/
+python scripts/index_files.py --paths ib-docs/questionnaires/*.pdf
+
+# 2. переиндексировать всё, что уже лежит
+python scripts/index_files.py --reindex bucket=ib-docs prefix=questionnaires/
+"""
+import argparse
 import os
 import uuid
-from pathlib import Path
-from minio import Minio
-from qdrant_client import QdrantClient
-from qdrant_client.http.models import PointStruct
-import openai
-from PyPDF2 import PdfReader
+import glob
+import pathlib
+import mimetypes
+from typing import List
 
-# Initialize MinIO client
-minio_client = Minio(
-    os.getenv("MINIO_ENDPOINT", "localhost:9000"),
+from minio import Minio
+from qdrant_client import QdrantClient, models
+import openai
+import pdfminer.high_level
+import docx
+from tqdm import tqdm
+
+# Configuration
+openai.api_key = os.getenv("OPENAI_API_KEY")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
+BUCKET_DEF = "ib-docs"
+PREFIX_DEF = "questionnaires/"
+
+# Clients
+mc = Minio(
+    os.getenv("MINIO_ENDPOINT", "minio:9000"),
     access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
     secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
-    secure=False
+    secure=False,
 )
+qc = QdrantClient(host=os.getenv("QDRANT_HOST", "qdrant"))
 
-# Initialize Qdrant client
-qdrant_client = QdrantClient(
-    url=f"http://{os.getenv('QDRANT_HOST', 'localhost')}:{os.getenv('QDRANT_PORT', '6333')}"
-)
-
-# OpenAI settings
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Simple text chunker
-
-def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200):
-    words = text.split()
-    chunks = []
-    current = []
-    current_len = 0
-    for word in words:
-        current.append(word)
-        current_len += len(word) + 1
-        if current_len >= chunk_size:
-            chunks.append(" ".join(current))
-            # keep overlap
-            current = current[-overlap:]
-            current_len = sum(len(w) + 1 for w in current)
-    if current:
-        chunks.append(" ".join(current))
-    return chunks
-
-
-def index_file(path: Path):
-    # Determine bucket and object key
-    bucket = path.parent.name
-    object_name = path.name
-
-    # Upload file to MinIO
-    try:
-        minio_client.bucket_exists(bucket)
-    except Exception:
-        minio_client.make_bucket(bucket)
-    minio_client.fput_object(bucket, object_name, str(path))
-
-    # Extract text from PDF
-    reader = PdfReader(str(path))
-    text = "".join([page.extract_text() or '' for page in reader.pages])
-
-    # Chunk text
-    chunks = chunk_text(text)
-
-    # Create embeddings
-    resp = openai.Embedding.create(input=chunks, model="text-embedding-ada-002")
-    vectors = []
-    for idx, data in enumerate(resp["data"]):
-        vec = data["embedding"]
-        point_id = f"{object_name}-{idx}"
-        payload = {"s3_key": object_name, "chunk_index": idx}
-        vectors.append(PointStruct(id=point_id, vector=vec, payload=payload))
-
-    # Upsert into Qdrant
-    collection_name = f"{bucket}_files"
-    try:
-        qdrant_client.get_collection(collection_name=collection_name)
-    except Exception:
-        # create collection with default params
-        qdrant_client.recreate_collection(
-            collection_name=collection_name,
-            vectors_config={"size": len(vectors[0].vector), "distance": "Cosine"}
+def ensure_collection(col: str = BUCKET_DEF):
+    existing = [c.name for c in qc.get_collections().collections]
+    if col not in existing:
+        qc.recreate_collection(
+            col,
+            vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
         )
-    qdrant_client.upsert(collection_name=collection_name, points=vectors)
+ensure_collection()
 
+def extract_text_from_file(path: pathlib.Path) -> str:
+    mime = mimetypes.guess_type(str(path))[0] or ""
+    try:
+        if "pdf" in mime or path.suffix.lower() == ".pdf":
+            with open(path, "rb") as f:
+                return pdfminer.high_level.extract_text(f, maxpages=20)
+        if path.suffix.lower() == ".docx":
+            doc = docx.Document(str(path))
+            return "\n".join(p.text for p in doc.paragraphs)
+    except Exception:
+        # Fallback to text if file parsing fails
+        pass
+    return path.read_text(encoding="utf-8", errors="ignore")
+
+def embed(text: str) -> List[float]:
+    """
+    Получить embedding: если API ключ не задан, возвращаем нулевой вектор.
+    """
+    # Длина вектора соответствует size в VectorParams
+    default_size = 1536
+    if not openai.api_key:
+        return [0.0] * default_size
+    # Используем новый API openai>=1.0
+    resp = openai.embeddings.create(model=EMBED_MODEL, input=text[:16384])
+    return resp["data"][0]["embedding"]
+
+def vector_exists(s3_key: str) -> bool:
+    res, _ = qc.scroll(
+        collection_name=BUCKET_DEF,
+        scroll_filter=models.Filter(
+            must=[models.FieldCondition(key="s3_key", match=models.MatchValue(value=s3_key))]
+        ),
+        limit=1,
+    )
+    return bool(res)
+
+def ingest_path(path: pathlib.Path, bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> bool:
+    key = f"{prefix}{path.name}"
+    if not mc.bucket_exists(bucket):
+        mc.make_bucket(bucket)
+    try:
+        mc.stat_object(bucket, key)
+    except Exception:
+        mc.fput_object(bucket, key, str(path))
+    if vector_exists(key):
+        return False
+    text = extract_text_from_file(path)
+    vec = embed(text)
+    payload = {"s3_key": key, "doc_type": "questionnaire", "file_name": path.name, "text": text[:1000]}
+    # Генерируем UUID на основе ключа для избежания отрицательных ID
+    point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
+    point = models.PointStruct(id=point_id, vector=vec, payload=payload)
+    qc.upsert(collection_name=BUCKET_DEF, points=[point])
+    return True
+
+def ingest_minio_objects(bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> int:
+    indexed = 0
+    for obj in mc.list_objects(bucket, prefix=prefix, recursive=True):
+        key = obj.object_name
+        if vector_exists(key):
+            continue
+        data = mc.get_object(bucket, key).read()
+        tmp = pathlib.Path("/tmp") / pathlib.Path(key).name
+        tmp.write_bytes(data)
+        if ingest_path(tmp, bucket, prefix):
+            indexed += 1
+        tmp.unlink(missing_ok=True)
+    return indexed
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: index_files.py <file1.pdf> [<file2.pdf> ...]")
-        sys.exit(1)
-    paths = [Path(p) for p in sys.argv[1:]]
-    for path in paths:
-        if not path.exists():
-            print(f"File not found: {path}")
-            continue
-        print(f"Indexing {path}")
-        index_file(path)
-        print(f"Indexed {path}")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--paths", nargs="+", help="Local file globs to ingest")
+    ap.add_argument("--reindex", action="store_true", help="Walk MinIO bucket/prefix")
+    ap.add_argument("bucket", nargs="?", default=BUCKET_DEF)
+    ap.add_argument("prefix", nargs="?", default=PREFIX_DEF)
+    args = ap.parse_args()
 
+    total_new = 0
+    if args.paths:
+        for g in args.paths:
+            for p in glob.glob(g):
+                if ingest_path(pathlib.Path(p), args.bucket, args.prefix):
+                    total_new += 1
+    if args.reindex:
+        total_new += ingest_minio_objects(args.bucket, args.prefix)
 
-if __name__ == '__main__':
+    print(f"Indexed {total_new} new vector(s) in collection {BUCKET_DEF}")
+
+if __name__ == "__main__":
     main()

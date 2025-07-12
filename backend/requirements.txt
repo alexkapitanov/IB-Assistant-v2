@@ -8,3 +8,7 @@ minio
 python-multipart      # file uploads
 tiktoken
 python-dotenv
+pytest
+pdfminer.six         # извлечение текста из PDF
+python-docx          # docx to text (если нет – ok, fallback)
+tqdm                  # прогресс-бар для индексатора

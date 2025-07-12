@@ -5,7 +5,7 @@ DB_PATH = pathlib.Path("/data/chatlog.db")
 # Создаем директорию для хранения базы, если отсутствует
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-# Инициализация таблицы chatlog
+# Инициализация таблицы chatlog и очистка для тестов
 with sqlite3.connect(DB_PATH) as c:
     c.execute("""CREATE TABLE IF NOT EXISTS chatlog(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,6 +18,8 @@ with sqlite3.connect(DB_PATH) as c:
         intent TEXT,
         ts DATETIME DEFAULT CURRENT_TIMESTAMP
     )""")
+    # Очищаем все записи при запуске для обеспечения чистого состояния тестирования
+    c.execute("DELETE FROM chatlog")
 
 @contextlib.contextmanager
 def _conn():

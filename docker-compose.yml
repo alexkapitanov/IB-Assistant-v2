@@ -1,10 +1,15 @@
 version: "3.9"
 services:
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
     volumes:
-      - ./backend:/app/backend
+      # Монтируем весь проект в /app для доступа к скриптам и документам
+      - ./:/app
       - chat_db:/data          # SQLite volume
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}

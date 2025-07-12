@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+      qdrant:
+        image: qdrant/qdrant
+        ports:
+          - 6333:6333
+      minio:
+        image: minio/minio
+        ports:
+          - 9000:9000
+          - 9001:9001
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 5
+        volumes:
+          - /tmp/minio-data:/data
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+      
+      - name: Install Python dependencies
+        run: |
+          pip install -r backend/requirements.txt
+      
+      - name: Wait for services to be ready
+        run: |
+          timeout 60s bash -c 'until curl -f http://localhost:6333/collections; do sleep 2; done'
+          timeout 60s bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
+          timeout 60s bash -c 'until redis-cli -h localhost ping; do sleep 2; done'
+      
+      - name: Run unit tests
+        env:
+          REDIS_HOST: localhost
+          QDRANT_HOST: localhost
+          MINIO_ENDPOINT: localhost:9000
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pytest tests/test_memory_and_sqlite.py -v
+          pytest tests/test_index_files.py -v
+          pytest tests/test_ingest_full.py -v
+      
+      - name: Run integration tests with Docker Compose
+        run: |
+          # Build and start all services
+          docker-compose up --build -d
+          
+          # Wait for all services to be ready
+          sleep 30
+          
+          # Run tests inside the backend container
+          docker-compose exec -T backend pytest tests/ -v
+          
+          # Clean up
+          docker-compose down
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Build backend Docker image
+        run: |
+          docker build -f backend/Dockerfile . -t ib-assistant-backend:test
+      
+      - name: Test Docker build
+        run: |
+          # Test that the image was built successfully
+          docker images | grep ib-assistant-backend
+          
+          # Test that the image can run
+          docker run --rm ib-assistant-backend:test python -c "import backend.main; print('Backend imports successfully')"

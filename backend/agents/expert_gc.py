@@ -1,31 +1,18 @@
-import autogen
+import autogen, asyncio, json, time
+from backend.agents.local_search import local_search
+from backend.openai_helpers import call_llm
 
-async def run_expert_gc(thread_id: str, user_q: str, slots: dict, plan) -> dict:
-    """
-    Runs a GroupChat among planner, expert, critic, and search agents.
-    Loops max 4 rounds and returns final expert answer.
-    """
-    # Configure agent roles
-    gc = autogen.GroupChat(
-        name=f"gc-{thread_id}",
-        roles=[
-            autogen.Role(name="planner", model="gpt-4.1"),
-            autogen.Role(name="expert", model="gpt-4.1"),
-            autogen.Role(name="critic", model="4.1-mini"),
-            autogen.Role(name="search", model="o3-mini"),
-        ],
-        max_iterations=4,
-    )
+async def run_expert_gc(thread_id, user_q, slots):
+    expert = autogen.AssistantAgent("Expert", llm_config={"model": "gpt-4o"})
+    critic = autogen.AssistantAgent("Critic", llm_config={"model": "gpt-4o-mini"})
+    search = autogen.AssistantAgent("Search", llm_config={"model": "o3-mini"})
 
-    # Initialize conversation
-    gc.add_system_message(f"Plan: {plan}")
-    gc.add_user_message(user_q)
+    @search.register_function
+    def local(query: str) -> str:
+        hits = local_search(query, 5)
+        return "\n".join(h["text"] for h in hits)
 
-    # Execute the multi-agent loop
-    await gc.run()
-
-    # Retrieve final message from expert agent
-    expert_msgs = gc.get_messages(role="expert")
-    final = expert_msgs[-1].content if expert_msgs else ""
-
-    return {"answer": final, "intent": "complex", "model": "gpt-4.1"}
+    gc = autogen.GroupChat([expert, critic, search], max_rounds=4, context=slots)
+    mgr = autogen.GroupChatManager(gc)
+    ans = await mgr.a_initiate_chat(expert, message=user_q)
+    return {"answer": ans, "model": "gpt-4.1"}

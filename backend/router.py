@@ -1,19 +1,25 @@
 from backend.memory import get_mem, save_mem
-from agents.file_retrieval import get_file_link
-from agents.local_search import local_search
-from agents.planner import ask_planner
+from backend.agents.file_retrieval import get_file_link
+from backend.agents.local_search import local_search
+from backend.agents.planner import ask_planner
+from backend.openai_helpers import call_llm
 
-INTENT_PROMPT = "Classify user request: get_file / simple_faq / complex."
+INTENT_SYSTEM = "Ты классификатор. Верни одно слово: get_file/simple_faq/complex."
 
-def classify(user_q: str, slots: dict) -> str:
-    """Определение интента запроса с помощью модели o3-mini"""
-    # TODO: реализовать классификацию используя o3-mini
-    raise NotImplementedError("Intent classification not implemented")
+def classify(user_q, slots):
+    prompt = f"{INTENT_SYSTEM}\nQ: {user_q}\nA:"
+    res, _ = call_llm("o3-mini", prompt)
+    return res.strip()
 
-def cheap_faq_answer(user_q: str, fragments: list) -> str:
-    """Генерация краткого ответа на основе фрагментов с помощью o3-mini"""
-    # TODO: реализовать простое FAQ-ответ используя o3-mini
-    raise NotImplementedError("FAQ answering not implemented")
+def cheap_faq_answer(q, frags):
+    ctx = "\n".join(f["text"] for f in frags)
+    prompt = (
+        f"Ответь кратко на русском, используя факты:\n"
+        f"### Контекст\n{ctx}\n"
+        f"### Вопрос\n{q}"
+    )
+    ans, _ = call_llm("o3-mini", prompt, temperature=0.3)
+    return ans
 
 async def handle_message(thread_id: str, user_q: str) -> dict:
     slots = get_mem(thread_id)
