@@ -1,7 +1,7 @@
 import sqlite3, contextlib, os, pathlib
 
-# Путь к базе данных внутри volume
-DB_PATH = pathlib.Path("/data/chatlog.db")
+# Путь к базе данных - используем переменную окружения для тестов
+DB_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/chatlog.db"))
 # Создаем директорию для хранения базы, если отсутствует
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
