@@ -55,6 +55,7 @@ jobs:
 
       - name: Run pytest
         env:
+          OPENAI_API_KEY: stub
           PYTHONPATH: ${{ github.workspace }}
           REDIS_HOST: localhost
           QDRANT_HOST: localhost
