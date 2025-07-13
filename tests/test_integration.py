@@ -86,7 +86,7 @@ class TestSystemIntegration:
         assert len(embedding) > 0
         
         # Ensure collection exists
-        ensure_collection(qc, BUCKET_DEF)
+        ensure_collection(BUCKET_DEF)
         
         # Test that collection was created
         try:

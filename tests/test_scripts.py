@@ -45,7 +45,7 @@ class TestIndexScripts:
             
             # Check if vector exists
             s3_key = f"dedup-test/{dummy_txt.name}"
-            exists = vector_exists(qc, BUCKET_DEF, s3_key)
+            exists = vector_exists(s3_key)
             
             # Should exist after first ingestion
             if result1:  # Only check if ingestion was successful

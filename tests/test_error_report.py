@@ -5,11 +5,23 @@ import pytest
 import websockets
 import json
 import asyncio
+import socket
+from contextlib import closing
+
+
+def _check_server_available(host="localhost", port=8000):
+    """Check if server is available"""
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        return sock.connect_ex((host, port)) == 0
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_error_message_shown():
     """Проверяем, что ошибки сервера корректно передаются клиенту"""
+    if not _check_server_available():
+        pytest.skip("WebSocket server not available")
+        
     uri = "ws://localhost:8000/ws"
     try:
         async with websockets.connect(uri) as ws:
@@ -31,8 +43,12 @@ async def test_error_message_shown():
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_websocket_connection():
     """Базовый тест подключения к WebSocket"""
+    if not _check_server_available():
+        pytest.skip("WebSocket server not available")
+        
     uri = "ws://localhost:8000/ws"
     try:
         async with websockets.connect(uri, timeout=2) as ws:
