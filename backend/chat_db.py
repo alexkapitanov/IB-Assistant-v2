@@ -43,9 +43,9 @@ def log_message(thread, turn, role, content,
             (thread, turn, role, content, model, latency_ms, intent)
         )
 
-def log_raw(thread_id, turn, model, raw):
+def log_raw(thread_id: str, turn: int, model: str, raw: str):
     """Логирование сырого ответа модели для отладки"""
     with _conn() as c:
-        c.execute("INSERT INTO chatlog(thread_id,turn_index,role,content,model) "
-                  "VALUES (?,?,?,?,?)",
+        c.execute("""INSERT INTO chatlog(thread_id,turn_index,role,content,model)
+                     VALUES (?,?,?,?,?)""",
                   (thread_id, turn, "raw", raw, model))

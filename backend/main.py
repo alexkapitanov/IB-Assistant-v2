@@ -25,7 +25,7 @@ app.add_middleware(
 
 sessions = {}
 
-async def safe_send(ws, role, content):
+async def _safe_send(ws, role, content):
     """Безопасная отправка сообщения через WebSocket"""
     await ws.send_json(WsOutgoing(type="chat", role=role, content=content).dict())
 
@@ -55,10 +55,8 @@ async def chat(ws: WebSocket):
                     print("✅ Response sent successfully")
             except Exception as e:
                 logger.exception("chat error")
-                await ws.send_json({
-                    "type": "chat", "role": "system",
-                    "content": f"⚠️ Ошибка сервера: {e.__class__.__name__}: {e}"
-                })
+                await _safe_send(ws, "system",
+                                f"⚠️ Ошибка сервера: {e.__class__.__name__}: {e}")
             
     except WebSocketDisconnect as e:
         print(f"🔌 WebSocket disconnected normally: {e}")

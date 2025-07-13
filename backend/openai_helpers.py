@@ -1,6 +1,18 @@
-import os, time
+import os, openai, time
 from openai import OpenAI
 from backend.utils import is_test_mode
+
+# Проверяем API ключ при загрузке модуля
+key = os.getenv("OPENAI_API_KEY")
+# Разрешаем stub-режим для разработки и CI, но блокируем test_ и пустые ключи
+if not key or (key.startswith("test_") or key == ""):
+    # Исключение для stub-режима
+    if key != "stub":
+        raise RuntimeError("OPENAI_API_KEY env var missing or dummy")
+
+# Устанавливаем ключ для совместимости (если не stub)
+if key and key != "stub":
+    openai.api_key = key
 
 # Глобальная переменная для клиента
 _client = None
