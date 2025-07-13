@@ -1,10 +1,25 @@
 import asyncio, json, websockets, uuid
 import pytest
+import socket
 
 # Пропускаем тесты, если сервер недоступен
 pytestmark = pytest.mark.integration
 
+def is_server_available():
+    """Проверяет доступность WebSocket сервера"""
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex(('localhost', 8000))
+        sock.close()
+        return result == 0
+    except:
+        return False
+
 async def run_round():
+    if not is_server_available():
+        pytest.skip("WebSocket server not available at localhost:8000")
+        
     try:
         uri="ws://localhost:8000/ws"
         async with websockets.connect(uri) as ws:
