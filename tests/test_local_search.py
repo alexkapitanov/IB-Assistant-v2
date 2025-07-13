@@ -30,3 +30,10 @@ def test_local_search_different_top_k():
     assert isinstance(res5, list)
     assert len(res1) <= 1
     assert len(res5) <= 5
+
+@pytest.mark.openai
+def test_local_search_returns_sane():
+    """Test local search returns sane results for specific query"""
+    res = local_search("Infowatch", top_k=3)
+    assert isinstance(res, list)
+    assert len(res) <= 3
