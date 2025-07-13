@@ -21,7 +21,11 @@ services:
     depends_on: [redis, qdrant, minio]
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      args:
+        - VITE_BACKEND_HOST=backend
+        - VITE_BACKEND_PORT=8000
     ports: [ "5173:80" ]          # production порт
     depends_on: [ backend ]
 

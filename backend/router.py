@@ -37,4 +37,11 @@ async def handle_message(thread_id: str, user_q: str) -> dict:
         return {"answer": draft, "intent": intent, "model": "o3-mini"}
     # complex → escalate
     await publish(thread_id, "generating")
-    return await ask_planner(thread_id, user_q, slots)
+    result = await ask_planner(thread_id, user_q, slots)
+    
+    # Проверяем, что получили корректный ответ
+    if not result or not result.get("answer"):
+        return {"type": "chat", "role": "system",
+                "content": "🤔 Я затруднился ответить. Уточните вопрос."}
+    
+    return result
