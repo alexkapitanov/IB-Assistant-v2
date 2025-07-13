@@ -86,6 +86,7 @@ class TestIndexScripts:
             pytest.skip("Invalid path test skipped due to missing services")
     
     @pytest.mark.integration
+    @pytest.mark.openai
     def test_index_files_empty_file(self, tmp_path, mc, qc):
         """Test handling of empty files"""
         from scripts.index_files import ingest_path, BUCKET_DEF

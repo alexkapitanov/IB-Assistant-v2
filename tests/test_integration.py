@@ -217,6 +217,7 @@ class TestSystemResilience:
     """Test system resilience and error recovery"""
     
     @pytest.mark.integration
+    @pytest.mark.openai
     def test_service_unavailable_handling(self, dummy_txt):
         """Test graceful handling when services are unavailable"""
         from scripts.index_files import ingest_path

@@ -90,18 +90,20 @@ class TestAgentErrorHandling:
     """Test agent error handling"""
     
     @pytest.mark.integration
+    @pytest.mark.openai
     def test_local_search_empty_query(self):
         """Test local search with empty query"""
-        from agents.local_search import local_search
+        from backend.agents.local_search import local_search
         
         # Should handle empty query gracefully
         result = local_search("", top_k=1)
         assert isinstance(result, list)
     
     @pytest.mark.integration
+    @pytest.mark.openai
     def test_local_search_invalid_top_k(self):
         """Test local search with invalid top_k values"""
-        from agents.local_search import local_search
+        from backend.agents.local_search import local_search
         
         # Test with zero
         result = local_search("test", top_k=0)
