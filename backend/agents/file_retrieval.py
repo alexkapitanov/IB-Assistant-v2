@@ -1,3 +1,8 @@
+"""
+FileRetrieval-tool: выдаёт presigned URL на PDF/Docx по ИБ-продуктам.
+"""
+__doc__ = "FileRetrieval-tool: выдаёт presigned URL на PDF/Docx по ИБ-продуктам."
+
 import os
 from minio import Minio
 from qdrant_client import QdrantClient

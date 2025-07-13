@@ -1,23 +1,34 @@
 import autogen, asyncio, time, json, logging
 from backend.openai_helpers import call_llm
-from backend.agents.expert_gc import run_expert_gc
+from agents.expert_gc import expert_group_chat
 from backend.json_utils import safe_load, BadJSON
 from backend.chat_db import log_raw          # для аудита
 
 logger = logging.getLogger(__name__)
 
-PROMPT = """Ты планировщик. Верни ровно ОДИН объект JSON
-без комментариев и форматирования:
+PROMPT = """
+Ты — Planner-агент ассистента по информационной безопасности.
+На основе вопроса пользователя и уже известных слотов реши, что делать.
+
+Верни ОДИН объект JSON БЕЗ комментариев:
 {
- "need_clarify": true/false,
- "clarify": "...",
- "need_escalate": true/false,
- "draft": "..."
-}"""
+ "need_clarify":   true/false,   # нужен ли уточняющий вопрос?
+ "clarify":        "текст вопроса" | "",
+ "need_escalate":  true/false,   # нужна ли глубокая цепочка Expert GC?
+ "draft":          "краткий ответ, если escalate=false"
+}
+
+Требования:
+* не добавляй никаких полей кроме указанных;
+* если в базе знаний мало фактов или вопрос требует сравнения/
+  интеграции/расчёта — ставь need_escalate=true;
+* если вопрос исчерпывается определением (например «Что такое SOC?») —
+  можешь вернуть draft и need_escalate=false.
+"""
 
 def _call_planner_llm(thread_id: str, user_q: str, slots: dict):
     raw, _ = call_llm("gpt-4o", f"{PROMPT}\nВопрос: {user_q}\nСлоты: {slots}")
-    log_raw(thread_id, 0, "gpt-4.1", raw)       # turn_index=0 = технический
+    log_raw(thread_id, 0, "gpt-4o", raw)       # turn_index=0 = технический
     return safe_load(raw)
 
 async def ask_planner(thread_id, user_q, slots):
@@ -35,5 +46,5 @@ async def ask_planner(thread_id, user_q, slots):
     if not plan.get("need_escalate"):
         return {"answer": plan.get("draft", ""), "model": "gpt-4o"}
     # Иначе эскалируем к экспертной цепочке
-    final = await run_expert_gc(thread_id, user_q, slots)
+    final = await expert_group_chat(user_q)
     return final
