@@ -32,16 +32,20 @@ class TestAgents:
     def test_local_search_mocked(self, mock_qdrant_client, mock_embed):
         """Test local search with mocked dependencies"""
         from agents.local_search import local_search
+        from unittest.mock import Mock
         
         # Setup mocks
         mock_embed.return_value = [0.1] * 1536
-        mock_qdrant_client.search.return_value = []
+        # Create a mock response object with points attribute
+        mock_response = Mock()
+        mock_response.points = []
+        mock_qdrant_client.query_points.return_value = mock_response
         
         result = local_search("test query")
         
         assert isinstance(result, list)
         mock_embed.assert_called_once()
-        mock_qdrant_client.search.assert_called_once()
+        mock_qdrant_client.query_points.assert_called_once()
     
     def test_expert_gc_agent_import(self):
         """Test expert GC agent can be imported"""
@@ -122,7 +126,7 @@ class TestAgentErrorHandling:
         # Setup mock to raise exception
         mock_client = MagicMock()
         mock_qdrant.return_value = mock_client
-        mock_client.search.side_effect = Exception("Qdrant error")
+        mock_client.query_points.side_effect = Exception("Qdrant error")
         
         # Should handle exception gracefully
         try:
