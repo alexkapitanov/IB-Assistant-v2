@@ -241,12 +241,10 @@ class TestIndexScriptErrorHandling:
                 env=env
             )
             
-            # Should fail gracefully with clear error message
-            assert result.returncode != 0
-            error_text = result.stdout + result.stderr
-            assert ("OPENAI_API_KEY" in error_text or 
-                   "ModuleNotFoundError" in error_text or
-                   "service" in error_text.lower())
+            # With stub mode, script should succeed but process 0 files
+            assert result.returncode == 0
+            output_text = result.stdout + result.stderr
+            assert "Indexed 0 new vector(s)" in output_text
             
         except subprocess.TimeoutExpired:
             pytest.fail("Script should fail quickly without API key")

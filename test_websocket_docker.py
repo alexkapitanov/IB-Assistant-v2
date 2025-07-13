@@ -6,8 +6,11 @@
 import asyncio
 import websockets
 import json
+import pytest
 
 
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_websocket():
     # Тестируем WebSocket соединение
     uri = "ws://localhost:8000/ws"
@@ -37,7 +40,6 @@ async def test_websocket():
             
     except Exception as e:
         print(f"❌ Ошибка подключения: {e}")
-
 
 if __name__ == "__main__":
     asyncio.run(test_websocket())
