@@ -48,11 +48,12 @@ flowchart TD
   Expert --> Response
 ```
 
-## Frontend dev  
+## Frontend Dev
+
 ```bash
 cd frontend
-npm i
-npm run dev
+npm i         # первый раз
+npm run dev   # http://localhost:5173
 ```
 
 Фронтенд использует:

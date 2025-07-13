@@ -20,6 +20,12 @@ def test_router_returns_file_link(monkeypatch, dummy_pdf):
         lambda thread_id: {}
     )
     
+    # Mock status_bus publish to avoid Redis connection
+    monkeypatch.setattr(
+        "backend.router.publish",
+        lambda thread_id, status: None
+    )
+    
     # Mock get_file_link directly in router module (since it's imported there)
     monkeypatch.setattr(
         "backend.router.get_file_link",

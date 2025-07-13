@@ -9,6 +9,9 @@ python-multipart      # file uploads
 tiktoken
 python-dotenv
 pytest
+pytest-asyncio        # для async тестов
+websockets            # для WebSocket тестов
+pydantic>=2           # требуется версия 2+
 pdfminer.six         # извлечение текста из PDF
 python-docx          # docx to text (если нет – ok, fallback)
 tqdm                  # прогресс-бар для индексатора

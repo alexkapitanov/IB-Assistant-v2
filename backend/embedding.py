@@ -21,6 +21,19 @@ def get(text:str)->list[float]:
     if vec:=_r.get(key):
         return json.loads(vec)
     
+    # Проверяем тестовый режим
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if api_key.startswith("test_key"):
+        # Возвращаем фиктивный вектор для тестового режима
+        print(f"🔧 Mock embedding for: {text[:50]}...")
+        # Создаем простой фиктивный вектор из хэша текста
+        import hashlib
+        hash_val = int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
+        # Создаем вектор размером 1536 (как у text-embedding-3-small)
+        vec = [(hash_val + i) % 100 / 100.0 for i in range(1536)]
+        _r.set(key, json.dumps(vec), ex=60*60*24)
+        return vec
+    
     # Используем новый API OpenAI v1.0+
     client = _get_client()
     resp = client.embeddings.create(model=MODEL, input=text)

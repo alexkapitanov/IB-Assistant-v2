@@ -3,12 +3,7 @@ from backend.agents.file_retrieval import get_file_link
 from backend.agents.local_search import local_search
 from backend.agents.planner import ask_planner
 from backend.openai_helpers import call_llm
-
-from backend.memory import get_mem, save_mem
-from backend.agents.file_retrieval import get_file_link
-from backend.agents.local_search import local_search
-from backend.agents.planner import ask_planner
-from backend.openai_helpers import call_llm
+from backend.status_bus import publish
 
 DEF_INTENT_PROMPT = """
 Ты классификатор. Категории: get_file, simple_faq, complex.
@@ -28,14 +23,18 @@ def cheap_faq_answer(q:str, frags:list):
 
 async def handle_message(thread_id: str, user_q: str) -> dict:
     slots = get_mem(thread_id)
+    await publish(thread_id, "thinking")
     intent = classify(user_q, slots)         # implement in this module using o3-mini
     if intent == "get_file":
         link = get_file_link(user_q, slots.get("product"))
         if link:
             return {"answer": f"Файл найден: [скачать]({link})", "intent": intent, "model": "none"}
     if intent == "simple_faq":
+        await publish(thread_id, "searching")
         frags = local_search(user_q)[:3]
+        await publish(thread_id, "generating")
         draft = cheap_faq_answer(user_q, frags)   # o3-mini
         return {"answer": draft, "intent": intent, "model": "o3-mini"}
     # complex → escalate
+    await publish(thread_id, "generating")
     return await ask_planner(thread_id, user_q, slots)
