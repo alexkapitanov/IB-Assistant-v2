@@ -4,8 +4,13 @@ import threading
 import tempfile
 import statistics
 from concurrent.futures import ThreadPoolExecutor
-import psutil
 import os
+
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 class TestPerformance:
     """Performance benchmarks and stress tests"""
@@ -158,6 +163,9 @@ class TestPerformance:
     @pytest.mark.slow
     def test_memory_usage(self, client):
         """Test memory usage during API operations"""
+        if not PSUTIL_AVAILABLE:
+            pytest.skip("psutil not available - skipping memory usage test")
+            
         import gc
         
         # Get initial memory usage
