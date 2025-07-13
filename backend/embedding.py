@@ -1,4 +1,5 @@
 import os, openai, functools, hashlib, json, redis
+from backend.utils import is_test_mode
 
 # Отложенная инициализация OpenAI клиента
 MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
@@ -22,8 +23,7 @@ def get(text:str)->list[float]:
         return json.loads(vec)
     
     # Проверяем тестовый режим
-    api_key = os.getenv("OPENAI_API_KEY", "")
-    if api_key.startswith("test_key"):
+    if is_test_mode():
         # Возвращаем фиктивный вектор для тестового режима
         print(f"🔧 Mock embedding for: {text[:50]}...")
         # Создаем простой фиктивный вектор из хэша текста

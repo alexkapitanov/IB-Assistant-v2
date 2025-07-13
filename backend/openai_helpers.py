@@ -1,14 +1,19 @@
 import os, time
 from openai import OpenAI
+from backend.utils import is_test_mode
 
-# Инициализация клиента OpenAI
-api_key = os.getenv("OPENAI_API_KEY")
-is_test_mode = api_key and api_key.startswith("test_key")
+# Глобальная переменная для клиента
+_client = None
 
-if not is_test_mode:
-    client = OpenAI(api_key=api_key)
-else:
-    client = None  # Заглушка для тестирования
+def _get_client():
+    """Ленивая инициализация OpenAI клиента"""
+    global _client
+    if _client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is required")
+        _client = OpenAI(api_key=api_key)
+    return _client
 
 def call_llm(model: str, prompt: str, tools: list | None = None, temperature: float = 0):
     """
@@ -18,7 +23,7 @@ def call_llm(model: str, prompt: str, tools: list | None = None, temperature: fl
     t0 = time.time()
     
     # Заглушка для тестирования
-    if is_test_mode:
+    if is_test_mode():
         # Имитируем ответ на основе промпта
         if "классификатор" in prompt.lower():
             content = "simple_faq"
@@ -27,6 +32,7 @@ def call_llm(model: str, prompt: str, tools: list | None = None, temperature: fl
         latency_ms = 100  # Имитируем небольшую задержку
         return content, latency_ms
     
+    client = _get_client()
     rsp = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
