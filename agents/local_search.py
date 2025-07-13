@@ -7,12 +7,12 @@ _q = QdrantClient(host=os.getenv("QDRANT_HOST","qdrant"), port=6333)
 def local_search(query:str, top_k:int=10, col:str="ib-docs"):
     vec = embed(query)
     try:
-        hits = _q.search(
+        hits = _q.query_points(
             collection_name=col,
-            query_vector=vec,
+            query=vec,
             limit=top_k,
             search_params=models.SearchParams(hnsw_ef=64),
-        )
+        ).points
         return [
             {"text": h.payload.get("text",""), "score": h.score, "meta": h.payload}
             for h in hits

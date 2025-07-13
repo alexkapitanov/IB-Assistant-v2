@@ -40,7 +40,7 @@ qc = QdrantClient(host=os.getenv("QDRANT_HOST", "qdrant"))
 def ensure_collection(col: str = BUCKET_DEF):
     existing = [c.name for c in qc.get_collections().collections]
     if col not in existing:
-        qc.recreate_collection(
+        qc.create_collection(
             col,
             vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
         )

@@ -19,11 +19,11 @@ def local_search(query, top_k: int = 10):
         else:
             query_vector = query
             
-        hits = _q.search(
+        hits = _q.query_points(
             collection_name="ib-docs",
-            query_vector=query_vector,
+            query=query_vector,
             limit=top_k,
-        )
+        ).points
         return [
             {
                 "text": h.payload.get("text", ""),
