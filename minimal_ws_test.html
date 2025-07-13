@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal WebSocket Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>⚡ Minimal WebSocket Test</h1>
+    <button onclick="testWS()">Test WebSocket</button>
+    <pre id="output">Ready to test...</pre>
+
+    <script>
+        function log(msg) {
+            const output = document.getElementById('output');
+            output.textContent += '\n' + new Date().toLocaleTimeString() + ': ' + msg;
+        }
+        
+        function testWS() {
+            log('🚀 Starting WebSocket test...');
+            
+            // Определяем правильный URL для WebSocket в зависимости от среды
+            let wsUrl;
+            const isCloudEnv = location.hostname.endsWith('.app.github.dev') || location.hostname.includes('gitpod.io');
+
+            if (isCloudEnv) {
+                const backendHost = location.hostname.replace(location.port, '8000');
+                wsUrl = `wss://${backendHost}/ws`;
+            } else {
+                wsUrl = 'ws://localhost:8000/ws';
+            }
+            
+            log(`🔗 Connecting to: ${wsUrl}`);
+            
+            try {
+                const ws = new WebSocket(wsUrl);
+                log('✅ WebSocket object created');
+                
+                ws.onopen = () => {
+                    log('🎉 WebSocket CONNECTED!');
+                    ws.send('Hello from minimal test!');
+                    log('📤 Sent test message');
+                };
+                
+                ws.onmessage = (e) => {
+                    log('📨 Received: ' + e.data);
+                };
+                
+                ws.onclose = (e) => {
+                    log('❌ WebSocket closed: ' + e.code + ' - ' + e.reason);
+                };
+                
+                ws.onerror = (e) => {
+                    log('🔥 WebSocket ERROR!');
+                    console.error('WebSocket error:', e);
+                };
+                
+            } catch (error) {
+                log('💥 Failed to create WebSocket: ' + error.message);
+            }
+        }
+        
+        // Auto-test
+        setTimeout(testWS, 1000);
+    </script>
+</body>
+</html>

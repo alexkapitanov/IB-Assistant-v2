@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Direct Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 15px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>🔗 Direct WebSocket Test</h1>
+    
+    <div>
+        <label>WebSocket URL:</label><br>
+        <input type="text" id="wsUrl" value="ws://localhost:8000/ws" />
+        <button onclick="testConnection()">Test Connection</button>
+    </div>
+    
+    <div>
+        <label>Test Message:</label><br>
+        <input type="text" id="testMessage" value="Привет!" />
+        <button onclick="sendTestMessage()">Send Message</button>
+    </div>
+    
+    <div id="status">Ready to test</div>
+    
+    <h3>Log:</h3>
+    <div id="log" class="log"></div>
+
+    <script>
+        let ws = null;
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        function testConnection() {
+            const url = document.getElementById('wsUrl').value;
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('❌ Closing existing connection first', 'info');
+                ws.close();
+            }
+            
+            log(`🚀 Attempting to connect to: ${url}`, 'info');
+            updateStatus('🔄 Connecting...');
+            
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = function() {
+                    log('✅ WebSocket connected successfully!', 'success');
+                    updateStatus('✅ Connected');
+                    log(`   ReadyState: ${ws.readyState} (OPEN)`, 'success');
+                };
+                
+                ws.onclose = function(event) {
+                    log(`❌ WebSocket closed. Code: ${event.code}, Reason: "${event.reason}", Clean: ${event.wasClean}`, 'error');
+                    updateStatus('❌ Disconnected');
+                };
+                
+                ws.onerror = function(error) {
+                    log(`🔥 WebSocket error occurred`, 'error');
+                    updateStatus('🔥 Error');
+                    console.error('WebSocket error details:', error);
+                };
+                
+                ws.onmessage = function(event) {
+                    log(`📨 Received: ${event.data}`, 'success');
+                };
+                
+            } catch (error) {
+                log(`💥 Failed to create WebSocket: ${error.message}`, 'error');
+                updateStatus('💥 Failed');
+            }
+        }
+        
+        function sendTestMessage() {
+            const message = document.getElementById('testMessage').value;
+            
+            if (!ws) {
+                log('❌ No WebSocket connection', 'error');
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                log(`❌ WebSocket not open. State: ${ws.readyState}`, 'error');
+                return;
+            }
+            
+            log(`📤 Sending: "${message}"`, 'info');
+            ws.send(message);
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            log('🌐 Page loaded, starting auto-test...', 'info');
+            setTimeout(testConnection, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IB Assistant Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .chat-area { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; height: 400px; overflow-y: auto; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 10px; max-width: 70%; }
+        .user { background: #007bff; color: white; margin-left: auto; }
+        .assistant { background: #e9ecef; color: #333; }
+        .input-area { display: flex; gap: 10px; margin-bottom: 20px; }
+        .input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .input-area button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .debug { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        .debug-line { margin: 2px 0; }
+        .debug-error { color: red; }
+        .debug-success { color: green; }
+        .debug-info { color: blue; }
+        .status { text-align: center; padding: 10px; background: #fff3cd; color: #856404; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IB Assistant (Debug Mode)</h1>
+        
+        <div class="status" id="status">Connecting...</div>
+        
+        <div class="chat-area" id="chatArea"></div>
+        
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Введите ваше сообщение...">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+        
+        <h3>Debug Log:</h3>
+        <div class="debug" id="debugLog"></div>
+        
+        <button onclick="clearDebug()" style="margin-top: 10px;">Clear Debug</button>
+    </div>
+
+    <script>
+        let ws = null;
+        let messageHistory = [];
+        
+        // Debug functions
+        function debugLog(message, type = 'info') {
+            const log = document.getElementById('debugLog');
+            const line = document.createElement('div');
+            line.className = `debug-line debug-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function clearDebug() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+        
+        function updateStatus(text, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.style.background = isError ? '#f8d7da' : '#d1ecf1';
+            status.style.color = isError ? '#721c24' : '#0c5460';
+        }
+        
+        function addMessage(role, content) {
+            const chatArea = document.getElementById('chatArea');
+            const message = document.createElement('div');
+            message.className = `message ${role}`;
+            message.textContent = content;
+            chatArea.appendChild(message);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            messageHistory.push({ role, content });
+        }
+        
+        // WebSocket connection
+        function connect() {
+            debugLog('Attempting to connect to ws://localhost:8000/ws', 'info');
+            updateStatus('Подключение...');
+            
+            try {
+                ws = new WebSocket('ws://localhost:8000/ws');
+                
+                ws.onopen = function(event) {
+                    debugLog('✅ WebSocket connected successfully!', 'success');
+                    updateStatus('Подключено - готов к работе');
+                    debugLog(`WebSocket readyState: ${ws.readyState}`, 'info');
+                };
+                
+                ws.onclose = function(event) {
+                    debugLog(`❌ WebSocket closed. Code: ${event.code}, Reason: "${event.reason}"`, 'error');
+                    updateStatus('Соединение потеряно - переподключение...', true);
+                    debugLog('🔄 Reconnecting in 3 seconds...', 'info');
+                    setTimeout(connect, 3000);
+                };
+                
+                ws.onerror = function(error) {
+                    debugLog(`🔥 WebSocket error: ${error.message || 'Unknown error'}`, 'error');
+                    updateStatus('Ошибка соединения', true);
+                };
+                
+                ws.onmessage = function(event) {
+                    debugLog(`📨 Received raw message: ${event.data}`, 'info');
+                    
+                    try {
+                        const data = JSON.parse(event.data);
+                        debugLog(`📋 Parsed JSON: ${JSON.stringify(data, null, 2)}`, 'info');
+                        
+                        if (data.type === 'status') {
+                            updateStatus(`Ассистент ${data.status}...`);
+                            debugLog(`📊 Status update: ${data.status}`, 'info');
+                        } else {
+                            // This is a regular message response
+                            const content = data.answer || data.content || event.data;
+                            addMessage('assistant', content);
+                            updateStatus('Готов к следующему сообщению');
+                            debugLog(`💬 Added assistant message: ${content.substring(0, 50)}...`, 'success');
+                        }
+                    } catch (parseError) {
+                        debugLog(`⚠️ Failed to parse JSON: ${parseError.message}`, 'error');
+                        // Treat as plain text message
+                        addMessage('assistant', event.data);
+                        updateStatus('Готов к следующему сообщению');
+                    }
+                };
+                
+            } catch (error) {
+                debugLog(`💥 Exception creating WebSocket: ${error.message}`, 'error');
+                updateStatus('Критическая ошибка', true);
+            }
+        }
+        
+        // Send message function
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            debugLog(`🚀 Send function called with message: "${message}"`, 'info');
+            
+            if (!message) {
+                debugLog('❌ Message is empty', 'error');
+                return;
+            }
+            
+            if (!ws) {
+                debugLog('❌ WebSocket is null', 'error');
+                updateStatus('Нет подключения', true);
+                return;
+            }
+            
+            debugLog(`🔍 WebSocket state: ${ws.readyState} (${getReadyStateText(ws.readyState)})`, 'info');
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                debugLog(`❌ WebSocket not open for sending (state: ${ws.readyState})`, 'error');
+                updateStatus('Соединение не готово', true);
+                return;
+            }
+            
+            try {
+                ws.send(message);
+                debugLog(`📤 Message sent successfully: "${message}"`, 'success');
+                addMessage('user', message);
+                input.value = '';
+                updateStatus('Ожидание ответа...');
+            } catch (error) {
+                debugLog(`💥 Error sending message: ${error.message}`, 'error');
+                updateStatus('Ошибка отправки', true);
+            }
+        }
+        
+        function getReadyStateText(state) {
+            switch(state) {
+                case WebSocket.CONNECTING: return 'CONNECTING (0)';
+                case WebSocket.OPEN: return 'OPEN (1)';
+                case WebSocket.CLOSING: return 'CLOSING (2)';
+                case WebSocket.CLOSED: return 'CLOSED (3)';
+                default: return `UNKNOWN (${state})`;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Initialize
+        debugLog('🚀 Starting IB Assistant Debug Mode', 'info');
+        connect();
+    </script>
+</body>
+</html>
