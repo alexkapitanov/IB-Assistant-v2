@@ -1,11 +1,10 @@
-from backend.memory import get_mem, save_mem
-from backend.agents.file_retrieval import get_file_link
-from backend.agents.local_search import local_search
-from backend.agents.planner import ask_planner
+"""
+Роутер интентов для классификации запросов и быстрых FAQ-ответов
+"""
 from backend.openai_helpers import call_llm
-from backend.status_bus import publish
+from agents.local_search import local_search
 
-DEF_INTENT_PROMPT = """
+INTENT_PROMPT = """
 Ты — классификатор запросов по информационной безопасности (ИБ).
 Определи назначение реплики пользователя.
 
@@ -19,16 +18,22 @@ DEF_INTENT_PROMPT = """
 Верни ОДНО слово без кавычек: get_file / simple_faq / complex
 """
 
-def classify(user_q: str, slots: dict) -> str:
+def classify_intent(user_query: str) -> str:
     """
     Классифицирует намерение пользователя на основе его запроса
+    
+    Args:
+        user_query: Запрос пользователя
+        
+    Returns:
+        Одно из: "get_file", "simple_faq", "complex"
     """
     try:
-        prompt = f"{DEF_INTENT_PROMPT}\n\nЗапрос пользователя: {user_q}"
-        res, _ = call_llm("gpt-4o-mini", prompt)
+        full_prompt = f"{INTENT_PROMPT}\n\nЗапрос пользователя: {user_query}"
+        response, _ = call_llm(full_prompt, model="gpt-4o-mini")
         
         # Очищаем ответ от лишних символов и приводим к нижнему регистру
-        intent = res.strip().lower().replace('"', '').replace("'", "")
+        intent = response.strip().lower().replace('"', '').replace("'", "")
         
         # Проверяем, что ответ валидный
         if intent in ["get_file", "simple_faq", "complex"]:
@@ -38,22 +43,32 @@ def classify(user_q: str, slots: dict) -> str:
             return "complex"
             
     except Exception as e:
-        print(f"❌ Error in classify: {e}")
+        print(f"❌ Error in classify_intent: {e}")
         # В случае ошибки считаем запрос сложным
         return "complex"
 
-def cheap_faq_answer(q: str, frags: list):
+def cheap_faq_answer(q: str) -> str:
     """
     Быстрый FAQ-ответ для простых вопросов по ИБ
+    
+    Args:
+        q: Вопрос пользователя
+        
+    Returns:
+        Короткий ответ на основе контекста из базы знаний
     """
     try:
-        if not frags:
+        # Получаем релевантный контекст из базы знаний
+        search_results = local_search(q, top_k=3)
+        
+        if not search_results:
             return "Нет данных в базе знаний."
         
+        # Формируем контекст из найденных результатов
         ctx = "\n\n".join([
-            f"- {f['text'][:500]}..." if len(f['text']) > 500 else f"- {f['text']}"
-            for f in frags
-            if f.get('text', '').strip()
+            f"- {result['text'][:500]}..." if len(result['text']) > 500 else f"- {result['text']}"
+            for result in search_results
+            if result.get('text', '').strip()
         ])
         
         if not ctx:
@@ -69,34 +84,37 @@ def cheap_faq_answer(q: str, frags: list):
 {q}
 """
         
-        response, _ = call_llm("gpt-4o-mini", prompt)
+        response, _ = call_llm(prompt, model="gpt-4o-mini")
         return response.strip()
         
     except Exception as e:
         print(f"❌ Error in cheap_faq_answer: {e}")
         return "Произошла ошибка при обработке запроса."
 
-async def handle_message(thread_id: str, user_q: str) -> dict:
-    slots = get_mem(thread_id)
-    await publish(thread_id, "thinking")
-    intent = classify(user_q, slots)
-    if intent == "get_file":
-        link = get_file_link(user_q, slots.get("product"))
-        if link:
-            return {"answer": f"Файл найден: [скачать]({link})", "intent": intent, "model": "none"}
-    if intent == "simple_faq":
-        await publish(thread_id, "searching")
-        frags = local_search(user_q)[:3]
-        await publish(thread_id, "generating")
-        draft = cheap_faq_answer(user_q, frags)
-        return {"answer": draft, "intent": intent, "model": "gpt-4o-mini"}
-    # complex → escalate
-    await publish(thread_id, "generating")
-    result = await ask_planner(thread_id, user_q, slots)
+def route_query(user_query: str) -> dict:
+    """
+    Основная функция роутинга - классифицирует запрос и возвращает соответствующий ответ
     
-    # Проверяем, что получили корректный ответ
-    if not result or not result.get("answer"):
-        return {"type": "chat", "role": "system",
-                "content": "🤔 Я затруднился ответить. Уточните вопрос."}
+    Args:
+        user_query: Запрос пользователя
+        
+    Returns:
+        Словарь с результатом обработки
+    """
+    intent = classify_intent(user_query)
+    
+    result = {
+        "intent": intent,
+        "query": user_query
+    }
+    
+    if intent == "simple_faq":
+        # Для простых FAQ даем быстрый ответ
+        result["answer"] = cheap_faq_answer(user_query)
+        result["type"] = "faq"
+    else:
+        # Для get_file и complex передаем дальше в планировщик
+        result["needs_planning"] = True
+        result["type"] = "planning_required"
     
     return result
