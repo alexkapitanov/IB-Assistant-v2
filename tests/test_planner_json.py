@@ -16,7 +16,7 @@ async def test_planner_with_valid_json():
         
         assert "answer" in result
         assert result["answer"] == "Тестовый ответ"
-        assert result["model"] == "gpt-4o"
+        assert result["model"] == "gpt-4.1"
 
 
 @pytest.mark.asyncio 
@@ -99,7 +99,7 @@ async def test_planner_no_escalation():
         result = await ask_planner("test_thread", "Что такое SOC?", {})
         
         assert result["answer"] == "Простое определение"
-        assert result["model"] == "gpt-4o"
+        assert result["model"] == "gpt-4.1"
 
 
 def test_planner_returns_json(monkeypatch):

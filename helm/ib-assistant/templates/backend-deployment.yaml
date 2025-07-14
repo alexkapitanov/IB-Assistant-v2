@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ib-assistant.fullname" . }}-backend
+  labels:
+    {{- include "ib-assistant.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount.backend }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ib-assistant.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "ib-assistant.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backend
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ib-assistant.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: backend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.env.PORT }}
+              protocol: TCP
+          {{- if .Values.healthcheck.backend.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.backend.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.backend.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.backend.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.backend.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.backend.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.backend.path }}
+              port: http
+            initialDelaySeconds: {{ div .Values.healthcheck.backend.initialDelaySeconds 2 }}
+            periodSeconds: {{ .Values.healthcheck.backend.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.backend.timeoutSeconds }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources.backend | nindent 12 }}
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ib-assistant.fullname" . }}-secrets
+                  key: openai-api-key
+            {{- if .Values.secrets.qdrantApiKey }}
+            - name: QDRANT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ib-assistant.fullname" . }}-secrets
+                  key: qdrant-api-key
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "ib-assistant.fullname" . }}-config
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.env.DATA_DIR }}
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "ib-assistant.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

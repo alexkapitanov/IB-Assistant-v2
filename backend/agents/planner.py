@@ -1,6 +1,6 @@
 import autogen, asyncio, time, json, logging
 from backend.openai_helpers import call_llm
-from agents.expert_gc import expert_group_chat
+from backend.agents.expert_gc import run_expert_gc
 from backend.json_utils import safe_load, BadJSON
 from backend.chat_db import log_raw          # для аудита
 
@@ -27,8 +27,8 @@ PROMPT = """
 """
 
 def _call_planner_llm(thread_id: str, user_q: str, slots: dict):
-    raw, _ = call_llm("gpt-4o", f"{PROMPT}\nВопрос: {user_q}\nСлоты: {slots}")
-    log_raw(thread_id, 0, "gpt-4o", raw)       # turn_index=0 = технический
+    raw, _ = call_llm("gpt-4.1", f"{PROMPT}\nВопрос: {user_q}\nСлоты: {slots}")
+    log_raw(thread_id, 0, "gpt-4.1", raw)       # turn_index=0 = технический
     return safe_load(raw)
 
 async def ask_planner(thread_id, user_q, slots):
@@ -41,10 +41,10 @@ async def ask_planner(thread_id, user_q, slots):
     
     # Если нужна уточняющая информация
     if plan.get("need_clarify"):
-        return {"answer": plan.get("clarify"), "follow_up": True, "model": "gpt-4o"}
+        return {"answer": plan.get("clarify"), "follow_up": True, "model": "gpt-4.1"}
     # Если эскалация не требуется
     if not plan.get("need_escalate"):
-        return {"answer": plan.get("draft", ""), "model": "gpt-4o"}
+        return {"answer": plan.get("draft", ""), "model": "gpt-4.1"}
     # Иначе эскалируем к экспертной цепочке
-    final = await expert_group_chat(user_q)
+    final = await run_expert_gc(thread_id, user_q, slots)
     return final

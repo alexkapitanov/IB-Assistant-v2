@@ -75,7 +75,7 @@ class ExpertAgent:
             
             full_prompt = "\n".join(prompt_parts)
             
-            response, _ = call_llm(full_prompt, model="gpt-4o")
+            response, _ = call_llm(full_prompt, model="gpt-4.1")
             return response.strip()
             
         except Exception as e:
@@ -113,7 +113,7 @@ class CriticAgent:
 
 Твоя оценка:"""
             
-            response, _ = call_llm(prompt, model="gpt-4o-mini")
+            response, _ = call_llm(prompt, model="gpt-4.1-mini")
             review_text = response.strip()
             
             # Определяем нужен ли дополнительный поиск

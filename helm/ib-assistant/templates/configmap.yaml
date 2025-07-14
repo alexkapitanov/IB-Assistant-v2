@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ib-assistant.fullname" . }}-config
+  labels:
+    {{- include "ib-assistant.labels" . | nindent 4 }}
+data:
+  CHAT_MODEL: {{ .Values.env.CHAT_MODEL | quote }}
+  ROUTER_MODEL: {{ .Values.env.ROUTER_MODEL | quote }}
+  EXPERT_MODEL: {{ .Values.env.EXPERT_MODEL | quote }}
+  QDRANT_URL: {{ .Values.env.QDRANT_URL | quote }}
+  REDIS_URL: {{ .Values.env.REDIS_URL | quote }}
+  DATA_DIR: {{ .Values.env.DATA_DIR | quote }}
+  PORT: {{ .Values.env.PORT | quote }}
+  ENVIRONMENT: {{ .Values.env.ENVIRONMENT | quote }}
+  MAX_TOKENS_PER_SESSION: {{ .Values.env.MAX_TOKENS_PER_SESSION | quote }}
+  RATE_LIMIT_REQUESTS: {{ .Values.env.RATE_LIMIT_REQUESTS | quote }}
+  ENABLE_METRICS: {{ .Values.env.ENABLE_METRICS | quote }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "ib-assistant.fullname" . }}-secrets
+  labels:
+    {{- include "ib-assistant.labels" . | nindent 4 }}
+type: Opaque
+data:
+  openai-api-key: {{ .Values.secrets.openaiApiKey | b64enc | quote }}
+  {{- if .Values.secrets.qdrantApiKey }}
+  qdrant-api-key: {{ .Values.secrets.qdrantApiKey | b64enc | quote }}
+  {{- end }}

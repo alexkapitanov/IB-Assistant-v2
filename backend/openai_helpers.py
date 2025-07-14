@@ -1,7 +1,9 @@
-import os, openai, time
+import os, openai, time, json
 from openai import OpenAI
 from backend.utils import is_test_mode
+from backend.token_counter import count_tokens
 
+# Разрешённые модели: o3-mini, gpt-4.1-mini, gpt-4.1
 # Проверяем API ключ при загрузке модуля
 key = os.getenv("OPENAI_API_KEY")
 # Разрешаем stub-режим для разработки и CI, но блокируем test_ и пустые ключи
@@ -24,18 +26,24 @@ def _get_client(api_key: str):
         _client = OpenAI(api_key=api_key)
     return _client
 
-def call_llm(model: str, prompt: str, tools: list | None = None, temperature: float = 0):
+def call_llm(model: str, prompt: str, tools: list | None = None, temperature: float = 0, thread_id: str = None, turn_index: int = None):
     """
-    Вызов LLM с проверкой API ключа и поддержкой stub-режима
+    Вызов LLM с проверкой API ключа, поддержкой stub-режима и учетом токенов
     Возвращает ответ и время задержки в миллисекундах.
     """
     
     # Получаем API ключ
     api_key = os.getenv("OPENAI_API_KEY")
     
+    # Подсчитываем токены промпта
+    prompt_tokens = count_tokens(prompt, model)
+    
     # Stub-LLM для офлайн-режима и CI
     if api_key == "stub":
-        return "[stub] Тестовый ответ", 0
+        completion_tokens = 10
+        response = "[stub] Тестовый ответ"
+        _log_token_usage(thread_id, turn_index, model, prompt_tokens, completion_tokens)
+        return response, 0
     
     # Заглушка для тестирования (режим test)
     if is_test_mode():
@@ -44,6 +52,8 @@ def call_llm(model: str, prompt: str, tools: list | None = None, temperature: fl
             content = "simple_faq"
         else:
             content = "Это тестовый ответ от ассистента. API ключ не настроен для реальных запросов к OpenAI."
+        completion_tokens = count_tokens(content, model)
+        _log_token_usage(thread_id, turn_index, model, prompt_tokens, completion_tokens)
         latency_ms = 100  # Имитируем небольшую задержку
         return content, latency_ms
     
@@ -62,4 +72,24 @@ def call_llm(model: str, prompt: str, tools: list | None = None, temperature: fl
     )
     content = rsp.choices[0].message.content.strip()
     latency_ms = int((time.time() - t0) * 1000)
+    
+    # Подсчитываем токены ответа
+    completion_tokens = count_tokens(content, model)
+    _log_token_usage(thread_id, turn_index, model, prompt_tokens, completion_tokens)
+    
     return content, latency_ms
+
+def _log_token_usage(thread_id: str, turn_index: int, model: str, prompt_tokens: int, completion_tokens: int):
+    """Логирует использование токенов"""
+    if thread_id and turn_index is not None:
+        try:
+            from backend.chat_db import log_message
+            meta_data = {
+                "model": model,
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": prompt_tokens + completion_tokens
+            }
+            log_message(thread_id, turn_index, "meta", json.dumps(meta_data))
+        except ImportError:
+            pass  # chat_db может быть недоступна в некоторых контекстах

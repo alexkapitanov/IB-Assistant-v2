@@ -30,7 +30,7 @@ def classify_intent(user_query: str) -> str:
     """
     try:
         full_prompt = f"{INTENT_PROMPT}\n\nЗапрос пользователя: {user_query}"
-        response, _ = call_llm(full_prompt, model="gpt-4o-mini")
+        response, _ = call_llm(full_prompt, model="o3-mini")
         
         # Очищаем ответ от лишних символов и приводим к нижнему регистру
         intent = response.strip().lower().replace('"', '').replace("'", "")
@@ -84,7 +84,7 @@ def cheap_faq_answer(q: str) -> str:
 {q}
 """
         
-        response, _ = call_llm(prompt, model="gpt-4o-mini")
+        response, _ = call_llm(prompt, model="o3-mini")
         return response.strip()
         
     except Exception as e:

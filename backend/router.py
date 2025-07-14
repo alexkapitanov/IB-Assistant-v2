@@ -25,7 +25,7 @@ def classify(user_q: str, slots: dict) -> str:
     """
     try:
         prompt = f"{DEF_INTENT_PROMPT}\n\nЗапрос пользователя: {user_q}"
-        res, _ = call_llm("gpt-4o-mini", prompt)
+        res, _ = call_llm("o3-mini", prompt)
         
         # Очищаем ответ от лишних символов и приводим к нижнему регистру
         intent = res.strip().lower().replace('"', '').replace("'", "")
@@ -69,7 +69,7 @@ def cheap_faq_answer(q: str, frags: list):
 {q}
 """
         
-        response, _ = call_llm("gpt-4o-mini", prompt)
+        response, _ = call_llm("o3-mini", prompt)
         return response.strip()
         
     except Exception as e:
@@ -89,7 +89,7 @@ async def handle_message(thread_id: str, user_q: str) -> dict:
         frags = local_search(user_q)[:3]
         await publish(thread_id, "generating")
         draft = cheap_faq_answer(user_q, frags)
-        return {"answer": draft, "intent": intent, "model": "gpt-4o-mini"}
+        return {"answer": draft, "intent": intent, "model": "o3-mini"}
     # complex → escalate
     await publish(thread_id, "generating")
     result = await ask_planner(thread_id, user_q, slots)

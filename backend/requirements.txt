@@ -12,6 +12,8 @@ pytest
 pytest-asyncio        # для async тестов
 websockets            # для WebSocket тестов
 pydantic>=2           # требуется версия 2+
+pydantic-settings     # для BaseSettings в Pydantic v2
 pdfminer.six         # извлечение текста из PDF
 python-docx          # docx to text (если нет – ok, fallback)
 tqdm                  # прогресс-бар для индексатора
+prometheus-fastapi-instrumentator  # Prometheus metrics

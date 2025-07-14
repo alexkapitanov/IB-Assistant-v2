@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ib-assistant.fullname" . }}-frontend
+  labels:
+    {{- include "ib-assistant.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount.frontend }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ib-assistant.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "ib-assistant.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ib-assistant.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: frontend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.frontend.image.registry }}/{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          {{- if .Values.healthcheck.frontend.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.frontend.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.frontend.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.frontend.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.frontend.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.frontend.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.frontend.path }}
+              port: http
+            initialDelaySeconds: {{ div .Values.healthcheck.frontend.initialDelaySeconds 2 }}
+            periodSeconds: {{ .Values.healthcheck.frontend.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.frontend.timeoutSeconds }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources.frontend | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

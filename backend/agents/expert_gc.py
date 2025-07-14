@@ -3,8 +3,8 @@ from backend.agents.local_search import local_search
 from backend.openai_helpers import call_llm
 
 async def run_expert_gc(thread_id, user_q, slots):
-    expert = autogen.AssistantAgent("Expert", llm_config={"model": "gpt-4o"})
-    critic = autogen.AssistantAgent("Critic", llm_config={"model": "gpt-4o-mini"})
+    expert = autogen.AssistantAgent("Expert", llm_config={"model": "gpt-4.1"})
+    critic = autogen.AssistantAgent("Critic", llm_config={"model": "gpt-4.1-mini"})
     search = autogen.AssistantAgent("Search", llm_config={"model": "o3-mini"})
 
     @search.register_function(name="local_search")

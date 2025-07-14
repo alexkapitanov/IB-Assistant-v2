@@ -1,0 +1,29 @@
+apiVersion: v2
+name: ib-assistant
+description: Investment Banking Assistant v2 - AI-powered research platform
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - ai
+  - assistant
+  - investment-banking
+  - research
+  - websocket
+home: https://github.com/your-org/ib-assistant-v2
+sources:
+  - https://github.com/your-org/ib-assistant-v2
+maintainers:
+  - name: IB Assistant Team
+    email: team@ib-assistant.com
+annotations:
+  category: AI/ML
+dependencies:
+  - name: redis
+    version: "17.15.6"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: qdrant
+    version: "0.7.0"
+    repository: "https://qdrant.github.io/qdrant-helm"
+    condition: qdrant.enabled

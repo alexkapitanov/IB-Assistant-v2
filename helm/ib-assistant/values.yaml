@@ -1,0 +1,188 @@
+# Default values for ib-assistant
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# Application image configuration
+image:
+  registry: docker.io
+  repository: ib-assistant/backend
+  tag: "2.0.0"
+  pullPolicy: IfNotPresent
+
+frontend:
+  image:
+    registry: docker.io
+    repository: ib-assistant/frontend
+    tag: "2.0.0"
+    pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    backend: 8000
+    frontend: 80
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/websocket-services: "ib-assistant-backend"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    - host: ib-assistant.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /ws
+          pathType: Prefix  
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+  tls: []
+
+# Environment variables and secrets
+env:
+  # OpenAI Configuration
+  OPENAI_API_KEY: ""  # Set via secret
+  
+  # Model configuration
+  CHAT_MODEL: "gpt-4.1"
+  ROUTER_MODEL: "gpt-4.1-mini"
+  EXPERT_MODEL: "gpt-4.1"
+  
+  # External services
+  QDRANT_URL: "http://ib-assistant-qdrant:6333"
+  QDRANT_API_KEY: ""  # Set via secret if needed
+  REDIS_URL: "redis://ib-assistant-redis-master:6379"
+  
+  # Application settings
+  DATA_DIR: "/app/data"
+  PORT: "8000"
+  ENVIRONMENT: "production"
+  
+  # Performance and limits
+  MAX_TOKENS_PER_SESSION: "50000"
+  RATE_LIMIT_REQUESTS: "20"
+  
+  # Features
+  ENABLE_METRICS: "true"
+
+# Secrets (use external secret management in production)
+secrets:
+  openaiApiKey: ""
+  qdrantApiKey: ""
+
+# Resource configuration
+resources:
+  backend:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  frontend:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Scaling configuration
+replicaCount:
+  backend: 2
+  frontend: 2
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Persistent storage
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+
+# Health checks
+healthcheck:
+  backend:
+    enabled: true
+    path: "/health"
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  frontend:
+    enabled: true
+    path: "/"
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Pod configuration
+podAnnotations: {}
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /metrics
+    labels: {}
+
+# Dependencies
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+qdrant:
+  enabled: true
+  persistence:
+    size: 20Gi
+  config:
+    cluster:
+      enabled: false

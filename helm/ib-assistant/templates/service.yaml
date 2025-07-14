@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ib-assistant.fullname" . }}-backend
+  labels:
+    {{- include "ib-assistant.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.backend }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ib-assistant.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ib-assistant.fullname" . }}-frontend
+  labels:
+    {{- include "ib-assistant.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.frontend }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ib-assistant.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
