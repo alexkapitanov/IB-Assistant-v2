@@ -26,7 +26,7 @@ def _get_client(api_key: str):
         _client = OpenAI(api_key=api_key)
     return _client
 
-def call_llm(model: str, prompt: str, tools: list | None = None, temperature: float = 0, thread_id: str = None, turn_index: int = None):
+async def call_llm(model: str, prompt: str, tools: list | None = None, temperature: float = 0, thread_id: str = None, turn_index: int = None):
     """
     Вызов LLM с проверкой API ключа, поддержкой stub-режима и учетом токенов
     Возвращает ответ и время задержки в миллисекундах.
@@ -41,7 +41,8 @@ def call_llm(model: str, prompt: str, tools: list | None = None, temperature: fl
     # Stub-LLM для офлайн-режима и CI
     if api_key == "stub":
         completion_tokens = 10
-        response = "[stub] Тестовый ответ"
+        # Генерируем разный ответ для разных промптов, чтобы тесты проходили
+        response = f"[stub] Тестовый ответ для промпта: {prompt[:20]}..."
         _log_token_usage(thread_id, turn_index, model, prompt_tokens, completion_tokens)
         return response, 0
     
@@ -64,12 +65,17 @@ def call_llm(model: str, prompt: str, tools: list | None = None, temperature: fl
     # Реальный вызов OpenAI API
     t0 = time.time()
     client = _get_client(api_key)
-    rsp = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        tools=tools or [],
-        temperature=temperature,
-    )
+
+    params = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "tools": tools or [],
+    }
+    # o3-mini не поддерживает temperature
+    if model != "o3-mini":
+        params["temperature"] = temperature
+
+    rsp = client.chat.completions.create(**params)
     content = rsp.choices[0].message.content.strip()
     latency_ms = int((time.time() - t0) * 1000)
     

@@ -2,8 +2,19 @@ from backend.memory import get_mem, save_mem
 from backend.agents.file_retrieval import get_file_link
 from backend.agents.local_search import local_search
 from backend.agents.planner import ask_planner
+from backend.agents.critic import ask_critic
+import sys
+import os
+# Добавляем путь к agents для корректного импорта
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from agents.refine import refine
 from backend.openai_helpers import call_llm
 from backend.status_bus import publish
+import backend.tracing # Импортируем для инициализации трейсинга
+import backend.logging_config # Импортируем для настройки логирования
+import structlog
+
+log = structlog.get_logger()
 
 DEF_INTENT_PROMPT = """
 Ты — классификатор запросов по информационной безопасности (ИБ).
@@ -38,7 +49,7 @@ def classify(user_q: str, slots: dict) -> str:
             return "complex"
             
     except Exception as e:
-        print(f"❌ Error in classify: {e}")
+        log.error("classify.error", error=e)
         # В случае ошибки считаем запрос сложным
         return "complex"
 
@@ -73,30 +84,86 @@ def cheap_faq_answer(q: str, frags: list):
         return response.strip()
         
     except Exception as e:
-        print(f"❌ Error in cheap_faq_answer: {e}")
+        log.error("cheap_faq_answer.error", error=e)
         return "Произошла ошибка при обработке запроса."
 
 async def handle_message(thread_id: str, user_q: str) -> dict:
+    log.info("handle_message.start", thread_id=thread_id, user_q=user_q)
     slots = get_mem(thread_id)
     await publish(thread_id, "thinking")
     intent = classify(user_q, slots)
+    log.info("handle_message.intent_classified", intent=intent)
     if intent == "get_file":
         link = get_file_link(user_q, slots.get("product"))
         if link:
-            return {"answer": f"Файл найден: [скачать]({link})", "intent": intent, "model": "none"}
+            log.info("handle_message.file_found", link=link)
+            return {"type": "chat", "role": "assistant", 
+                    "content": f"Файл найден: [скачать]({link})", 
+                    "intent": intent, "model": "none"}
+        else:
+            return {"type": "chat", "role": "system",
+                    "content": "К сожалению, файл не найден."}
+                    
     if intent == "simple_faq":
         await publish(thread_id, "searching")
         frags = local_search(user_q)[:3]
+        log.info("handle_message.simple_faq.frags_found", count=len(frags))
         await publish(thread_id, "generating")
         draft = cheap_faq_answer(user_q, frags)
-        return {"answer": draft, "intent": intent, "model": "o3-mini"}
+        
+        # Проверяем уверенность в ответе
+        is_confident = await ask_critic(draft)
+        if not is_confident:
+            log.warning("handle_message.simple_faq.low_confidence", draft=draft)
+            return {"type": "chat", "role": "system",
+                    "content": "🤔 Не уверен в полноте ответа, проверьте, пожалуйста."}
+        
+        # Улучшаем текст ответа
+        refined_answer = await refine(draft)
+        if not refined_answer:
+            log.warning("handle_message.refine.empty_answer", draft=draft)
+            return {"type": "chat", "role": "system",
+                    "content": "Не удалось улучшить ответ, возвращаю черновик.",
+                    "intent": intent, "model": "o3-mini"}
+        
+        return {"type": "chat", "role": "assistant", 
+                "content": refined_answer, "intent": intent, "model": "o3-mini"}
     # complex → escalate
     await publish(thread_id, "generating")
     result = await ask_planner(thread_id, user_q, slots)
+    log.info("handle_message.complex.planner_result", result=result)
     
     # Проверяем, что получили корректный ответ
     if not result or not result.get("answer"):
         return {"type": "chat", "role": "system",
                 "content": "🤔 Я затруднился ответить. Уточните вопрос."}
     
-    return result
+    # Проверяем уверенность в ответе от планировщика
+    answer_text = result.get("answer", "")
+    is_confident = await ask_critic(answer_text)
+    if not is_confident:
+        log.warning("handle_message.complex.low_confidence", answer=answer_text)
+        return {"type": "chat", "role": "system",
+                "content": "🤔 Не уверен в полноте ответа, проверьте, пожалуйста."}
+    
+    # Улучшаем текст ответа
+    refined_answer = await refine(answer_text)
+    if not refined_answer:
+        log.warning("handle_message.refine.empty_answer", draft=answer_text)
+        return {"type": "chat", "role": "system",
+                "content": "Не удалось улучшить ответ, возвращаю черновик.",
+                "model": result.get("model", "unknown")}
+    
+    # Формируем ответ с цитатами (если есть)
+    response = {
+        "type": "chat",
+        "role": "assistant", 
+        "content": refined_answer,
+        "model": result.get("model", "unknown")
+    }
+    
+    # Добавляем цитаты, если они есть
+    if "citations" in result:
+        response["citations"] = result["citations"]
+    
+    return response

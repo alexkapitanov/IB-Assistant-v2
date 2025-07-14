@@ -43,7 +43,7 @@ async def test_router_returns_file_link(monkeypatch, dummy_pdf):
     thread = str(uuid.uuid4())
     resp = await handle_message(thread, "дай опросный лист Infowatch")
     
-    assert "http" in resp["answer"]
-    assert "minio" in resp["answer"]
-    assert "скачать" in resp["answer"]
+    assert "http" in resp["content"]
+    assert "minio" in resp["content"]
+    assert "скачать" in resp["content"]
     assert resp["intent"] == "get_file"

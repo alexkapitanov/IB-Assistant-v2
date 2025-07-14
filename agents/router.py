@@ -18,7 +18,7 @@ INTENT_PROMPT = """
 Верни ОДНО слово без кавычек: get_file / simple_faq / complex
 """
 
-def classify_intent(user_query: str) -> str:
+async def classify_intent(user_query: str) -> str:
     """
     Классифицирует намерение пользователя на основе его запроса
     
@@ -30,7 +30,7 @@ def classify_intent(user_query: str) -> str:
     """
     try:
         full_prompt = f"{INTENT_PROMPT}\n\nЗапрос пользователя: {user_query}"
-        response, _ = call_llm(full_prompt, model="o3-mini")
+        response, _ = await call_llm(full_prompt, model="o3-mini")
         
         # Очищаем ответ от лишних символов и приводим к нижнему регистру
         intent = response.strip().lower().replace('"', '').replace("'", "")
@@ -47,7 +47,7 @@ def classify_intent(user_query: str) -> str:
         # В случае ошибки считаем запрос сложным
         return "complex"
 
-def cheap_faq_answer(q: str) -> str:
+async def cheap_faq_answer(q: str) -> str:
     """
     Быстрый FAQ-ответ для простых вопросов по ИБ
     
@@ -84,14 +84,14 @@ def cheap_faq_answer(q: str) -> str:
 {q}
 """
         
-        response, _ = call_llm(prompt, model="o3-mini")
+        response, _ = await call_llm(prompt, model="o3-mini")
         return response.strip()
         
     except Exception as e:
         print(f"❌ Error in cheap_faq_answer: {e}")
         return "Произошла ошибка при обработке запроса."
 
-def route_query(user_query: str) -> dict:
+async def route_query(user_query: str) -> dict:
     """
     Основная функция роутинга - классифицирует запрос и возвращает соответствующий ответ
     
@@ -101,20 +101,31 @@ def route_query(user_query: str) -> dict:
     Returns:
         Словарь с результатом обработки
     """
-    intent = classify_intent(user_query)
     
-    result = {
-        "intent": intent,
-        "query": user_query
-    }
+    # 1. Классифицируем интент
+    intent = await classify_intent(user_query)
     
+    # 2. Роутим в зависимости от интента
     if intent == "simple_faq":
-        # Для простых FAQ даем быстрый ответ
-        result["answer"] = cheap_faq_answer(user_query)
-        result["type"] = "faq"
+        # Для простых вопросов - быстрый ответ по базе знаний
+        answer = await cheap_faq_answer(user_query)
+        return {"type": "chat", "role": "assistant", "content": answer}
+        
+    elif intent == "get_file":
+        # Для запросов файлов - ищем ссылку
+        from backend.agents.file_retrieval import get_file_link
+        link = get_file_link(user_query)
+        if link:
+            return {"type": "chat", "role": "assistant", "content": f"Файл найден: [скачать]({link})"}
+        else:
+            return {"type": "chat", "role": "system", "content": "К сожалению, файл не найден."}
+            
+    elif intent == "complex":
+        # Для сложных вопросов - эскалация на экспертную группу
+        from agents.expert_gc import expert_group_chat
+        result = await expert_group_chat(user_query)
+        return {"type": "chat", "role": "assistant", "content": result.get("answer", "Эксперты готовят ответ...")}
+        
     else:
-        # Для get_file и complex передаем дальше в планировщик
-        result["needs_planning"] = True
-        result["type"] = "planning_required"
-    
-    return result
+        # Если интент не распознан, возвращаем сообщение по умолчанию
+        return {"type": "chat", "role": "system", "content": "Не удалось определить ваш запрос. Попробуйте переформулировать."}

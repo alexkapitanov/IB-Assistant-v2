@@ -198,9 +198,9 @@ class TestIndexScriptCLI:
         """Test index_files.py reindex functionality"""
         cmd = [
             "python", "scripts/index_files.py",
-            "--reindex", "test-bucket", "test-prefix/"
+            "--reindex", "--bucket", "test-bucket", "--prefix", "test-prefix/"
         ]
-        
+
         try:
             result = subprocess.run(
                 cmd,

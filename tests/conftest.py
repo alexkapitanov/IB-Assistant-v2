@@ -1,17 +1,12 @@
 import os
 import sys
 import pytest
-import tempfile
-import io
-import uuid
-import pathlib
-import json
-import time
-import asyncio
-import socket
+from unittest.mock import patch
 from fastapi.testclient import TestClient
-from minio import Minio
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
+
+# Устанавливаем переменную окружения до импорта других модулей
+os.environ["OPENAI_API_KEY"] = "stub"
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))

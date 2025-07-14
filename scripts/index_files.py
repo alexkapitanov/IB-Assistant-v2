@@ -9,6 +9,9 @@ python scripts/index_files.py --paths ib-docs/questionnaires/*.pdf
 # 2. переиндексировать всё, что уже лежит
 python scripts/index_files.py --reindex bucket=ib-docs prefix=questionnaires/
 """
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import argparse
 import os
 import uuid
@@ -86,7 +89,7 @@ def ingest_path(path: pathlib.Path, bucket: str = BUCKET_DEF, prefix: str = PREF
     # Генерируем UUID на основе ключа для избежания отрицательных ID
     point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
     point = models.PointStruct(id=point_id, vector=vec, payload=payload)
-    qc.upsert(collection_name=BUCKET_DEF, points=[point])
+    qc.upsert(collection_name=bucket, points=[point])
     return True
 
 def ingest_minio_objects(bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> int:
@@ -103,24 +106,48 @@ def ingest_minio_objects(bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> 
         tmp.unlink(missing_ok=True)
     return indexed
 
+def index_local_files(paths: List[str], bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF):
+    """Index local files to MinIO and Qdrant"""
+    all_files = []
+    for path in paths:
+        path_obj = pathlib.Path(path)
+        if path_obj.is_file():
+            all_files.append(path_obj)
+        elif path_obj.is_dir():
+            # Add all files from directory
+            for file_path in path_obj.rglob("*"):
+                if file_path.is_file():
+                    all_files.append(file_path)
+        else:
+            # Handle glob patterns
+            all_files.extend([pathlib.Path(p) for p in glob.glob(path) if pathlib.Path(p).is_file()])
+    
+    indexed = 0
+    for file_path in tqdm(all_files, desc="Indexing local files"):
+        if ingest_path(file_path, bucket, prefix):
+            indexed += 1
+    
+    print(f"Indexed {indexed} new vector(s) in collection {bucket}")
+
+def reindex_minio_files(bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF):
+    """Reindex files from MinIO"""
+    indexed = ingest_minio_objects(bucket, prefix)
+    print(f"Indexed {indexed} new vector(s) in collection {bucket}")
+
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--paths", nargs="+", help="Local file globs to ingest")
-    ap.add_argument("--reindex", action="store_true", help="Walk MinIO bucket/prefix")
-    ap.add_argument("bucket", nargs="?", default=BUCKET_DEF)
-    ap.add_argument("prefix", nargs="?", default=PREFIX_DEF)
-    args = ap.parse_args()
+    parser = argparse.ArgumentParser(description="Index files to MinIO and Qdrant")
+    parser.add_argument("--paths", nargs="+", help="Paths to files or directories to index")
+    parser.add_argument("--reindex", action="store_true", help="Reindex files from MinIO")
+    parser.add_argument("--bucket", default="ib-docs", help="MinIO bucket name")
+    parser.add_argument("--prefix", default="questionnaires/", help="MinIO prefix")
+    args = parser.parse_args()
 
-    total_new = 0
-    if args.paths:
-        for g in args.paths:
-            for p in glob.glob(g):
-                if ingest_path(pathlib.Path(p), args.bucket, args.prefix):
-                    total_new += 1
     if args.reindex:
-        total_new += ingest_minio_objects(args.bucket, args.prefix)
-
-    print(f"Indexed {total_new} new vector(s) in collection {BUCKET_DEF}")
+        reindex_minio_files(args.bucket, args.prefix)
+    elif args.paths:
+        index_local_files(args.paths, args.bucket, args.prefix)
+    else:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()

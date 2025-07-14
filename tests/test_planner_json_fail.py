@@ -15,15 +15,21 @@ async def test_planner_json_fail(monkeypatch):
         
     # подкладываем broken ответ от LLM
     import backend.agents.planner as p
+    async def mock_bad_json(tid, q, s, history):
+        raise p.BadJSON("fail")
     monkeypatch.setattr(
         p, "_call_planner_llm",
-        lambda tid, q, s: (_ for _ in ()).throw(p.BadJSON("fail"))
+        mock_bad_json
     )
     uri = "ws://localhost:8000/ws"
     try:
-        async with websockets.connect(uri, timeout=5) as ws:
-            await ws.send("test")
-            msg = json.loads(await ws.recv())
-            assert msg["role"] == "system" and "Не смог" in msg["content"]
-    except (websockets.exceptions.ConnectionClosed, OSError) as e:
-        pytest.skip(f"WebSocket server unavailable: {e}")
+        async with websockets.connect(uri) as ws:
+            await ws.send('{"text": "сложный вопрос"}')
+            response = await asyncio.wait_for(ws.recv(), timeout=10.0)
+            data = json.loads(response)
+            assert data["role"] == "system"
+            assert "затруднился" in data["content"]
+    except asyncio.TimeoutError:
+        pytest.fail("Test timed out waiting for response.")
+    except Exception as e:
+        pytest.fail(f"Test failed with exception: {e}")

@@ -97,7 +97,7 @@ export default function App() {
             <Bubble role={m.role}>{m.content}</Bubble>
           </div>
         ))}
-        {status && <Status status={status} />}
+        {status && <Status text={status} />}
       </div>
       
       <div className="flex bg-white border border-gray-300 rounded-xl overflow-hidden shadow-sm">

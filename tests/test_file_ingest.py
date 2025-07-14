@@ -125,35 +125,37 @@ def test_custom_bucket_and_prefix(dummy_txt, mc, qc, unique_bucket, unique_prefi
     if not mc.bucket_exists(unique_bucket):
         mc.make_bucket(unique_bucket)
     
+    # Ingest with custom bucket and prefix
+    check_call(
+        ["python", "scripts/index_files.py", "--paths", str(dummy_txt), "--bucket", unique_bucket, "--prefix", unique_prefix],
+        cwd=pathlib.Path(__file__).resolve().parents[1],
+        env=env
+    )
+    
+    # Verify file is in the custom location
+    key = f"{unique_prefix}{dummy_txt.name}"
     try:
-        # Ingest with custom bucket and prefix
-        check_call(
-            ["python", "scripts/index_files.py", "--paths", str(dummy_txt), unique_bucket, unique_prefix],
-            cwd=pathlib.Path(__file__).resolve().parents[1],
-            env=env
-        )
-        
-        # Verify file is in the custom location
-        key = f"{unique_prefix}{dummy_txt.name}"
-        try:
-            obj = mc.stat_object(unique_bucket, key)
-            assert obj.object_name == key
-        except Exception as e:
-            # In stub mode, file might not be uploaded
-            if os.getenv("OPENAI_API_KEY") == "stub":
-                pytest.skip("File not uploaded in stub mode - this is expected")
-            raise
-        
-    finally:
-        # Cleanup
-        try:
-            # Remove objects
-            objects = mc.list_objects(unique_bucket, recursive=True)
-            for obj in objects:
-                mc.remove_object(unique_bucket, obj.object_name)
-            # Remove bucket
-            mc.remove_bucket(unique_bucket)
-            # Remove Qdrant collection
-            qc.delete_collection(unique_bucket)
-        except Exception:
-            pass
+        obj = mc.stat_object(unique_bucket, key)
+        assert obj.object_name == key
+    except Exception as e:
+        # In stub mode, file might not be uploaded
+        if os.getenv("OPENAI_API_KEY") == "stub":
+            pytest.skip("File not uploaded in stub mode - this is expected")
+        raise
+    
+    # Cleanup
+    try:
+        # Remove objects
+        objects_to_delete = mc.list_objects(unique_bucket, prefix=unique_prefix, recursive=True)
+        for obj in objects_to_delete:
+            mc.remove_object(unique_bucket, obj.object_name)
+        # Remove bucket
+        mc.remove_bucket(unique_bucket)
+    except Exception as e:
+        print(f"Cleanup failed: {e}")
+
+    # Cleanup Qdrant
+    try:
+        qc.delete_collection(collection_name=unique_bucket)
+    except Exception as e:
+        print(f"Qdrant cleanup failed for collection {unique_bucket}: {e}")

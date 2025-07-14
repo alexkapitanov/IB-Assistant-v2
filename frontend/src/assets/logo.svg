@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+  <!-- Щит -->
+  <path d="M32 4L8 14v18c0 14 9.5 26 24 30 14.5-4 24-16 24-30V14L32 4z"
+        fill="#2563eb"/>
+  <!-- Контур щита (тоньше) -->
+  <path d="M32 4L8 14v18c0 14 9.5 26 24 30 14.5-4 24-16 24-30V14L32 4z"
+        stroke="white" stroke-width="2" fill="none"/>
+  <!-- Буквы I B -->
+  <text x="22" y="38" font-family="Inter, sans-serif"
+        font-size="20" font-weight="700"
+        fill="white">IB</text>
+</svg>

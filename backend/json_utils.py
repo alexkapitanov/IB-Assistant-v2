@@ -4,7 +4,9 @@ import re
 
 class BadJSON(RuntimeError):
     """Модель вернула строку, которую нельзя распарсить как JSON."""
-    pass
+    def __init__(self, message: str, raw_json: str = ""):
+        super().__init__(message)
+        self.raw_json = raw_json
 
 
 def safe_load(text: str) -> dict:

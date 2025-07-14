@@ -75,7 +75,7 @@ class ExpertAgent:
             
             full_prompt = "\n".join(prompt_parts)
             
-            response, _ = call_llm(full_prompt, model="gpt-4.1")
+            response, _ = await call_llm(full_prompt, model="gpt-4.1")
             return response.strip()
             
         except Exception as e:
@@ -113,18 +113,17 @@ class CriticAgent:
 
 Твоя оценка:"""
             
-            response, _ = call_llm(prompt, model="gpt-4.1-mini")
+            response, _ = await call_llm(prompt, model="gpt-4.1-mini")
             review_text = response.strip()
             
             # Определяем нужен ли дополнительный поиск
             needs_search = "ADD_SEARCH" in review_text
-            is_sufficient = "OK" in review_text
+            is_sufficient = "OK" in review_text and not needs_search
             
             return {
-                "review": review_text,
                 "needs_search": needs_search,
                 "is_sufficient": is_sufficient,
-                "action": "search" if needs_search else ("ok" if is_sufficient else "revise")
+                "feedback": review_text
             }
             
         except Exception as e:

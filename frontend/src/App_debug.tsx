@@ -144,7 +144,7 @@ export default function App() {
             <Bubble role={m.role}>{m.content}</Bubble>
           </div>
         ))}
-        <Status status={status} />
+        <Status text={status} />
       </div>
       
       <div className="mt-2 flex">

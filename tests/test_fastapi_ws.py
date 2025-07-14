@@ -10,35 +10,39 @@ def test_ws_smoke_unit():
     
     # Create mock WebSocket
     mock_ws = AsyncMock()
-    mock_ws.receive_text.side_effect = ["что такое dlp?", Exception("disconnect")]
+    # Отправляем валидный JSON с сообщением
+    mock_ws.receive_text.side_effect = ['{"message": "что такое dlp?"}', Exception("disconnect")]
     
     # Mock handle_message
     async def mock_handle_message(thread_id, data):
         return {
-            "answer": "DLP (Data Loss Prevention) - это система защиты от утечек данных",
-            "intent": "simple_faq",
-            "model": "o3-mini"
+            "content": "DLP (Data Loss Prevention) - это система защиты от утечек данных",
+            "role": "assistant"
         }
     
     # Test the chat function
     async def test_chat():
-        with patch("backend.main.handle_message", mock_handle_message), \
-             patch("backend.main.publish", lambda thread_id, status: None):
+        # Используем реальный chat_core, но мокаем handle_message внутри него
+        with patch("backend.chat_core.handle_message", mock_handle_message):
             try:
                 await chat(mock_ws)
             except Exception:
                 pass  # Expected due to disconnect simulation
-        
+
         # Verify WebSocket interactions
         mock_ws.accept.assert_called_once()
         mock_ws.receive_text.assert_called()
-        mock_ws.send_json.assert_called_once()
         
+        # Проверяем, что send_json был вызван
+        assert mock_ws.send_json.called
+
         # Check the sent data
         sent_data = mock_ws.send_json.call_args[0][0]
-        assert "answer" in sent_data
-        assert "DLP" in sent_data["answer"]
-    
+        assert "content" in sent_data
+        assert "DLP" in sent_data["content"]
+        assert sent_data["role"] == "assistant"
+
+
     # Run the async test
     asyncio.run(test_chat())
 
@@ -56,11 +60,73 @@ def test_ws_endpoint_exists():
 
 @pytest.mark.slow
 @pytest.mark.integration
-def test_ws_real_server():
+@pytest.mark.asyncio
+async def test_ws_integration():
     """Integration test that requires actual WebSocket server running (skipped by default)"""
     # This test would connect to a real server if it was running
     # It will be skipped due to integration marker when services aren't available
-    pytest.skip("Real server test - requires running FastAPI server on localhost:8000")
+    from backend.protocol import WsOutgoing
+    from backend.main import app
+    import websockets
+    
+    def _check_server_available():
+        # Проверяем, что сервер доступен по указанному адресу и порту
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5)
+        try:
+            sock.connect(("localhost", 8000))
+            return True
+        except Exception:
+            return False
+        finally:
+            sock.close()
+
+    if not _check_server_available():
+        pytest.skip("WebSocket server not available")
+
+    uri = "ws://localhost:8000/ws"
+    async with websockets.connect(uri) as websocket:
+        await websocket.send('{"text": "что такое DLP?"}')
+        response = await websocket.recv()
+        data = json.loads(response)
+        assert "content" in data
+        assert data['content'] is not None, "Content should not be None"
+        assert data['role'] == 'assistant'
+
+@pytest.mark.asyncio
+async def test_ws_error_handling():
+    """Test WebSocket error handling with invalid data"""
+    from backend.main import app
+    import websockets
+    
+    def _check_server_available():
+        # Проверяем, что сервер доступен по указанному адресу и порту
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5)
+        try:
+            sock.connect(("localhost", 8000))
+            return True
+        except Exception:
+            return False
+        finally:
+            sock.close()
+
+    if not _check_server_available():
+        pytest.skip("WebSocket server not available")
+
+    uri = "ws://localhost:8000/ws"
+    async with websockets.connect(uri) as websocket:
+        # Отправляем заведомо некорректные данные (не JSON)
+        await websocket.send("не json")
+        response = await websocket.recv()
+        print(f"DEBUG: WebSocket response: {response}")
+        data = json.loads(response)
+        print(f"DEBUG: Parsed data: {data}")
+        assert "role" in data
+        assert data['role'] == 'system'
+        assert "error" in data['content']
 
 def test_ws_status_forwarder_unit():
     """Unit test for WebSocket status forwarder function"""

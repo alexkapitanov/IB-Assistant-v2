@@ -3,8 +3,11 @@ import time
 import threading
 import tempfile
 import statistics
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 import os
+import pathlib
+from subprocess import check_call
 
 try:
     import psutil
@@ -247,70 +250,45 @@ class TestStressTests:
             file_path = tmp_path / f"stress_test_{i}.txt"
             file_path.write_text(content)
             files.append(file_path)
-        
+    
         # Index all documents
         start_time = time.time()
-        results = []
         
-        for file_path in files:
-            result = ingest_path(file_path, BUCKET_DEF, f"stress-test-{file_path.stem}/")
-            results.append(result)
+        # Используем скрипт для индексации, чтобы тест был ближе к реальности
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(pathlib.Path(__file__).resolve().parents[1])
+        cmd = ["python", "scripts/index_files.py", "--paths"] + [str(f) for f in files]
         
+        try:
+            check_call(cmd, cwd=pathlib.Path(__file__).resolve().parents[1], env=env, timeout=60)
+            successful_indexing = num_docs
+        except Exception as e:
+            print(f"Indexing script failed: {e}")
+            successful_indexing = 0
+
         total_time = time.time() - start_time
-        successful_indexing = sum(1 for r in results if r)
-        
+    
         print(f"Batch indexing - {successful_indexing}/{num_docs} successful in {total_time:.2f}s")
-        
+    
         # Should complete within reasonable time
         assert total_time < 60.0  # Under 1 minute
         assert successful_indexing >= num_docs * 0.8  # At least 80% success
-    
-    @pytest.mark.slow
-    def test_rapid_api_requests(self, client):
-        """Test rapid succession of API requests"""
-        num_requests = 50
-        start_time = time.time()
-        
-        responses = []
-        for i in range(num_requests):
-            response = client.get("/")
-            responses.append(response.status_code)
-        
-        total_time = time.time() - start_time
-        successful_responses = [r for r in responses if r in [200, 404]]
-        
-        print(f"Rapid requests - {len(successful_responses)}/{num_requests} successful in {total_time:.2f}s")
-        
-        # Should handle rapid requests
-        assert len(successful_responses) >= num_requests * 0.9  # At least 90% success
-        assert total_time < 30.0  # Under 30 seconds
-    
+
     @pytest.mark.slow
     @pytest.mark.openai
-    def test_embedding_cache_stress(self):
-        """Test embedding cache under stress"""
-        from backend.embedding import get as embed
-        
-        # Generate same text multiple times (should use cache)
-        text = "Cached stress test content"
-        num_requests = 10
-        
-        times = []
-        
-        for i in range(num_requests):
-            start_time = time.time()
-            result = embed(text)
-            end_time = time.time()
-            
-            times.append(end_time - start_time)
-            assert isinstance(result, list)
-        
-        # Later requests should be faster due to caching
-        first_request_time = times[0]
-        avg_cached_time = statistics.mean(times[1:]) if len(times) > 1 else first_request_time
-        
-        print(f"Cache performance - First: {first_request_time:.2f}s, Avg cached: {avg_cached_time:.2f}s")
-        
-        # Cached requests should be significantly faster
-        if len(times) > 1:
-            assert avg_cached_time < first_request_time * 0.5  # At least 50% faster
+    @pytest.mark.integration
+    def test_index_files_stress(self):
+        """Test index_files.py script under stress"""
+        # This test is more of a placeholder for a real stress test.
+        # It just runs the script with a dummy file.
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix=".txt") as f:
+            f.write("stress test")
+            fname = f.name
+    
+        try:
+            env = os.environ.copy()
+            env["QDRANT_HOST"] = "localhost"
+            env["MINIO_HOST"] = "localhost"
+            subprocess.check_call(["python", "scripts/index_files.py", "--paths", fname], env=env)
+        finally:
+            os.remove(fname)

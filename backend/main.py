@@ -8,6 +8,8 @@ from backend.status_bus import publish, subscribe
 from backend.ratelimit import check_rate_limit
 from backend.env_validator import validate_environment
 from prometheus_fastapi_instrumentator import Instrumentator
+from backend import grpc_server
+from backend.chat_core import chat_stream
 import uuid
 import asyncio
 import logging
@@ -24,6 +26,11 @@ app = FastAPI(
     description="Investment Banking Assistant with AI-powered research capabilities",
     version="2.0.0"
 )
+
+@app.on_event("startup")
+async def _start_grpc():
+    import asyncio
+    asyncio.create_task(grpc_server.serve())
 
 # Prometheus metrics
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
@@ -87,17 +94,34 @@ async def validate():
 @app.websocket("/ws")
 async def chat(ws: WebSocket):
     status_task = None
+    stream_task = None
+    q_in, q_out = asyncio.Queue(), asyncio.Queue()
     try:
         await ws.accept()
         print("✅ WebSocket connection accepted")
         thread_id = str(uuid.uuid4())
         sessions[ws] = thread_id
+        
         status_task = asyncio.create_task(_status_forwarder(ws, thread_id))
-        print(f"📡 Status forwarder started for thread {thread_id}")
+        stream_task = asyncio.create_task(chat_stream(thread_id, q_in, q_out))
+        
+        print(f"📡 Status forwarder and chat stream started for thread {thread_id}")
         
         # Получаем IP клиента для rate limiting
         client_ip = ws.client.host if ws.client else "unknown"
         
+        # Запускаем sender для отправки сообщений из очереди в WebSocket
+        async def sender():
+            while True:
+                resp = await q_out.get()
+                if resp is None: # Сигнал для завершения
+                    break
+                print(f"📤 Sending response: {resp}")
+                await ws.send_json(resp)
+                print("✅ Response sent successfully")
+
+        sender_task = asyncio.create_task(sender())
+
         while True:
             print("⏳ Waiting for message...")
             data = await ws.receive_text()
@@ -109,32 +133,27 @@ async def chat(ws: WebSocket):
                 await ws.close(code=4008, reason="Rate limit exceeded")
                 break
             
-            try:
-                resp = await handle_message(thread_id, data)
-                if resp:
-                    print(f"📤 Sending response: {resp}")
-                    await ws.send_json(resp)
-                    print("✅ Response sent successfully")
-            except Exception as e:
-                logger.exception("chat error")
-                await _safe_send(ws, "system",
-                                f"⚠️ Ошибка сервера: {e.__class__.__name__}: {e}")
+            await q_in.put(data)
             
     except WebSocketDisconnect as e:
         print(f"🔌 WebSocket disconnected normally: {e}")
     except Exception as e:
         print(f"❌ WebSocket error: {e}")
-        import traceback
         traceback.print_exc()
     finally:
         print("🧹 Cleaning up WebSocket connection...")
         if status_task and not status_task.done():
             print("🛑 Cancelling status forwarder task")
             status_task.cancel()
-            try:
-                await status_task
-            except asyncio.CancelledError:
-                pass
+        
+        # Корректное завершение
+        if q_in:
+            await q_in.put(None) # Сигнал для chat_stream
+        if stream_task and not stream_task.done():
+            await stream_task
+        if q_out:
+            await q_out.put(None) # Сигнал для sender_task
+
         if ws in sessions:
             print(f"🗑️ Removing session for thread {sessions[ws]}")
             del sessions[ws]

@@ -20,7 +20,7 @@ def test_reindex_skips_existing(mc):
     try:
         # Run reindex command
         out = subprocess.check_output(
-            ["python", "scripts/index_files.py", "--reindex", "ib-docs", "questionnaires/"],
+            ["python", "scripts/index_files.py", "--reindex", "--bucket", "ib-docs", "--prefix", "questionnaires/"],
             cwd=pathlib.Path(__file__).resolve().parents[1],
             env=env,
             text=True,
@@ -64,10 +64,10 @@ def test_reindex_with_custom_bucket_prefix(mc):
             mc.make_bucket(test_bucket)
         
         mc.put_object(test_bucket, key, io.BytesIO(b"custom bucket test content"), length=26)
-        
+
         # Run reindex on custom bucket/prefix
         out = subprocess.check_output(
-            ["python", "scripts/index_files.py", "--reindex", test_bucket, test_prefix],
+            ["python", "scripts/index_files.py", "--reindex", "--bucket", test_bucket, "--prefix", test_prefix],
             cwd=pathlib.Path(__file__).resolve().parents[1],
             env=env,
             text=True,

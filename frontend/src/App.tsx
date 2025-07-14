@@ -1,174 +1,83 @@
-import { useEffect, useRef, useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import Header from "./components/Header"
 import Bubble from "./components/MessageBubble"
 import Status from "./components/Status"
+import FileDrop from "./components/FileDrop"
+import useAutoScroll from "./hooks/useAutoScroll"
 import { WS_URL } from "./ws"
 
 interface ChatMsg {
-  role: "user" | "assistant"
+  role: "user" | "assistant" | "system"
   content: string
 }
 
 export default function App() {
   const [chat, setChat] = useState<ChatMsg[]>([])
   const [status, setStatus] = useState("")
-  const [ws, setWs] = useState<WebSocket | null>(null)
   const [input, setInput] = useState("")
-  const [isDark, setIsDark] = useState(false)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const wsRef = useRef<WebSocket>()
+  const [connected, setConnected] = useState(false)
 
-  // Initialize dark mode from localStorage
+  useAutoScroll([chat, status])
+
+  // connect WS
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark)
-    
-    setIsDark(shouldBeDark)
-    if (shouldBeDark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+    const ws = new WebSocket(WS_URL)
+    wsRef.current = ws
+    ws.onopen = () => setConnected(true)
+    ws.onclose = () => {
+      setConnected(false)
+      setTimeout(() => location.reload(), 2000)
     }
-  }, [])
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newIsDark = !isDark
-    setIsDark(newIsDark)
-    
-    if (newIsDark) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+    ws.onmessage = e => {
+      const m = JSON.parse(e.data)
+      if (m.type === "status") {
+        setStatus(mapStatus(m.status))
+        return
+      }
+      setChat(c => [...c, { role: m.role ?? "assistant", content: m.content }])
+      setStatus("")
     }
-  }
-
-  // auto-scroll
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
-  }, [chat, status])
-
-  // connect / reconnect
-  useEffect(() => {
-    const connect = () => {
-      const w = new WebSocket(WS_URL)
-      
-      w.onopen = () => {
-        console.log("WebSocket connected")
-      }
-      
-      w.onclose = (event) => {
-        console.log(`WebSocket closed. Code: ${event.code}`)
-        setTimeout(connect, 2000)
-      }
-      
-      w.onerror = (error) => {
-        console.error("WebSocket error:", error)
-      }
-      
-      w.onmessage = e => {
-        try {
-          const msg = JSON.parse(e.data)
-          if (msg.type === "status") {
-            setStatus(msg.status)
-            return
-          }
-          if (msg.type === "chat") {
-            setChat(c => [...c, { role: "assistant", content: msg.content }])
-          }
-        } catch {
-          console.error("Failed to parse message:", e.data)
-        }
-      }
-      
-      setWs(w)
-    }
-    
-    connect()
-    return () => ws?.close()
   }, [])
 
   const send = () => {
-    if (!input.trim()) {
-      return
-    }
-    
-    if (!ws) {
-      return
-    }
-    
-    if (ws.readyState !== 1) {
-      return
-    }
-    
-    ws.send(input.trim())
-    setChat(c => [...c, { role: "user", content: input.trim() }])
+    if (!input.trim() || !connected) return
+    wsRef.current?.send(JSON.stringify({ message: input }))
+    setChat(c => [...c, { role: "user", content: input }])
     setInput("")
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      send()
-    }
-  }
-
-  // Check if button should be disabled
-  const disabled = !input.trim() || !ws || ws.readyState !== 1
-
   return (
-    <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900 p-4">
-      
-      {/* Header with theme toggle */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">IB Assistant</h1>
-        <button
-          onClick={toggleDarkMode}
-          className="p-2 rounded-lg bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white transition-colors"
-          title={isDark ? "Переключить на светлую тему" : "Переключить на тёмную тему"}
-        >
-          {isDark ? "☀️" : "🌙"}
-        </button>
-      </div>
-      
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-2 pr-2">
-        {chat.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <Bubble role={m.role}>{m.content}</Bubble>
-          </div>
-        ))}
-        {status && <Status status={status} />}
-      </div>
-      
-      <div className="flex bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden shadow-sm">
-        <textarea 
-          className="flex-1 p-3 resize-none border-none outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
-          rows={1} 
-          value={input} 
+    <div className="h-screen flex flex-col dark:bg-gray-900">
+      <Header />
+      <main className="flex-1 overflow-y-auto p-4 space-y-3">
+        {chat.map((m, i) => <Bubble key={i} role={m.role}>{m.content}</Bubble>)}
+        <Status text={status} />
+        <div id="anchor" />
+      </main>
+      <div className="p-3 border-t flex gap-2 dark:border-gray-700">
+        <input 
+          className="flex-1 border rounded-xl p-2 dark:bg-gray-800 dark:border-gray-600"
+          placeholder="Введите запрос…" 
+          value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Введите запрос…"
+          onKeyDown={e => e.key === "Enter" && send()}
         />
         <button 
           onClick={send} 
-          disabled={disabled}
-          className={`px-4 rounded-r-xl ${
-            disabled 
-              ? "bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500 dark:text-gray-400"
-              : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
-          }`}
+          disabled={!connected}
+          className={`px-4 rounded-xl ${connected ? "bg-brand text-white" : "bg-gray-300"}`}
         >
           ▶
         </button>
       </div>
-      
-      {/* Connection status */}
-      <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        WS: {ws ? `${ws.readyState === 1 ? '✅' : '❌'} ${ws.readyState}` : '❌ null'} | 
-        Input: "{input}" | 
-        Disabled: {disabled ? 'YES' : 'NO'}
-      </div>
+      <FileDrop onFile={f => wsRef.current?.send(`upload:${f.name}`)} />
     </div>
   )
+}
+
+function mapStatus(s?: string) {
+  return s === "thinking" ? "Ассистент думает…" :
+    s === "searching" ? "Ассистент ищет…" :
+    s === "generating" ? "Ассистент печатает…" : ""
 }

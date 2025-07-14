@@ -60,7 +60,7 @@ def test_full_ingest_flow(tmp_path):
     # Just check that the command runs without error
     try:
         out = subprocess.check_output(
-            ["python", "scripts/index_files.py", "--reindex", "ib-docs", "questionnaires/"],
+            ["python", "scripts/index_files.py", "--reindex", "--bucket", "ib-docs", "--prefix", "questionnaires/"],
             cwd=pathlib.Path(__file__).resolve().parents[1],
             text=True,
             stderr=subprocess.STDOUT,
@@ -68,6 +68,12 @@ def test_full_ingest_flow(tmp_path):
         assert "Indexed" in out  # Should contain some output about indexing
     except subprocess.CalledProcessError as e:
         pytest.fail(f"Reindex command failed: {e.output}")
+    finally:
+        # cleanup
+        try:
+            mc.remove_object("ib-docs", key)
+        except Exception as e:
+            print(f"Failed to cleanup object {key}: {e}")
 
 def test_multi_format_ingest(tmp_path):
     """Test ingesting different file formats"""

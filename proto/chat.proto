@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+service Chat {
+  rpc Stream (stream ChatMessage) returns (stream ChatMessage);
+}
+
+message ChatMessage {
+  string role    = 1;   // user | assistant | system
+  string content = 2;   // текст
+  string status  = 3;   // thinking | searching | generating (опц.)
+}

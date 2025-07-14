@@ -17,3 +17,11 @@ pdfminer.six         # извлечение текста из PDF
 python-docx          # docx to text (если нет – ok, fallback)
 tqdm                  # прогресс-бар для индексатора
 prometheus-fastapi-instrumentator  # Prometheus metrics
+grpcio
+grpcio-tools
+grpclib
+opentelemetry-api
+opentelemetry-sdk
+sse-starlette                       # Server-Sent Events
+opentelemetry-exporter-otlp
+structlog

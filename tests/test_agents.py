@@ -1,5 +1,8 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, Mock, AsyncMock, MagicMock
+import asyncio
+import uuid
+from qdrant_client.http import models
 
 class TestAgents:
     """Test agent functionality"""
@@ -32,21 +35,57 @@ class TestAgents:
     def test_local_search_mocked(self, mock_qdrant_client, mock_embed):
         """Test local search with mocked dependencies"""
         from agents.local_search import local_search
-        from unittest.mock import Mock
-        
+    
         # Setup mocks
         mock_embed.return_value = [0.1] * 1536
         # Create a mock response object with points attribute
-        mock_response = Mock()
-        mock_response.points = []
-        mock_qdrant_client.query_points.return_value = mock_response
-        
-        result = local_search("test query")
-        
+        mock_qdrant_client.search.return_value = [
+            models.ScoredPoint(id=str(uuid.uuid4()), version=1, score=0.9, payload={'text': 'mocked result'})
+        ]
+    
+        # Use a unique query to avoid caching
+        result = local_search(f"test query {uuid.uuid4()}")
+    
         assert isinstance(result, list)
         mock_embed.assert_called_once()
-        mock_qdrant_client.query_points.assert_called_once()
-    
+        mock_qdrant_client.search.assert_called_once()
+
+    @patch('agents.refine.call_llm', new_callable=AsyncMock)
+    @pytest.mark.asyncio
+    async def test_refine_mocked(self, mock_call_llm):
+        """Test refine function with mocked LLM call"""
+        from agents.refine import refine
+        mock_call_llm.return_value = ("Улучшенный ответ", None)
+        result = await refine("тестовый черновик")
+        assert result == "Улучшенный ответ"
+        mock_call_llm.assert_called_once()
+
+    @patch('backend.agents.critic.call_llm', new_callable=AsyncMock)
+    @pytest.mark.asyncio
+    async def test_ask_critic_mocked(self, mock_call_llm):
+        """Test critic with mocked dependencies"""
+        from backend.agents.critic import ask_critic
+        # Моделируем ответ от LLM, который означает "уверен"
+        mock_call_llm.return_value = ("10", None)
+        
+        is_confident = await ask_critic("тестовый черновик")
+        
+        assert is_confident is True
+        mock_call_llm.assert_called_once()
+
+    @patch('backend.agents.critic.call_llm', new_callable=AsyncMock)
+    @pytest.mark.asyncio
+    async def test_ask_critic_not_confident_mocked(self, mock_call_llm):
+        """Test critic when not confident"""
+        from backend.agents.critic import ask_critic
+        # Моделируем ответ от LLM, который означает "не уверен"
+        mock_call_llm.return_value = ("0.3", None)
+
+        is_confident = await ask_critic("тестовый черновик")
+
+        assert is_confident is False
+        mock_call_llm.assert_called_once()
+
     def test_expert_gc_agent_import(self):
         """Test expert GC agent can be imported"""
         try:
@@ -117,24 +156,20 @@ class TestAgentErrorHandling:
         # Test with negative value
         result = local_search("test", top_k=-1)
         assert isinstance(result, list)
-    
+
+    @patch('agents.local_search.embed')
     @patch('agents.local_search.QdrantClient')
-    def test_local_search_qdrant_error(self, mock_qdrant):
+    def test_local_search_qdrant_error(self, mock_qdrant, mock_embed):
         """Test local search handles Qdrant errors"""
         from agents.local_search import local_search
-        
+
         # Setup mock to raise exception
-        mock_client = MagicMock()
-        mock_qdrant.return_value = mock_client
-        mock_client.query_points.side_effect = Exception("Qdrant error")
-        
-        # Should handle exception gracefully
-        try:
-            result = local_search("test query")
-            assert isinstance(result, list)
-        except Exception:
-            # If exception is not handled, that's also acceptable behavior
-            pass
+        mock_embed.return_value = [0.1] * 1536
+        mock_qdrant.return_value.search.side_effect = Exception("Qdrant is down")
+
+        # Call the function and assert it returns an empty list
+        result = local_search(f"any query {uuid.uuid4()}")
+        assert result == []
     
     @patch('agents.local_search.embed')
     def test_local_search_embedding_error(self, mock_embed):

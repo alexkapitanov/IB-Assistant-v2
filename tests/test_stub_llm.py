@@ -3,6 +3,7 @@
 """
 import os
 import pytest
+import asyncio
 
 
 def test_stub_llm_mode():
@@ -11,25 +12,23 @@ def test_stub_llm_mode():
     original_key = os.environ.get("OPENAI_API_KEY")
     try:
         os.environ["OPENAI_API_KEY"] = "stub"
-        
+
         # Импортируем модуль после установки переменной окружения
         import importlib
         import backend.openai_helpers as h
         importlib.reload(h)
-        
+
         # Тестируем stub-функцию
-        result, latency = h.call_llm("o3-mini", "ping")
-        
-        assert result.startswith("[stub]")
+        result, latency = asyncio.run(h.call_llm("o3-mini", "ping"))
+        assert "[stub]" in result
         assert latency == 0
-        assert "Тестовый ответ" in result
-        
     finally:
-        # Восстанавливаем исходное значение
-        if original_key is not None:
-            os.environ["OPENAI_API_KEY"] = original_key
-        elif "OPENAI_API_KEY" in os.environ:
+        # Возвращаем исходный ключ
+        if original_key is None:
             del os.environ["OPENAI_API_KEY"]
+        else:
+            os.environ["OPENAI_API_KEY"] = original_key
+        importlib.reload(h)
 
 
 def test_stub_llm_with_different_prompts():
@@ -37,20 +36,22 @@ def test_stub_llm_with_different_prompts():
     original_key = os.environ.get("OPENAI_API_KEY")
     try:
         os.environ["OPENAI_API_KEY"] = "stub"
-        
+
         import importlib
         import backend.openai_helpers as h
         importlib.reload(h)
-        
+
         # Тестируем разные промпты
-        result1, _ = h.call_llm("gpt-4", "Что такое AI?")
-        result2, _ = h.call_llm("o3-mini", "Классификатор", tools=[])
-        
-        assert result1.startswith("[stub]")
-        assert result2.startswith("[stub]")
-        
+        result1, _ = asyncio.run(h.call_llm("gpt-4", "Что такое AI?"))
+        result2, _ = asyncio.run(h.call_llm("o3-mini", "Что такое DLP?"))
+
+        assert result1 != result2
+        assert "[stub]" in result1
+        assert "[stub]" in result2
     finally:
-        if original_key is not None:
-            os.environ["OPENAI_API_KEY"] = original_key
-        elif "OPENAI_API_KEY" in os.environ:
+        # Возвращаем исходный ключ
+        if original_key is None:
             del os.environ["OPENAI_API_KEY"]
+        else:
+            os.environ["OPENAI_API_KEY"] = original_key
+        importlib.reload(h)
