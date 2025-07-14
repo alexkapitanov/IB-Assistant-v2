@@ -4,6 +4,9 @@ from backend.agents.expert_gc import run_expert_gc
 from backend.json_utils import safe_load, BadJSON
 from backend.chat_db import log_raw          # для аудита
 
+# Alias for backward compatibility with tests
+expert_group_chat = run_expert_gc
+
 logger = logging.getLogger(__name__)
 
 PROMPT = """
