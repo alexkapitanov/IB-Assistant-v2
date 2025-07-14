@@ -1,15 +1,22 @@
-from fastapi import FastAPI, WebSocket, Depends
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, WebSocket, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 from backend.router import handle_message
+from backend.auth import check_auth_header
 from backend.chat_db import log_message
 from backend.protocol import WsOutgoing
 from backend.status_bus import publish, subscribe
+from backend.upload import upload_file
+from backend.json_utils import NpEncoder
+from backend.openai_helpers import setup_qdrant
 from backend.ratelimit import check_rate_limit
 from backend.env_validator import validate_environment
 from prometheus_fastapi_instrumentator import Instrumentator
 from backend import grpc_server
 from backend.chat_core import chat_stream
+import json
 import uuid
 import asyncio
 import logging
@@ -24,13 +31,17 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="IB Assistant v2 API",
     description="Investment Banking Assistant with AI-powered research capabilities",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan
 )
 
-@app.on_event("startup")
-async def _start_grpc():
-    import asyncio
-    asyncio.create_task(grpc_server.serve())
+async def lifespan(app: FastAPI):
+    # Действия при старте
+    logger.info("Application startup")
+    await setup_qdrant(recreate_collection=True) # Создаем коллекцию при старте
+    yield
+    # Действия при завершении
+    logger.info("Application shutdown")
 
 # Prometheus metrics
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")

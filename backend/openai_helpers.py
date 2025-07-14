@@ -2,6 +2,7 @@ import os, openai, time, json
 from openai import OpenAI
 from backend.utils import is_test_mode
 from backend.token_counter import count_tokens
+from qdrant_client import QdrantClient, models
 
 # Разрешённые модели: o3-mini, gpt-4.1-mini, gpt-4.1
 # Проверяем API ключ при загрузке модуля
@@ -99,3 +100,34 @@ def _log_token_usage(thread_id: str, turn_index: int, model: str, prompt_tokens:
             log_message(thread_id, turn_index, "meta", json.dumps(meta_data))
         except ImportError:
             pass  # chat_db может быть недоступна в некоторых контекстах
+
+def get_qdrant_client():
+    host = os.getenv("QDRANT_HOST", "localhost")
+    return QdrantClient(host=host, port=6333)
+
+async def setup_qdrant(recreate_collection: bool = False):
+    """
+    Инициализирует Qdrant, создает коллекцию, если она не существует.
+    """
+    qdrant_client = get_qdrant_client()
+    collection_name = "ib-docs"
+    
+    if recreate_collection:
+        qdrant_client.recreate_collection(
+            collection_name=collection_name,
+            vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
+        )
+        log.info(f"Collection '{collection_name}' recreated.")
+        return
+
+    try:
+        qdrant_client.get_collection(collection_name=collection_name)
+        log.info(f"Collection '{collection_name}' already exists.")
+    except Exception:
+        qdrant_client.create_collection(
+            collection_name=collection_name,
+            vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
+        )
+        log.info(f"Collection '{collection_name}' created.")
+
+def embed_and_store(docs: list):
