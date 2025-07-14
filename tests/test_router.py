@@ -25,6 +25,14 @@ class TestIntentClassifier:
         assert result == "simple_faq"
     
     @patch('agents.router.call_llm')
+    def test_classify_capabilities_intent(self, mock_llm):
+        """Тест классификации запроса о возможностях"""
+        mock_llm.return_value = ("capabilities", None)
+        
+        result = classify_intent("что ты умеешь?")
+        assert result == "capabilities"
+    
+    @patch('agents.router.call_llm')
     def test_classify_complex_intent(self, mock_llm):
         """Тест классификации сложного аналитического вопроса"""
         mock_llm.return_value = ("complex", None)
@@ -89,6 +97,25 @@ class TestFAQAnswer:
         result = cheap_faq_answer("Вопрос")
         assert "ошибка" in result.lower()
 
+class TestCapabilitiesAnswer:
+    """Тесты ответов о возможностях ассистента"""
+    
+    def test_get_capabilities_answer(self):
+        """Тест получения информации о возможностях"""
+        from agents.router import get_capabilities_answer
+        
+        result = get_capabilities_answer()
+        
+        # Проверяем, что ответ содержит ключевые элементы
+        assert "InfoSec Assistant v2" in result
+        assert "Что я умею" in result
+        assert "Работа с файлами" in result
+        assert "Быстрые ответы" in result
+        assert "Аналитические задачи" in result
+        assert "DLP" in result
+        assert "SIEM" in result
+        assert "SOC" in result
+
 class TestRouter:
     """Тесты основного роутера"""
     
@@ -104,6 +131,19 @@ class TestRouter:
         assert result["intent"] == "simple_faq"
         assert result["type"] == "faq"
         assert "DLP" in result["answer"]
+        assert "needs_planning" not in result
+    
+    @patch('agents.router.classify_intent')
+    def test_route_capabilities(self, mock_classify):
+        """Тест роутинга запроса о возможностях"""
+        mock_classify.return_value = "capabilities"
+        
+        result = route_query("что ты умеешь?")
+        
+        assert result["intent"] == "capabilities"
+        assert result["type"] == "capabilities"
+        assert "InfoSec Assistant v2" in result["answer"]
+        assert "Что я умею" in result["answer"]
         assert "needs_planning" not in result
     
     @patch('agents.router.classify_intent')
