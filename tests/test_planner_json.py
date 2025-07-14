@@ -66,7 +66,7 @@ async def test_planner_with_malformed_json():
 async def test_planner_with_escalation():
     """Тест планировщика с эскалацией к экспертной группе"""
     with patch('backend.agents.planner.call_llm') as mock_llm, \
-         patch('backend.agents.planner.expert_group_chat') as mock_expert_gc:
+         patch('backend.agents.planner.run_expert_gc') as mock_expert_gc:
         
         # Планировщик решает эскалировать
         mock_llm.return_value = (
@@ -81,10 +81,10 @@ async def test_planner_with_escalation():
         }
         
         result = await ask_planner("test_thread", "Сложный аналитический вопрос", {})
-        
+
         assert result["answer"] == "Экспертный анализ сложного вопроса"
         assert result["model"] == "expert-group-chat"
-        mock_expert_gc.assert_called_once_with("Сложный аналитический вопрос")
+        mock_expert_gc.assert_called_once_with("test_thread", "Сложный аналитический вопрос", {})
 
 
 @pytest.mark.asyncio
