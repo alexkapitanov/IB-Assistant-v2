@@ -12,41 +12,42 @@ class Settings(BaseSettings):
     """Application settings with environment variable support"""
     
     # OpenAI Configuration
-    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
+    openai_api_key: str = Field(..., description="OpenAI API key for LLM access")
     
     # Model Configuration
-    chat_model: str = Field("gpt-4.1", env="CHAT_MODEL")
-    router_model: str = Field("gpt-4.1-mini", env="ROUTER_MODEL") 
-    expert_model: str = Field("gpt-4.1", env="EXPERT_MODEL")
+    chat_model: str = Field("gpt-4.1", description="Chat model name")
+    router_model: str = Field("gpt-4.1-mini", description="Router model name") 
+    expert_model: str = Field("gpt-4.1", description="Expert model name")
     
     # External Services
-    qdrant_url: str = Field("http://localhost:6333", env="QDRANT_URL")
-    qdrant_api_key: Optional[str] = Field(None, env="QDRANT_API_KEY")
-    qdrant_host: str = Field("localhost", env="QDRANT_HOST")  # Legacy compatibility
+    qdrant_url: str = Field("http://localhost:6333", description="Qdrant vector database URL")
+    qdrant_api_key: Optional[str] = Field(None, description="Qdrant authentication key")
+    qdrant_host: str = Field("localhost", description="Qdrant host (legacy)")  # Legacy compatibility
     
-    redis_url: str = Field("redis://localhost:6379", env="REDIS_URL")
-    redis_host: str = Field("localhost", env="REDIS_HOST")  # Legacy compatibility
+    redis_url: str = Field("redis://localhost:6379", description="Redis connection URL")
+    redis_host: str = Field("localhost", description="Redis host (legacy)")  # Legacy compatibility
     
     # MinIO Configuration (legacy compatibility)
-    minio_access_key: str = Field("minioadmin", env="MINIO_ACCESS_KEY")
-    minio_secret_key: str = Field("minioadmin", env="MINIO_SECRET_KEY")
+    minio_access_key: str = Field("minioadmin", description="MinIO access key")
+    minio_secret_key: str = Field("minioadmin", description="MinIO secret key")
     
     # Application Settings
-    data_dir: str = Field("./data", env="DATA_DIR")
-    port: int = Field(8000, env="PORT")
-    environment: str = Field("development", env="ENVIRONMENT")
+    data_dir: str = Field("./data", description="Directory for file storage")
+    port: int = Field(8000, description="API server port")
+    environment: str = Field("development", description="Environment name")
     
     # Performance and Limits
-    max_tokens_per_session: int = Field(50000, env="MAX_TOKENS_PER_SESSION")
-    rate_limit_requests: int = Field(10, env="RATE_LIMIT_REQUESTS")
-    rate_limit_window_seconds: int = Field(60, env="RATE_LIMIT_WINDOW_SECONDS")
+    max_tokens_per_session: int = Field(50000, description="Token limit per session")
+    rate_limit_requests: int = Field(10, description="Rate limit requests per minute")
+    rate_limit_window_seconds: int = Field(60, description="Rate limit window in seconds")
     
     # Features
-    enable_metrics: bool = Field(True, env="ENABLE_METRICS")
+    enable_metrics: bool = Field(True, description="Enable Prometheus metrics")
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": False
+    }
 
 # Legacy constants for backward compatibility
 MAX_TOKENS_SESSION = 20_000
