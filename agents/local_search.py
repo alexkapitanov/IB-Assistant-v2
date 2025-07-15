@@ -33,9 +33,9 @@ def local_search(query:str, top_k:int=10, col:str="ib-docs", expected_tokens:int
     vec = embed(query)
     try:
         with tracer.start_as_current_span("qdrant_search"):
-            hits = _q.search(
+            hits = _q.query_points(
                 collection_name=col,
-                query_vector=vec,
+                query=vec,
                 limit=k,
                 search_params=models.SearchParams(hnsw_ef=64),
             )

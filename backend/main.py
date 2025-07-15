@@ -4,12 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 from backend.router import handle_message
-from backend.auth import check_auth_header
 from backend.chat_db import log_message
 from backend.protocol import WsOutgoing
 from backend.status_bus import publish, subscribe
-from backend.upload import upload_file
-from backend.json_utils import NpEncoder
 from backend.openai_helpers import setup_qdrant
 from backend.ratelimit import check_rate_limit
 from backend.env_validator import validate_environment
@@ -22,19 +19,14 @@ import asyncio
 import logging
 import traceback
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any
 
 # Настройка логгера
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="IB Assistant v2 API",
-    description="Investment Banking Assistant with AI-powered research capabilities",
-    version="2.0.0",
-    lifespan=lifespan
-)
 
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     # Действия при старте
     logger.info("Application startup")
@@ -42,6 +34,14 @@ async def lifespan(app: FastAPI):
     yield
     # Действия при завершении
     logger.info("Application shutdown")
+
+
+app = FastAPI(
+    title="IB Assistant v2 API",
+    description="Investment Banking Assistant with AI-powered research capabilities",
+    version="2.0.0",
+    lifespan=lifespan
+)
 
 # Prometheus metrics
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
@@ -62,14 +62,14 @@ async def _safe_send(ws, role, content):
 
 @app.get("/health")
 def health(): 
-    return {"ok": True, "timestamp": datetime.utcnow().isoformat()}
+    return {"ok": True, "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/version")
 def version():
     """Get system version and build information"""
     return {
         "version": "2.0.0",
-        "build_time": datetime.utcnow().isoformat(),
+        "build_time": datetime.now(timezone.utc).isoformat(),
         "environment": os.getenv("ENVIRONMENT", "development"),
         "python_version": f"{os.sys.version_info.major}.{os.sys.version_info.minor}.{os.sys.version_info.micro}",
         "features": [

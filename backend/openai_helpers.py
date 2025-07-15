@@ -129,5 +129,3 @@ async def setup_qdrant(recreate_collection: bool = False):
             vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
         )
         log.info(f"Collection '{collection_name}' created.")
-
-def embed_and_store(docs: list):
