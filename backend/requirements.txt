@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-pyautogen             # multi-agent runtime
+ag2             # multi-agent runtime
 openai
 qdrant-client
 redis
