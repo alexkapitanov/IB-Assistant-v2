@@ -26,3 +26,5 @@ opentelemetry-sdk
 sse-starlette                       # Server-Sent Events
 opentelemetry-exporter-otlp
 structlog
+aiohttp
+autogenstudio
