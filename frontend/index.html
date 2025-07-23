@@ -5,4 +5,26 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <script type="module" src="/src/main.tsx"></script>
-</head><body class="bg-gray-100 text-sm font-sans"></body></html>
+</head><body class="bg-gray-100 text-sm font-sans">
+  <div id="app" class="flex flex-col h-screen max-w-4xl mx-auto p-4">
+    
+    <!-- Tab Headers -->
+    <div class="flex border-b mb-4">
+      <button id="tab-chat" class="py-2 px-4 bg-white rounded-t-lg focus:outline-none">Чат</button>
+      <button id="tab-logs" class="py-2 px-4 text-gray-500 focus:outline-none">Логи</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="content-chat" class="flex-grow flex flex-col bg-white shadow-md rounded-b-lg rounded-tr-lg overflow-hidden">
+      <!-- Chat content will be rendered here by main.tsx -->
+    </div>
+
+    <div id="content-logs" class="hidden flex-grow flex flex-col bg-gray-900 text-gray-200 font-mono text-xs shadow-md rounded-b-lg rounded-tr-lg overflow-hidden">
+      <div class="p-4 flex-grow overflow-y-auto" id="logs-container">
+        <p class="text-gray-500">Ожидание логов сессии...</p>
+      </div>
+    </div>
+
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
+</body></html>

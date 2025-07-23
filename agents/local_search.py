@@ -38,7 +38,7 @@ def local_search(query:str, top_k:int=10, col:str="ib-docs", expected_tokens:int
                 query=vec,
                 limit=k,
                 search_params=models.SearchParams(hnsw_ef=64),
-            )
+            ).points
         results = [
             {"text": h.payload.get("text",""), "score": h.score, "meta": h.payload}
             for h in hits

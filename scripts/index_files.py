@@ -62,33 +62,53 @@ def extract_text_from_file(path: pathlib.Path) -> str:
         pass
     return path.read_text(encoding="utf-8", errors="ignore")
 
-def vector_exists(s3_key: str) -> bool:
-    res, _ = qc.scroll(
-        collection_name=BUCKET_DEF,
-        scroll_filter=models.Filter(
-            must=[models.FieldCondition(key="s3_key", match=models.MatchValue(value=s3_key))]
-        ),
-        limit=1,
-    )
-    return bool(res)
+def _doc_exists(doc_id: str, col: str = BUCKET_DEF) -> bool:
+    """Проверяет, существует ли документ с таким doc_id в коллекции."""
+    try:
+        res, _ = qc.scroll(
+            collection_name=col,
+            scroll_filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="doc_id",  # Поиск по уникальному идентификатору документа
+                        match=models.MatchValue(value=doc_id),
+                    )
+                ]
+            ),
+            limit=1,
+        )
+        return bool(res)
+    except Exception:
+        # Если коллекция не существует или другая ошибка, считаем, что документа нет
+        return False
 
 def ingest_path(path: pathlib.Path, bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> bool:
-    ensure_collection(bucket)  # Создаем коллекцию если нужно
+    ensure_collection(bucket)
     key = f"{prefix}{path.name}"
+    
+    # Генерируем уникальный ID для документа на основе его ключа
+    doc_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
+
+    # Проверяем, не был ли этот документ уже проиндексирован
+    if _doc_exists(doc_id, bucket):
+        return False # Пропускаем, если уже есть
+
     if not mc.bucket_exists(bucket):
         mc.make_bucket(bucket)
+    
     try:
         mc.stat_object(bucket, key)
     except Exception:
         mc.fput_object(bucket, key, str(path))
-    if vector_exists(key):
-        return False
+
     text = extract_text_from_file(path)
     vec = embed(text)
-    payload = {"s3_key": key, "doc_type": "questionnaire", "file_name": path.name, "text": text[:1000]}
-    # Генерируем UUID на основе ключа для избежания отрицательных ID
-    point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
-    point = models.PointStruct(id=point_id, vector=vec, payload=payload)
+    
+    # Добавляем doc_id в payload
+    payload = {"s3_key": key, "doc_type": "questionnaire", "file_name": path.name, "text": text[:1000], "doc_id": doc_id}
+    
+    # Используем сгенерированный doc_id как ID точки
+    point = models.PointStruct(id=doc_id, vector=vec, payload=payload)
     qc.upsert(collection_name=bucket, points=[point])
     return True
 
@@ -96,8 +116,12 @@ def ingest_minio_objects(bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> 
     indexed = 0
     for obj in mc.list_objects(bucket, prefix=prefix, recursive=True):
         key = obj.object_name
-        if vector_exists(key):
+        
+        # Проверяем существование по doc_id, сгенерированному из ключа
+        doc_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
+        if _doc_exists(doc_id, bucket):
             continue
+            
         data = mc.get_object(bucket, key).read()
         tmp = pathlib.Path("/tmp") / pathlib.Path(key).name
         tmp.write_bytes(data)

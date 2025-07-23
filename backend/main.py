@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request, WebSocket, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
-from backend.router import handle_message
+from backend.agents.dialog_manager import handle_message
 from backend.chat_db import log_message
 from backend.protocol import WsOutgoing
 from backend.status_bus import publish, subscribe
@@ -11,8 +11,10 @@ from backend.openai_helpers import setup_qdrant
 from backend.ratelimit import check_rate_limit
 from backend.env_validator import validate_environment
 from prometheus_fastapi_instrumentator import Instrumentator
-from backend import grpc_server
+# from backend import grpc_server  # Temporarily disabled due to protobuf version conflict
 from backend.chat_core import chat_stream
+from backend.log_streamer import log_streamer
+from sse_starlette.sse import EventSourceResponse
 import json
 import uuid
 import asyncio
@@ -55,6 +57,11 @@ app.add_middleware(
 )
 
 sessions = {}
+
+@app.get("/logs/{session_id}")
+async def stream_logs(session_id: str):
+    """Эндпоинт для стриминга логов сессии через Server-Sent Events."""
+    return EventSourceResponse(log_streamer.log_generator(session_id))
 
 async def _safe_send(ws, role, content):
     """Безопасная отправка сообщения через WebSocket"""
@@ -112,6 +119,9 @@ async def chat(ws: WebSocket):
         print("✅ WebSocket connection accepted")
         thread_id = str(uuid.uuid4())
         sessions[ws] = thread_id
+        
+        # Отправляем ID сессии клиенту для инициализации стрима логов
+        await ws.send_json({"type": "session", "sessionId": thread_id})
         
         status_task = asyncio.create_task(_status_forwarder(ws, thread_id))
         stream_task = asyncio.create_task(chat_stream(thread_id, q_in, q_out))

@@ -61,6 +61,15 @@ MODEL_LIMITS = {
 RATE_LIMIT_REQUESTS_PER_WINDOW = 5
 RATE_LIMIT_WINDOW_SECONDS = 10
 
+# Qdrant settings
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+
+# Redis settings from environment variables
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+
 @lru_cache()
 def get_settings() -> Settings:
     """Get application settings (cached)"""

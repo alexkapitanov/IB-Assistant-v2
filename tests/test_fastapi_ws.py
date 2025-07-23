@@ -14,7 +14,7 @@ def test_ws_smoke_unit():
     mock_ws.receive_text.side_effect = ['{"message": "что такое dlp?"}', Exception("disconnect")]
     
     # Mock handle_message
-    async def mock_handle_message(thread_id, data):
+    async def mock_handle_message(thread_id, data, slots, logger):
         return {
             "content": "DLP (Data Loss Prevention) - это система защиты от утечек данных",
             "role": "assistant"
@@ -37,7 +37,13 @@ def test_ws_smoke_unit():
         assert mock_ws.send_json.called
 
         # Check the sent data
-        sent_data = mock_ws.send_json.call_args[0][0]
+        # Первый вызов - session_id
+        session_call = mock_ws.send_json.call_args_list[0]
+        assert "sessionId" in session_call[0][0]
+
+        # Второй вызов - ответ ассистента
+        chat_call = mock_ws.send_json.call_args_list[1]
+        sent_data = chat_call[0][0]
         assert "content" in sent_data
         assert "DLP" in sent_data["content"]
         assert sent_data["role"] == "assistant"
@@ -57,6 +63,51 @@ def test_ws_endpoint_exists():
     # Check if it's a WebSocket route
     ws_route = ws_routes[0]
     assert hasattr(ws_route, 'endpoint'), "Route should have endpoint"
+
+@pytest.mark.slow
+@pytest.mark.integration
+@pytest.mark.asyncio
+@patch("backend.chat_core.handle_message", side_effect=Exception("Internal test error"))
+async def test_ws_error_handling(mock_handle_message):
+    """Test WebSocket error handling by mocking an internal exception."""
+    from backend.main import app
+    import websockets
+
+    def _check_server_available():
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        try:
+            sock.connect(("localhost", 8000))
+            return True
+        except Exception:
+            return False
+        finally:
+            sock.close()
+
+    if not _check_server_available():
+        pytest.skip("WebSocket server not available for integration test")
+
+    uri = "ws://localhost:8000/ws"
+    async with websockets.connect(uri) as websocket:
+        # 1. Receive the initial session_id message
+        session_response = await websocket.recv()
+        session_data = json.loads(session_response)
+        assert "sessionId" in session_data
+
+        # 2. Send a valid message to trigger the mocked handle_message
+        await websocket.send('{"message": "this will trigger an error"}')
+
+        # 3. Expect a system error message
+        error_response = await websocket.recv()
+        data = json.loads(error_response)
+
+        assert "type" in data
+        assert data["type"] == "error"
+        assert "role" in data
+        assert data["role"] == "system"
+        assert "Произошла внутренняя ошибка сервера" in data["content"]
+
 
 @pytest.mark.slow
 @pytest.mark.integration
@@ -118,15 +169,22 @@ async def test_ws_error_handling():
 
     uri = "ws://localhost:8000/ws"
     async with websockets.connect(uri) as websocket:
-        # Отправляем заведомо некорректные данные (не JSON)
+        # 1. Получаем session_id
+        session_response = await websocket.recv()
+        session_data = json.loads(session_response)
+        assert "sessionId" in session_data
+
+        # 2. Отправляем заведомо некорректные данные (не JSON)
         await websocket.send("не json")
-        response = await websocket.recv()
-        print(f"DEBUG: WebSocket response: {response}")
-        data = json.loads(response)
-        print(f"DEBUG: Parsed data: {data}")
+        
+        # 3. Ожидаем сообщение об ошибке
+        error_response = await websocket.recv()
+        data = json.loads(error_response)
+        
         assert "role" in data
         assert data['role'] == 'system'
-        assert "error" in data['content']
+        assert "ошибка" in data['content'].lower()
+        assert "json" in data['content'].lower()
 
 def test_ws_status_forwarder_unit():
     """Unit test for WebSocket status forwarder function"""

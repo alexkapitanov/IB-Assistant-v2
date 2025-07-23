@@ -3,7 +3,7 @@ Rate limiting для WebSocket соединений
 """
 import asyncio
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 import redis
 import os
 import logging
@@ -16,33 +16,45 @@ DEFAULT_WINDOW = 10  # секунд
 
 class RateLimiter:
     def __init__(self):
-        self.redis_client = None
+        self._redis_client: Optional[redis.Redis] = None
+        self._redis_initialized = False
         self.local_cache: Dict[str, Tuple[int, float]] = {}  # ip -> (count, window_start)
-        self._init_redis()
+    
+    def _get_redis_client(self) -> Optional[redis.Redis]:
+        """Ленивая инициализация Redis клиента"""
+        if not self._redis_initialized:
+            self._init_redis()
+            self._redis_initialized = True
+        return self._redis_client
+    
     
     def _init_redis(self):
-        """Инициализация Redis клиента"""
+        """Инициализация Redis клиента с переменными окружения"""
         try:
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-            self.redis_client = redis.from_url(redis_url, decode_responses=True)
+            # Получаем настройки из переменных окружения
+            redis_host = os.getenv("REDIS_HOST", "localhost")
+            redis_port = int(os.getenv("REDIS_PORT", "6379"))
+            
+            self._redis_client = redis.Redis(host=redis_host, port=redis_port, db=0, decode_responses=True, socket_timeout=5)
             # Проверяем соединение
-            self.redis_client.ping()
-            logger.info("Rate limiter using Redis")
+            self._redis_client.ping()
+            logger.info(f"Rate limiter using Redis at {redis_host}:{redis_port}")
         except Exception as e:
             logger.warning(f"Redis unavailable for rate limiting, using in-memory: {e}")
-            self.redis_client = None
+            self._redis_client = None
     
     async def check_rate_limit(self, ip: str, limit: int = DEFAULT_LIMIT, window: int = DEFAULT_WINDOW) -> bool:
         """
         Проверяет превышение лимита запросов
         Возвращает True если лимит превышен
         """
-        if self.redis_client:
-            return await self._check_redis(ip, limit, window)
+        redis_client = self._get_redis_client()
+        if redis_client:
+            return await self._check_redis(ip, limit, window, redis_client)
         else:
             return self._check_local(ip, limit, window)
     
-    async def _check_redis(self, ip: str, limit: int, window: int) -> bool:
+    async def _check_redis(self, ip: str, limit: int, window: int, redis_client: redis.Redis) -> bool:
         """Проверка лимита через Redis"""
         try:
             key = f"rl:{ip}"
@@ -50,13 +62,13 @@ class RateLimiter:
             
             # Получаем текущий счетчик
             current_count = await asyncio.get_event_loop().run_in_executor(
-                None, self.redis_client.get, key
+                None, redis_client.get, key
             )
             
             if current_count is None:
                 # Первый запрос в окне
                 await asyncio.get_event_loop().run_in_executor(
-                    None, lambda: self.redis_client.setex(key, window, 1)
+                    None, lambda: redis_client.setex(key, window, 1)
                 )
                 return False
             
@@ -66,7 +78,7 @@ class RateLimiter:
             
             # Увеличиваем счетчик
             await asyncio.get_event_loop().run_in_executor(
-                None, self.redis_client.incr, key
+                None, redis_client.incr, key
             )
             return False
             

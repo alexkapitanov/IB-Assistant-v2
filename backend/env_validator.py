@@ -10,7 +10,7 @@ import redis.asyncio as redis
 from openai import AsyncOpenAI
 import qdrant_client
 from pydantic import ValidationError
-from backend.settings import get_settings
+from backend.settings import get_settings, REDIS_URL as DEFAULT_REDIS_URL
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class EnvironmentValidator:
     async def _check_optional_env_vars(self):
         """Check optional environment variables with defaults"""
         optional_vars = [
-            ("REDIS_URL", "redis://localhost:6379", "Redis for rate limiting"),
+            ("REDIS_URL", DEFAULT_REDIS_URL, "Redis for rate limiting"),
             ("PORT", "8000", "API server port"),
             ("QDRANT_API_KEY", None, "Qdrant authentication"),
             ("ENABLE_METRICS", "true", "Prometheus metrics"),

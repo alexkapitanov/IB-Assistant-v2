@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-pyautogen             # multi-agent runtime
+pyautogen==0.2.9      # multi-agent runtime, pinned version
 openai
 qdrant-client
 redis
@@ -20,6 +20,7 @@ prometheus-fastapi-instrumentator  # Prometheus metrics
 grpcio
 grpcio-tools
 grpclib
+protobuf>=5.26.0      # Обновлённая версия protobuf
 opentelemetry-api
 opentelemetry-sdk
 sse-starlette                       # Server-Sent Events

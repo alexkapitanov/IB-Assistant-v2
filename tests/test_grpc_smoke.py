@@ -18,7 +18,7 @@ async def test_grpc_echo(monkeypatch):
     # Мокируем handle_message где он импортирован - в chat_core
     from backend import chat_core
     
-    async def _echo(tid,msg): 
+    async def _echo(tid, msg, slots, logger):
         return {"type":"chat","role":"assistant","content":msg}
     
     monkeypatch.setattr(chat_core, "handle_message", _echo)

@@ -1,49 +1,44 @@
 import pytest
-from backend.router import handle_message
+from agents.dialog_manager import handle_message
 import asyncio
 import uuid
 from unittest.mock import patch, MagicMock
+import logging
+
+test_logger = logging.getLogger("test_router")
 
 @pytest.mark.asyncio
-async def test_router_returns_file_link(monkeypatch, dummy_pdf):
-    """Test that router returns file link when requesting documents"""
+async def test_dialog_manager_returns_file_link(monkeypatch, dummy_pdf):
+    """Test that dialog_manager returns file link when requesting documents with file_key in slots"""
     
-    # Mock classify function to return get_file intent
+    # Mock get_file_link function that should be called for file shortcuts
+    async def mock_get_file_link(key):
+        return {
+            "type": "chat",
+            "role": "assistant",
+            "content": "📎 Документ доступен для скачать: http://minio/ib-docs/questionnaires/x.pdf",
+            "intent": "get_file"
+        }
+
+    # Mock классификации интента для возврата "file"
+    async def mock_classify_intent(q, slots):
+        return "file", 0.95
+
     monkeypatch.setattr(
-        "backend.router.classify",
-        lambda user_q, slots: "get_file"
+        "backend.agents.file_retrieval.get_file_link",
+        mock_get_file_link
     )
-    
-    # Mock memory functions
     monkeypatch.setattr(
-        "backend.router.get_mem",
-        lambda thread_id: {}
-    )
-    
-    monkeypatch.setattr(
-        "backend.router.save_mem",
-        lambda thread_id, data: None
-    )
-    
-    # Mock status_bus publish to avoid Redis connection (must be async)
-    async def mock_publish(thread_id, status):
-        pass
-    
-    monkeypatch.setattr(
-        "backend.router.publish",
-        mock_publish
-    )
-    
-    # Mock get_file_link directly in router module (since it's imported there)
-    monkeypatch.setattr(
-        "backend.router.get_file_link",
-        lambda q, p: "http://minio/ib-docs/questionnaires/x.pdf"
+        "agents.dialog_manager._classify_intent",
+        mock_classify_intent
     )
     
     thread = str(uuid.uuid4())
-    resp = await handle_message(thread, "дай опросный лист Infowatch")
+    # Slots with file_key should trigger file shortcut logic
+    slots = {"file_key": "infowatch_questionnaire"}
+    resp = await handle_message(thread, "любой текст", slots, test_logger)
     
     assert "http" in resp["content"]
-    assert "minio" in resp["content"]
+    assert "minio" in resp["content"] 
     assert "скачать" in resp["content"]
     assert resp["intent"] == "get_file"

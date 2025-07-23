@@ -1,8 +1,11 @@
 import os, openai, time, json
+import logging
 from openai import OpenAI
 from backend.utils import is_test_mode
 from backend.token_counter import count_tokens
 from qdrant_client import QdrantClient, models
+
+logger = logging.getLogger(__name__)
 
 # Разрешённые модели: o3-mini, gpt-4.1-mini, gpt-4.1
 # Проверяем API ключ при загрузке модуля
@@ -42,8 +45,12 @@ async def call_llm(model: str, prompt: str, tools: list | None = None, temperatu
     # Stub-LLM для офлайн-режима и CI
     if api_key == "stub":
         completion_tokens = 10
-        # Генерируем разный ответ для разных промптов, чтобы тесты проходили
-        response = f"[stub] Тестовый ответ для промпта: {prompt[:20]}..."
+        # Генерируем ответ в зависимости от промпта
+        if "Planner-агент" in prompt:
+            # Возвращаем валидный JSON для планировщика
+            response = '{"need_clarify": false, "clarify": "", "need_escalate": false, "draft": "Тестовый ответ планировщика"}'
+        else:
+            response = f"[stub] Тестовый ответ для промпта: {prompt[:20]}..."
         _log_token_usage(thread_id, turn_index, model, prompt_tokens, completion_tokens)
         return response, 0
     
@@ -117,15 +124,36 @@ async def setup_qdrant(recreate_collection: bool = False):
             collection_name=collection_name,
             vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
         )
-        log.info(f"Collection '{collection_name}' recreated.")
+        logger.info(f"Collection '{collection_name}' recreated.")
         return
 
     try:
         qdrant_client.get_collection(collection_name=collection_name)
-        log.info(f"Collection '{collection_name}' already exists.")
+        logger.info(f"Collection '{collection_name}' already exists.")
     except Exception:
         qdrant_client.create_collection(
             collection_name=collection_name,
             vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
         )
-        log.info(f"Collection '{collection_name}' created.")
+        logger.info(f"Collection '{collection_name}' created.")
+
+
+import openai, asyncio
+
+async def browser_search(query: str, k: int = 5) -> str:
+    """
+    Выполняет web-поиск через OpenAI Browser-tool.
+    Возвращает markdown-список заголовок+URL+excerpt (k результатов).
+    """
+    client = openai.AsyncClient()        # если sync версия – адаптируй
+    resp = await client.chat.completions.create(
+        model = "o3-mini",
+        tools = [{"type": "browser", "calls":[{"name":"search"}]}],
+        tool_choice = {"type":"browser","function_name":"search"},
+        messages = [{"role":"user","content":query}],
+        extra_headers = {"browser-search-k": str(k)}
+    )
+    snippets = []
+    for item in resp.tools_output[0]["results"][:k]:
+        snippets.append(f"- **{item['title']}** — {item['url']}\n  {item['excerpt']}")
+    return "\n".join(snippets)

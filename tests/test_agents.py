@@ -32,23 +32,29 @@ class TestAgents:
     
     @patch('agents.local_search.embed')
     @patch('agents.local_search._q')
-    def test_local_search_mocked(self, mock_qdrant_client, mock_embed):
+    @patch('agents.local_search._r')  # Mock Redis to avoid cache hits
+    def test_local_search_mocked(self, mock_redis, mock_qdrant_client, mock_embed):
         """Test local search with mocked dependencies"""
         from agents.local_search import local_search
     
         # Setup mocks
         mock_embed.return_value = [0.1] * 1536
-        # Create a mock response object with points attribute
-        mock_qdrant_client.search.return_value = [
+        mock_redis.get.return_value = None  # No cache hit
+        mock_redis.set.return_value = True  # Cache write succeeds
+        
+        # Создаем мок-объект, который имитирует ответ от qdrant_client
+        mock_response = Mock()
+        mock_response.points = [
             models.ScoredPoint(id=str(uuid.uuid4()), version=1, score=0.9, payload={'text': 'mocked result'})
         ]
+        mock_qdrant_client.query_points.return_value = mock_response
     
         # Use a unique query to avoid caching
         result = local_search(f"test query {uuid.uuid4()}")
     
         assert isinstance(result, list)
         mock_embed.assert_called_once()
-        mock_qdrant_client.search.assert_called_once()
+        mock_qdrant_client.query_points.assert_called_once()
 
     @patch('agents.refine.call_llm', new_callable=AsyncMock)
     @pytest.mark.asyncio

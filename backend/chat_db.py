@@ -1,4 +1,4 @@
-import sqlite3, contextlib, os, pathlib, tempfile
+import sqlite3, contextlib, os, pathlib, tempfile, json
 
 # Путь к базе данных - используем переменную окружения для тестов
 default_path = "/data/chatlog.db"
@@ -23,8 +23,14 @@ with sqlite3.connect(DB_PATH) as c:
         intent TEXT,
         ts DATETIME DEFAULT CURRENT_TIMESTAMP
     )""")
+    c.execute("""CREATE TABLE IF NOT EXISTS dialog_log(
+        thread_id TEXT PRIMARY KEY,
+        body TEXT,
+        ts DATETIME DEFAULT CURRENT_TIMESTAMP
+    )""")
     # Очищаем все записи при запуске для обеспечения чистого состояния тестирования
     c.execute("DELETE FROM chatlog")
+    c.execute("DELETE FROM dialog_log")
 
 @contextlib.contextmanager
 def _conn():
@@ -49,3 +55,19 @@ def log_raw(thread_id: str, turn: int, model: str, raw: str):
         c.execute("""INSERT INTO chatlog(thread_id,turn_index,role,content,model)
                      VALUES (?,?,?,?,?)""",
                   (thread_id, turn, "raw", raw, model))
+
+def get_current_thread_messages(thread_id: str) -> list[dict]:
+    """Возвращает все сообщения (кроме raw) для данного thread_id."""
+    with _conn() as c:
+        # Выбираем только сообщения от user, assistant и system
+        rows = c.execute("""SELECT role, content FROM chatlog 
+                            WHERE thread_id = ? AND role != 'raw'
+                            ORDER BY ts ASC""", (thread_id,)).fetchall()
+        # Преобразуем каждую строку sqlite3.Row в словарь
+        return [dict(row) for row in rows]
+
+def save_dialog_full(thread_id:str, messages:list[dict]):
+    """Сохраняет или заменяет полную ветку диалога в dialog_log."""
+    with _conn() as c:
+        c.execute("INSERT OR REPLACE INTO dialog_log(thread_id, body, ts) VALUES (?,?,CURRENT_TIMESTAMP)",
+                  (thread_id, json.dumps(messages, ensure_ascii=False)))

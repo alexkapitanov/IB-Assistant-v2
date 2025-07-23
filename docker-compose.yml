@@ -17,10 +17,12 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_HOST=redis
       - QDRANT_HOST=qdrant
+      - QDRANT_URL=http://qdrant:6333
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - WEB_SEARCH_TIMEOUT_SEC=3
     depends_on: [redis, qdrant, minio]
     healthcheck:
       test: ["CMD", "grpc_health_probe", "-addr=localhost:50051"]
@@ -76,6 +78,19 @@ services:
       - GF_DATASOURCES_DEFAULT_URL=http://loki:3100
       - GF_DATASOURCES_DEFAULT_ACCESS=proxy
       - GF_DATASOURCES_DEFAULT_IS_DEFAULT=true
+
+  update_dialog_embeddings:
+    image: ib-assistant-v2-backend
+    command: python scripts/update_dialog_embeddings.py
+    volumes:
+      - ./:/app
+      - chat_db:/data
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - QDRANT_HOST=qdrant
+    depends_on:
+      - qdrant
+      - backend # Убедимся, что backend собрал chat.db
 
 volumes:
   chat_db:

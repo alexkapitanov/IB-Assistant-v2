@@ -10,7 +10,7 @@ import socket
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from scripts.index_files import ingest_path, ingest_minio_objects, vector_exists, BUCKET_DEF, PREFIX_DEF
+from scripts.index_files import ingest_path, ingest_minio_objects, _doc_exists, BUCKET_DEF, PREFIX_DEF
 
 # Skip tests if MinIO or Qdrant services are not reachable
 def _service_available(host: str, port: int) -> bool:
@@ -45,9 +45,10 @@ def test_ingest_local_and_skip(tmp_path):
     # Second ingestion should skip (already indexed)
     assert ingest_path(test_file, bucket, prefix) is False
 
-    # Check that vector_exists returns True
+    # Check that _doc_exists returns True for the generated doc_id
     key = f"{prefix}{test_file.name}"
-    assert vector_exists(key)
+    doc_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
+    assert _doc_exists(doc_id, bucket)
 
     # ingest_minio_objects should skip already indexed objects
     count = ingest_minio_objects(bucket, prefix)

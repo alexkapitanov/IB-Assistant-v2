@@ -23,14 +23,19 @@ qc = QdrantClient(
 def _presign(key, ttl=3600):
     return mc.get_presigned_url("GET", bucket, key, expires=ttl)
 
-def get_file_link(query, product=None):
+async def get_file_link(query, product=None):
     # Формируем slug и ключ
     slug = query.lower().replace(" ", "_")
     key = f"questionnaires/{slug}.pdf"
     # Попытка точного совпадения
     try:
         mc.stat_object(bucket, key)
-        return _presign(key)
+        return {
+            "type": "chat",
+            "role": "assistant", 
+            "content": f"📎 Документ доступен для скачать: {_presign(key)}",
+            "intent": "get_file"
+        }
     except Exception:
         pass
     # Семантический поиск в Qdrant
@@ -45,7 +50,17 @@ def get_file_link(query, product=None):
         if key:
             try:
                 mc.stat_object(bucket, key)
-                return _presign(key)
+                return {
+                    "type": "chat",
+                    "role": "assistant", 
+                    "content": f"📎 Документ доступен для скачать: {_presign(key)}",
+                    "intent": "get_file"
+                }
             except Exception:
                 return None
-    return None
+    return {
+        "type": "chat",
+        "role": "assistant",
+        "content": "📄 Файл не найден. Попробуйте уточнить название.",
+        "intent": "file_not_found"
+    }

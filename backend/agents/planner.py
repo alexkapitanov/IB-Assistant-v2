@@ -1,100 +1,72 @@
-import autogen, asyncio, time, json, logging
-from backend.openai_helpers import call_llm, count_tokens
-from backend.memory import get_mem, save_mem
-from backend.agents.critic import ask_critic
-from backend.agents.expert_gc import run_expert_gc
-from backend.json_utils import safe_load, BadJSON
-from backend.chat_db import log_raw          # для аудита
+import json
+import logging
+from backend.openai_helpers import call_llm
+from backend.json_utils import safe_load
 
-# Alias for backward compatibility with tests
-ask_expert_gc = run_expert_gc
-
-logger = logging.getLogger(__name__)
-
-PROMPT = """
-Ты — Planner-агент ассистента по информационной безопасности.
-На основе вопроса пользователя и уже известных слотов реши, что делать.
-
-Верни ОДИН объект JSON БЕЗ комментариев:
-{
- "need_clarify":   true/false,   # нужен ли уточняющий вопрос?
- "clarify":        "текст вопроса" | "",
- "need_escalate":  true/false,   # нужна ли глубокая цепочка Expert GC?
- "draft":          "краткий ответ, если escalate=false"
-}
-
-Требования:
-* не добавляй никаких полей кроме указанных;
-* если в базе знаний мало фактов или вопрос требует сравнения/
-  интеграции/расчёта — ставь need_escalate=true;
-* если вопрос исчерпывается определением (например «Что такое SOC?») —
-  можешь вернуть draft и need_escalate=false.
+PLAN_PROMPT = """Ты — Planner-агент по информационной безопасности.
+Верни ОДИН JSON без комментариев:
+{{
+ "need_clarify": bool,
+ "clarify": "<вопрос или пусто>",
+ "need_escalate": bool,
+ "draft": "<краткий ответ или пусто>",
+ "plan": ["шаг 1", "шаг 2", …]
+}}
+===
+Вопрос: «{q}»
+Слоты: {slots}
 """
 
-
-async def _call_planner_llm(thread_id: str, user_q: str, slots: dict, history: list = None):
-    # Добавляем историю в промпт, если она есть
-    history_prompt = ""
-    if history:
-        history_prompt = "\nИстория итераций:\n" + "\n".join(json.dumps(h, ensure_ascii=False) for h in history)
-
-    raw, _ = await call_llm("gpt-4.1", f"{PROMPT}\nВопрос: {user_q}\nСлоты: {slots}{history_prompt}")
+async def _build_plan(q: str, slots: dict, logger: logging.Logger) -> dict:
+    """
+    Вызывает LLM для построения плана и безопасно парсит результат.
+    """
+    logger.info("Calling LLM to build a plan.")
+    # `ensure_ascii=False` для корректной передачи кириллицы в JSON
+    raw, _ = await call_llm("gpt-4.1", PLAN_PROMPT.format(q=q, slots=json.dumps(slots, ensure_ascii=False)), temperature=0)
     
-    try:
-        # Убираем ```json и ```
-        plan = json.loads(raw.replace("```json", "").replace("```", ""))
-    except json.JSONDecodeError as e:
-        raise BadJSON(f"Ошибка декодирования JSON: {e.msg}", raw) from e
-
-    # Проверяем, что есть все обязательные поля
-    if not all(k in plan for k in ("need_clarify", "clarify", "need_escalate", "draft")):
-        raise BadJSON(f"Недостаточно полей в ответе планировщика: {raw}", raw)
-
+    plan = safe_load(raw)
+    
+    # Проверка на случай, если LLM вернул пустой или невалидный JSON
+    if not plan:
+        logger.error(f"Planner LLM returned invalid JSON: {raw}")
+        # Fallback в случае, если LLM вернул невалидный JSON
+        return {
+            "need_clarify": False,
+            "clarify": "",
+            "need_escalate": True, # Эскалация для ручного разбора
+            "draft": "",
+            "plan": ["LLM planner returned invalid JSON"]
+        }
+    
+    logger.info(f"Plan received from LLM: {plan}")
     return plan
 
-MAX_ITERATIONS = 3
-async def _iterate_plan(thread_id: str, user_q: str, slots: dict):
-    history = []
-    for i in range(MAX_ITERATIONS):
-        plan = await _call_planner_llm(thread_id, user_q, slots, history)
-        history.append(plan)
+async def ask_planner(thread_id: str, user_q: str, slots: dict, logger: logging.Logger) -> dict:
+    """
+    Основная функция-планировщик. Определяет, что делать с запросом пользователя.
+    Вызывает LLM для построения плана, затем проверяет его через критика.
+    """
+    logger.info(f"Building plan for: '{user_q}'")
+    plan = await _build_plan(user_q, slots, logger)
+    
+    # Добавляем план в контекст для Expert-GC (если план существует)
+    if "plan" in plan:
+        plan["context"] = {"plan": plan["plan"]}
 
-        # Проверяем, нужно ли уточнение
-        if plan.get("need_clarify"):
-            return plan
-
-        # Если эскалация не нужна, проверяем ответ критиком
-        if not plan.get("need_escalate"):
-            is_ok = await ask_critic(plan.get("draft", ""))
-            if is_ok:
-                return plan
-            else:
-                # Добавляем в историю и идем на новую итерацию
-                history.append({"plan": plan, "critic": "Неполный ответ, нужно переделывать"})
-        else:
-            # Если планировщик сразу решил эскалировать, выходим
-            return plan
-
-    # Если после всех итераций не удалось получить хороший ответ, эскалиуем
-    return {"need_escalate": True, "draft": ""}
-
-
-async def ask_planner(thread_id: str, user_q: str, slots: dict):
-    """Основная функция-планировщик"""
-    try:
-        plan = await _iterate_plan(thread_id, user_q, slots)
+    # если draft готов и need_escalate=False — задаём Critic-проверку
+    if not plan.get("need_escalate") and plan.get("draft"):
+        logger.info(f"Draft found, sending to critic: '{plan['draft']}'")
+        from agents.critic import ask_critic
         
-        # Если нужна уточняющая информация
-        if plan.get("need_clarify"):
-            return {"answer": plan.get("clarify"), "follow_up": True, "model": "gpt-4.1"}
-        # Если эскалация не требуется
-        if not plan.get("need_escalate"):
-            return {"answer": plan.get("draft", ""), "model": "gpt-4.1"}
-        # Иначе эскалируем к экспертной цепочке
-        final = await run_expert_gc(thread_id, user_q, slots)
-        return final
+        ok = await ask_critic(plan["draft"], logger)
         
-    except BadJSON as e:
-        logger.error(f"Planner failed to parse LLM response: {e.raw_json}")
-        return {"type": "chat", "role": "system",
-                "content": "🤖 Не смог разобрать план. Уточните, пожалуйста."}
+        if ok:
+            logger.info("Critic approved the draft.")
+            return plan
+        
+        # иначе помечаем как need_escalate
+        logger.warning("Critic rejected the draft, escalating.")
+        plan["need_escalate"] = True
+
+    return plan
