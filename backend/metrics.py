@@ -1,3 +1,4 @@
+import os
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 import logging
 
@@ -10,13 +11,18 @@ EXPERT_GC_CALLS = Counter("ib_expert_gc_calls_total", "Количество вы
 
 _initialized = False
 
-def init(port: int = 9310):
+def init(port: int = None):
     """Initializes the Prometheus metrics server."""
     global _initialized
+    # Порт берётся из окружения METRICS_PORT или по умолчанию 9090
+    if port is None:
+        try:
+            port = int(os.getenv("METRICS_PORT", "9090"))
+        except ValueError:
+            port = 9090
     if _initialized:
         logging.info(f"Prometheus metrics server already initialized on port {port}")
         return
-    
     try:
         start_http_server(port)
         _initialized = True

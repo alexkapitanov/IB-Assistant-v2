@@ -5,6 +5,7 @@ import json
 import asyncio
 import websockets
 
+@pytest.mark.integration
 # Фикстура для event loop, если тесты запускаются не через pytest-asyncio
 @pytest.fixture(scope="module")
 def event_loop():

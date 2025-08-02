@@ -82,6 +82,10 @@ def _doc_exists(doc_id: str, col: str = BUCKET_DEF) -> bool:
         # Если коллекция не существует или другая ошибка, считаем, что документа нет
         return False
 
+def vector_exists(doc_id: str, bucket: str = BUCKET_DEF) -> bool:
+    """Проверяет существование вектора (документа) в коллекции Qdrant"""
+    return _doc_exists(doc_id, bucket)
+
 def ingest_path(path: pathlib.Path, bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> bool:
     ensure_collection(bucket)
     key = f"{prefix}{path.name}"

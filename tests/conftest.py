@@ -6,10 +6,14 @@ import socket
 import uuid
 from minio import Minio
 from qdrant_client import QdrantClient
+import backend.metrics as _metrics
 
 # Добавляем корневую директорию проекта в PYTHONPATH
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+# Запускаем HTTP-сервер метрик на порту по умолчанию (9090)
+_metrics.init()
 
 
 @pytest.fixture(autouse=True)
