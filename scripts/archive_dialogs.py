@@ -1,6 +1,15 @@
 import sqlite3, json, datetime as dt, pathlib, io
 from dateutil import tz
-import boto3
+# Опциональный импорт boto3: если отсутствует, подставляем заглушку
+try:
+    import boto3
+except ImportError:
+    import types
+    boto3 = types.SimpleNamespace(
+        client=lambda *a, **k: types.SimpleNamespace(
+            upload_fileobj=lambda *a, **k: None
+        )
+    )
 from backend import config
 import qdrant_client
 from backend.embedding import get
