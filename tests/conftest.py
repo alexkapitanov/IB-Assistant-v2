@@ -1,17 +1,31 @@
 import os
-import sys
 import pytest
-from unittest.mock import patch
-from fastapi.testclient import TestClient
-from qdrant_client import QdrantClient, models
+import sys
+from pathlib import Path
+import socket
+import uuid
+from minio import Minio
+from qdrant_client import QdrantClient
 
-# Устанавливаем переменную окружения до импорта других модулей
-os.environ["OPENAI_API_KEY"] = "stub"
+# Добавляем корневую директорию проекта в PYTHONPATH
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-# Add project root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from backend.main import app
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Автоматически сбрасывать конфигурацию перед каждым тестом."""
+    from backend import config
+    
+    # Очищаем кэш перед тестом
+    if hasattr(config, 'config') and hasattr(config.config, 'reload'):
+        config.config.reload()
+    
+    yield
+    
+    # Очищаем кэш после теста
+    if hasattr(config, 'config') and hasattr(config.config, 'reload'):
+        config.config.reload()
 
 # Helper function to check service availability
 def _service_available(host: str, port: int) -> bool:
@@ -56,6 +70,8 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(scope="session")
 def client():
     """FastAPI test client"""
+    from fastapi.testclient import TestClient
+    from backend.main import app
     return TestClient(app)
 
 @pytest.fixture(scope="session")
@@ -142,55 +158,3 @@ def mock_openai_response():
             "total_tokens": 8
         }
     }
-
-@pytest.fixture
-def cleanup_test_data(mc, qc):
-    """Cleanup fixture to remove test data after tests"""
-    created_buckets = []
-    created_collections = []
-    
-    def _cleanup():
-        # Cleanup MinIO buckets
-        for bucket in created_buckets:
-            try:
-                objects = mc.list_objects(bucket, recursive=True)
-                for obj in objects:
-                    mc.remove_object(bucket, obj.object_name)
-                mc.remove_bucket(bucket)
-            except Exception:
-                pass
-        
-        # Cleanup Qdrant collections
-        for collection in created_collections:
-            try:
-                qc.delete_collection(collection)
-            except Exception:
-                pass
-    
-    yield _cleanup
-    _cleanup()
-
-@pytest.fixture(autouse=True)
-def setup_test_env():
-    """Setup test environment variables"""
-    original_env = {}
-    test_env = {
-        "DB_PATH": "/tmp/test-chatlog.db",
-        "REDIS_HOST": os.getenv("REDIS_HOST", "redis"),
-        "QDRANT_HOST": os.getenv("QDRANT_HOST", "qdrant"),
-        "MINIO_ENDPOINT": os.getenv("MINIO_ENDPOINT", "minio:9000"),
-    }
-    
-    # Save original values and set test values
-    for key, value in test_env.items():
-        original_env[key] = os.environ.get(key)
-        os.environ[key] = value
-    
-    yield
-    
-    # Restore original values
-    for key, value in original_env.items():
-        if value is None:
-            os.environ.pop(key, None)
-        else:
-            os.environ[key] = value

@@ -4,6 +4,8 @@ from backend.memory import get_mem, save_mem
 # from agents.slot_extractor import extract_slots # not used
 from agents.dm_critic import ask_dm_critic
 from backend.agents.kb_search import kb_search
+from backend import status_bus
+
 
 _SMALL_TALK_PROMPT = """
 Ты — ассистент по ИБ. Кратко и вежливо ответь на реплику пользователя.
@@ -42,6 +44,7 @@ async def _classify_intent(q:str, slots:dict)->tuple[str,float]:
 
 
 async def handle_message(thread_id: str, user_q: str, slots: dict, logger: logging.Logger):
+    await status_bus.publish(thread_id, "thinking", None)
     logger.info(f"Classifying intent for: '{user_q}'")
     intent, conf = await _classify_intent(user_q, slots)
     logger.info(f"Intent classified as '{intent}' with confidence {conf:.2f}")
@@ -63,6 +66,7 @@ async def handle_message(thread_id: str, user_q: str, slots: dict, logger: loggi
 
     # kb_search, request and file fallback are handled via kb_search first
     # then planner if needed
+    await status_bus.publish(thread_id, "searching", "local KB")
     logger.info("Вызываем kb_search для поиска в базе знаний.")
     status, ctx = await kb_search(user_q)
     

@@ -19,6 +19,12 @@ async def ask_critic(text: str) -> bool:
     try:
         # Убираем лишние символы и преобразуем в float
         score = float(score_raw.strip().replace(",", "."))
+        # Регистрируем оценку Critic в метриках
+        try:
+            from backend import metrics
+            metrics.CRITIC.observe(score)
+        except Exception:
+            pass
         return score >= 0.7
     except (ValueError, TypeError):
         # В случае невалидного ответа от LLM, считаем оценку низкой

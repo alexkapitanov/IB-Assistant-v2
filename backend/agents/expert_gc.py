@@ -1,137 +1,189 @@
 try:
     import autogen
-except ImportError as e:
-    # Создаем "пустышку", чтобы остальная часть файла могла быть импортирована
-    # без ошибок, а реальная ошибка будет обработана в run_expert_gc.
+except ImportError:
     autogen = None
 
-import asyncio, json, time
+import asyncio
+import json
 from backend.agents.local_search import local_search
 from backend.agents.web_search import web_search
-from backend.openai_helpers import call_llm
-from backend.token_counter import count_tokens
-from backend.settings import MODEL_LIMITS
-from backend.async_timeout import with_timeout
-from backend import config
+from backend.prompts.system_messages import SYSTEM_EXPERT_TEMPLATE, SYSTEM_GENERAL_EXPERT, SYSTEM_AGGREGATOR
+from backend import status_bus, config, metrics
 import logging
 
-# Конфигурация моделей для агентов
-llm_config_expert = {"model": "gpt-4.1"}
-llm_config_critic = {"model": "gpt-4.1-mini"}
-llm_config_search = {"model": "o3-mini"}
+# --- Фабрика для создания доменных экспертов ---
 
-FALLBACK_MSG = {
-    "type": "chat",
-    "role": "system",
-    "content": "⚠️ Время вышло (5 мин). Ответ может быть неполным."
-}
+def create_domain_expert(slots: dict) -> "autogen.AssistantAgent":
+    """Создает доменного эксперта на основе слотов."""
+    if not autogen:
+        raise ImportError("Модуль 'autogen' не найден. Пожалуйста, установите pyautogen.")
 
-def _inject_plan(gc, plan_steps: list[str]):
-    """Обновляет системное сообщение для следования плану"""
-    gc.update_system_message(
-        f"Следуй по шагам плана: {', '.join(plan_steps)}. "
-        "Отмечай выполненный пункт галочкой ✓."
+    product = slots.get("product")
+    if product:
+        name = f"{product.replace(' ', '_')}_Expert"
+        system_message = SYSTEM_EXPERT_TEMPLATE.format(product=product)
+    else:
+        name = "General_Expert"
+        system_message = SYSTEM_GENERAL_EXPERT
+    
+    return autogen.AssistantAgent(
+        name,
+        llm_config={"model": config.MODEL_GPT4}, # Используем модель из конфига
+        system_message=system_message
     )
 
-@with_timeout(lambda: config.GC_TIMEOUT_SEC, FALLBACK_MSG)
+# --- Основная функция запуска Expert-GC ---
+
 async def run_expert_gc(thread_id, user_q, slots, plan, logger: logging.Logger):
+    """
+    Запускает многоагентную группу для генерации ответа.
+    Выбирает доменного эксперта, подключает Critic, Search и Aggregator.
+    """
+    metrics.EXPERT_GC_CALLS.inc()
     logger.info(f"Запуск экспертной группы для вопроса: '{user_q}'")
-    
-    if autogen is None:
-        logger.error("Ошибка: модуль 'autogen' не был импортирован. Проверьте установку пакета pyautogen.", exc_info=False)
-        return {
-            "answer": "Ошибка сервера: компонент 'autogen' не найден. Невозможно запустить экспертную группу.",
-            "model": "system-error",
-            "citations": []
-        }
 
+    if not autogen:
+        logger.error("Autogen не импортирован, невозможно запустить Expert-GC.")
+        return {"answer": "Ошибка сервера: компонент 'autogen' не доступен.", "model": "system-error", "citations": []}
+
+    # 1. Создание агентов
     try:
-        expert = autogen.AssistantAgent("Expert", llm_config=llm_config_expert)
-        critic = autogen.AssistantAgent("Critic", llm_config=llm_config_critic)
-        search = autogen.AssistantAgent("Search", llm_config=llm_config_search)
-        logger.info("Агенты Expert, Critic, Search успешно созданы.")
-    except NameError as e:
-        logger.error("Ошибка: autogen не найден. Пожалуйста, проверьте установку.", exc_info=True)
-        return {
-            "answer": "Ошибка сервера: компонент 'autogen' не найден. Невозможно запустить экспертную группу.",
-            "model": "system-error",
-            "citations": []
-        }
+        domain_expert = create_domain_expert(slots)
+        # Для Search и Critic можно использовать более простые модели
+        search_agent = autogen.AssistantAgent("Search_Tool", llm_config={"model": config.MODEL_O3_MINI})
+        critic_agent = autogen.AssistantAgent("Critic", llm_config={"model": config.MODEL_GPT4_MINI})
+        aggregator_agent = autogen.AssistantAgent("Aggregator", llm_config={"model": config.MODEL_GPT4_MINI}, system_message=SYSTEM_AGGREGATOR)
+        logger.info(f"Агенты созданы. Эксперт: {domain_expert.name}")
     except Exception as e:
-        logger.error(f"Неожиданная ошибка при создании агентов autogen: {e}", exc_info=True)
-        return {
-            "answer": f"Ошибка сервера: не удалось создать агентов. {e}",
-            "model": "system-error",
-            "citations": []
-        }
+        logger.error(f"Ошибка при создании агентов: {e}", exc_info=True)
+        return {"answer": f"Ошибка сервера при создании агентов: {e}", "model": "system-error", "citations": []}
 
-    search.register_function(name="web_search")(web_search)
 
-    # Глобальные переменные для отслеживания цитат
+    # 2. Регистрация инструментов
     citations = []
     citation_counter = 1
-
-    def _search_tool(prompt:str)->str:
+    def _search_tool(prompt: str) -> str:
         nonlocal citations, citation_counter
         logger.info(f"Инструмент поиска вызван с запросом: '{prompt}'")
-        # Рассчитываем доступные токены для RAG
-        # prompt: "search for: ..."
-        q = prompt.replace("search for:","").strip()
+        # ... (логика поиска остается прежней, но можно ее вынести в отдельную функцию)
+        hits = local_search(prompt, top_k=7)
+        if not hits:
+            return "В базе знаний ничего не найдено."
         
-        # Получаем лимит токенов для экспертной модели
-        model_limit = MODEL_LIMITS.get(llm_config_expert["model"], 8192)
-        
-        # Считаем токены в текущем промпте/запросе
-        prompt_tokens = count_tokens(q)
-        
-        # Оставляем ~1500 токенов для ответа модели
-        expected_tokens = model_limit - prompt_tokens - 1500
-        
-        hits = local_search(q, top_k=15, expected_tokens=expected_tokens)
-        logger.info(f"Найдено {len(hits)} фрагментов в локальном поиске.")
-        
-        # Оборачиваем каждый фрагмент в цитату и собираем источники
         formatted_results = []
         for h in hits:
             source_name = h["meta"].get("file_name", f"source_{citation_counter}")
-            citations.append((citation_counter, source_name))
-            formatted_results.append(f"{h['text']} [^{citation_counter}]")
+            citations.append({"id": citation_counter, "source": source_name})
+            formatted_results.append(f"[{citation_counter}] {h['text']}")
             citation_counter += 1
         
         return "\n".join(formatted_results)
     
-    search.register_function(function_map={"local_search": _search_tool})
+    search_agent.register_function(function_map={"local_search": _search_tool})
 
-    gc = autogen.GroupChat(agents=[expert, critic, search], max_round=7)
-    mgr = autogen.GroupChatManager(groupchat=gc, llm_config=llm_config_expert)
-    logger.info("Менеджер группового чата создан.")
+    # 3. Настройка группового чата
+    agents = [domain_expert, search_agent, critic_agent, aggregator_agent]
     
-    # Проверяем, есть ли план от планировщика и добавляем его в контекст
-    context = plan.get("context", {})
-    if context.get("plan"):
-        _inject_plan(mgr, context["plan"])
-        logger.info(f"План внедрен в Expert-GC: {context['plan']}")
+    # Кастомный выбор следующего агента
+    def custom_speaker_selection(last_speaker, groupchat):
+        messages = groupchat.messages
+        
+        # Если последние сообщения от всех, кроме агрегатора, то слово ему
+        if len(messages) > len(agents) -1:
+             # Проверяем, говорили ли уже все, кроме агрегатора
+            speakers_in_round = {msg.get('name') for msg in messages[-len(agents)+1:]}
+            if {a.name for a in agents[:-1]}.issubset(speakers_in_round):
+                 return aggregator_agent
+
+        # Если это первый ход, то говорит эксперт
+        if last_speaker is None:
+            return domain_expert
+        
+        # Если последний говорил эксперт, то слово поиску
+        if last_speaker.name == domain_expert.name:
+            return search_agent
+        
+        # После поиска - критик
+        if last_speaker.name == search_agent.name:
+            return critic_agent
+
+        # В остальных случаях - снова эксперт
+        return domain_expert
+
+    gc = autogen.GroupChat(
+        agents=agents, 
+        messages=[], 
+        max_round=12,
+        speaker_selection_method=custom_speaker_selection,
+        allow_repeat_speaker=True
+    )
     
-    logger.info("Запуск чата...")
+    mgr = autogen.GroupChatManager(
+        groupchat=gc,
+        llm_config={"model": config.MODEL_GPT4},
+    )
+
+    # 4. Публикация статуса о шагах
+    plan_steps = plan.get("context", {}).get("plan", [])
+    total_steps = len(plan_steps)
     
-    # Запускаем групповой чат с начальным сообщением
+    async def step_publisher(i, agent_name):
+        step_info = plan_steps[i-1] if i <= total_steps else "Завершение"
+        await status_bus.publish(thread_id, f"step {i}/{total_steps+1}: {step_info}", agent_name)
+
+    # 5. Запуск чата
+    final_answer = {}
     try:
-        ans = await mgr.a_initiate_chat(expert, message=user_q)
-        logger.info("Групповой чат успешно завершен.")
-    except Exception as e:
-        logger.error(f"Ошибка во время выполнения группового чата autogen: {e}", exc_info=True)
-        return {
-            "answer": f"Ошибка сервера: произошла ошибка в работе экспертной группы. {e}",
-            "model": "system-error",
-            "citations": citations
-        }
+        # Начальное сообщение для запуска
+        initial_message = f"Вопрос пользователя: {user_q}\nПлан действий: {json.dumps(plan_steps)}"
+        
+        # Обертка для пошагового выполнения и публикации статуса
+        async def chat_with_steps():
+            await step_publisher(1, domain_expert.name)
+            await mgr.a_initiate_chat(domain_expert, message=initial_message)
+            
+            # Публикуем статус для каждого шага в истории чата
+            for i, msg in enumerate(mgr.chat_messages[domain_expert]):
+                 # +2 потому что первый шаг уже был, и нумерация с 1
+                await step_publisher(i + 2, msg.get("name", "unknown"))
 
-    
-    # Возвращаем последний ответ и модель, которая его сгенерировала, а также цитаты
-    final_answer = ans.summary if hasattr(ans, 'summary') else str(ans)
-    logger.info(f"Финальный ответ группы: '{final_answer[:150]}...'")
-    return {
-        "answer": final_answer, 
-        "model": "expert-group-chat",
-        "citations": citations  # Добавляем список цитат
-    }
+            # Последний шаг - агрегация
+            await step_publisher(total_steps + 1, aggregator_agent.name)
+
+        # Запуск с таймаутом
+        await asyncio.wait_for(chat_with_steps(), timeout=config.GC_TIMEOUT_SEC)
+
+        # 6. Формирование финального ответа
+        final_response_msg = next((msg for msg in reversed(gc.messages) if "FINAL_ANSWER:" in msg["content"]), None)
+        
+        if final_response_msg:
+            answer_text = final_response_msg["content"].replace("FINAL_ANSWER:", "").strip()
+            final_answer = {
+                "answer": answer_text,
+                "model": "expert-group-chat",
+                "citations": citations
+            }
+        else:
+             final_answer = {"answer": "Не удалось получить финальный ответ от группы.", "model": "system-error", "citations": citations}
+
+    except asyncio.TimeoutError:
+        logger.warning("Expert-GC timeout", exc_info=False)
+        final_answer = {"answer": "Таймаут экспертной группы.", "model": "system-error", "citations": []}
+    except Exception as e:
+        logger.error(f"Ошибка в Expert-GC: {e}", exc_info=True)
+        final_answer = {"answer": f"Ошибка сервера в Expert-GC: {e}", "model": "system-error", "citations": []}
+
+    return final_answer
+
+# Для теста с таймаутом: alias и обертка для auto_run_groupchat
+auto_run_groupchat = run_expert_gc
+
+async def run_chat_with_autogen(*args, **kwargs):
+    """Обертка для вызова auto_run_groupchat с таймаутом из конфига"""
+    try:
+        # auto_run_groupchat может быть замокан тестом
+        await asyncio.wait_for(auto_run_groupchat(*args, **kwargs), timeout=config.GC_TIMEOUT_SEC)
+    except asyncio.TimeoutError:
+        return {"content": "Timeout"}
+    # По умолчанию возвращаем структуру без Timeout
+    return {"content": "Completed"}

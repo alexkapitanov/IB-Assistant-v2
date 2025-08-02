@@ -28,3 +28,4 @@ opentelemetry-exporter-otlp
 structlog
 aiohttp
 autogenstudio
+python-dateutil

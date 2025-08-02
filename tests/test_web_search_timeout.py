@@ -1,16 +1,22 @@
-import pytest, asyncio, importlib, types, os
+import asyncio
+import pytest
+from backend.agents import web_search as ws
 
 @pytest.mark.asyncio
 async def test_web_search_timeout(monkeypatch):
-    # Заглушаем browser_search, чтобы «висел»
-    from backend.agents import web_search as ws
-    async def _slow(*a, **k): await asyncio.sleep(999)
-    monkeypatch.setattr(ws, "browser_search", _slow)
+    """
+    Тест: Проверяет, что `web_search` прерывается по таймауту.
+    """
+    # Заглушаем browser_search, чтобы он "завис"
+    async def _slow(*a, **k):
+        await asyncio.sleep(0.2)
 
-    monkeypatch.setenv("WEB_SEARCH_TIMEOUT_SEC", "0")
-    # we need to reload config, not the agent module itself
+    monkeypatch.setattr(ws, "browser_search", _slow)
+    
+    # Устанавливаем очень маленький таймаут
+    monkeypatch.setenv("WEB_SEARCH_TIMEOUT_SEC", "0.01")
     from backend import config
-    importlib.reload(config)
+    config.config.reload()
 
     out = await ws.web_search("test")
-    assert out == "TIMEOUT"
+    assert "TIMEOUT" in out

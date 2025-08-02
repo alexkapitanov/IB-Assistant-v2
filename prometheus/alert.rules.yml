@@ -1,0 +1,20 @@
+groups:
+- name: ib-assistant
+  rules:
+  - alert: ExpertGCTimeouts
+    expr: rate(ib_timeout_total{kind="gc"}[5m]) > 0.1
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "GC таймауты >10% (5m)"
+      description: "{{ $value }} timeouts per sec"
+
+  - alert: CriticLowScore
+    expr: quantile_over_time(0.1, ib_critic_score[15m]) < 0.5
+    for: 15m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Critic-score упал"
+      description: "10-й перцентиль <0.5 за 15 минут"

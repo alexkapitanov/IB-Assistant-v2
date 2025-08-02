@@ -4,16 +4,9 @@ FROM python:3.11-slim
 WORKDIR /app
 ENV PYTHONPATH=/app
 
-  # requirements.txt находится в каталоге backend
-COPY backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем только содержимое каталога backend в контейнер
-# Копируем каталог tests для запуска тестов
-COPY backend /app/backend
-COPY tests /app/tests
-# Копируем скрипты индексации в контейнер
-COPY scripts /app/scripts
+COPY . /app
+RUN pip install --no-cache-dir -r backend/requirements.txt
 
 # Устанавливаем wget и grpc_health_probe
 RUN apt-get update && apt-get install -y wget \

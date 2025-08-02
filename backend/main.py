@@ -13,6 +13,7 @@ from backend.env_validator import validate_environment
 from prometheus_fastapi_instrumentator import Instrumentator
 # from backend import grpc_server  # Temporarily disabled due to protobuf version conflict
 from backend.chat_core import chat_stream
+from backend import metrics
 from backend.log_streamer import log_streamer
 from sse_starlette.sse import EventSourceResponse
 import json
@@ -33,6 +34,8 @@ async def lifespan(app: FastAPI):
     # Действия при старте
     logger.info("Application startup")
     await setup_qdrant(recreate_collection=True) # Создаем коллекцию при старте
+    # Запускаем Prometheus metrics сервер
+    metrics.init()
     yield
     # Действия при завершении
     logger.info("Application shutdown")

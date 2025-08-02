@@ -1,3 +1,23 @@
+### Архивирование диалогов
+
+* Храним чаты в SQLite ≤ DIALOG_TTL_DAYS (деф. 90).
+* Ночью архивный скрипт выгружает JSON в MinIO `ib-assistant-archive/YYYY-MM-DD/*.json` и удаляет записи из БД.
+* После архивирования коллекция `dialogs` пересоздаётся и наполняется актуальными точками.
+* Переменные:
+    - DIALOG_TTL_DAYS      (days, default 90)
+    - ARCHIVE_BUCKET       (s3-bucket, default ib-assistant-archive)
+### Инструмент `web_search`
+* Асинхронный вызов OpenAI Browser-tool.
+* Таймаут задаётся `WEB_SEARCH_TIMEOUT_SEC` (по умолчанию 20 с).
+* При срабатывании таймаута Search-агент возвращает строку **TIMEOUT**,
+  Critic снижает уверенность → Expert-GC переходит к fallback-циклу.
+
+### Live-статусы
+
+* Каждый узел публикует progress в Redis `status_bus`.
+* Gateway транслирует события в WebSocket/gRPC.
+* Фронт показывает строку «Ассистент ищет…», «Шаг 2/4» и др.
+* Канонические stage-метки: thinking | searching | web-search | step N/M | generating | done | timeout
 # InfoSec Assistant (multi-agent + RAG)
 
 * FastAPI backend, React frontend.
@@ -70,27 +90,84 @@ for obj in mc.list_objects('ib-docs', recursive=True):
 
 ## Архитектура
 
-```mermaid
-flowchart TD
-  U[User] --> WS[WebSocket /ws]
-  WS --> API[FastAPI handle_message]
-  API --> DM[Dialog Manager]
-  DM -->|small-talk| SmallTalk[Простые приветствия]
-  DM -->|file shortcut| FileRetrieval[get_file_link]
-  DM -->|request/kb_search| KBSearch[KB-Search-Agent]
-  KBSearch -->|reuse| ReuseAnswer[Готовый ответ из памяти]
-  KBSearch -->|escalate + context| Planner[ask_planner]
-  Planner -->|need_clarify| Clarify[Уточнение]
-  Planner -->|need_escalate + plan| Expert[run_expert_gc]
-  Planner -->|draft| Draft[Готовый ответ]
-  Expert -->|с планом ✓| ExpertAnswer[Структурированный ответ]
-  FileRetrieval --> Response[send_json]
-  SmallTalk --> Response
-  ReuseAnswer --> Response
-  Clarify --> Response
-  ExpertAnswer --> Response
-  Draft --> Response
-```
+User ─┐
+      │  WebSocket / gRPC
+      ▼
+┌─────────────────────────── Gateway (FastAPI + grpclib) ───────────────────────────┐
+│ rate-limit • /metrics (Prom) • status_bus → WS                                    │
+└─────────────────────────────────────┬──────────────────────────────────────────────┘
+                                      ▼
+╔═════════════════════  DIALOG-MANAGER GROUP  ═════════════════════╗
+║ DM-Router  (o3-mini)   → classify: file | kb_search | request   ║
+║ DM-Critic  (4.1-mini)  → OK / ask-again                        ║
+║ Slots ↔ Redis, follow-up loop while intent=="unknown"          ║
+╚═══════════════════════════════╧═════════════════════════════════╝
+                                      │
+                                      ▼
+╔═══════════════════  KB-SEARCH AGENT  ═══════════════════╗
+║ 1) Qdrant `dialogs`  → reuse if sim≥0.95                ║
+║ 2) Qdrant `docs`     → rag_hits + similar_dialogs       ║
+║ status: searching / web-search                          ║
+╚═════════════════════════════════════════════════════════╝
+                                      │ (context)
+                                      ▼
+╔════════════════ Planner (gpt-4.1) ═════════════════╗
+║ build_plan(), need_clarify?, need_escalate?        ║
+║ draft+Critic → UI  |  plan[] + context → Expert-GC ║
+╚════════════════════════════════════════════════════╝
+                                      │
+                                      ▼
+╔══════════════  EXPERT GROUP CHAT (AutoGen)  ══════════════╗
+║ • **DomainExpert** (gpt-4.1)   – Infowatch-Expert / …    ║
+║ • Search-Tool (o3-mini)        – local + web_search      ║
+║ • Critic-Expert (4.1-mini)     – OK / ADD_SEARCH         ║
+║ • **EvidenceAggregator** (4.1-mini) – финальная проверка ║
+║ status: step i/N, generating;  timeout 5 min             ║
+╚══════════════════════════════════════════════════════════╝
+                                      │
+                         Refine-Paraphraser (o3-mini)
+                                      │
+                                      ▼
+                                UI  (React)
+                                   • Message bubbles (MD)
+                                   • Live status & progress
+                                   • Copy-button, citation pop-up
+──────────────────────────────────────────────────────────────────────────────
+                     ───── DATA & INFRA LAYER ─────
+ Redis – slots, rate-limit, status_bus, web_search cache (TTL 24h)  
+ SQLite – `dialog_log` (FULL chat ≤90 д); TTL-cron → MinIO archive  
+ Qdrant – `docs` (RAG) • `dialogs` (re-use)        (dynamic-k)  
+ MinIO  – PDF / чек-листы (File-Search)  
+ Prometheus + Alertmanager – ib_* metrics, latency & timeout alerts  
+ Grafana/Loki/Jaeger – dashboards, traces (“step i/N”, local_search)  
+ k6 load-test (nightly CI)
+
+──────────────────────────────────────────────────────────────────────────────
+                     ───── МОДЕЛИ ─────
+o3-mini   → DM-Router, embeddings, Search-Tool, Refiner, browser_search  
+4.1-mini → DM-Critic, Critic-Expert, EvidenceAggregator  
+gpt-4.1  → Planner, DomainExpert(s)
+
+──────────────────────────────────────────────────────────────────────────────
+                     ───── ПОТОК ЗАПРОСА ─────
+User ► DM-Router/DM-Critic ► KB-Search (reuse?) ► Planner  
+    └ file-shortcut → File-Search → URL  
+             └ need_escalate → Expert-GC (multi-round) → Refine ► UI
+
+*Все стадии публикуют status-event; таймауты (web 20 s / GC 300 s) отсекают долгие операции, отправляя системное ⚠️-сообщение.*
+
+### Мониторинг и дашборды
+
+Система включает в себя полноценный стек мониторинга на базе Prometheus и Grafana.
+
+- **Prometheus**: Собирает метрики с бэкенда (`/metrics`), включая счетчики запросов (`ib_req_total`), задержки (`ib_stage_latency_sec`), таймауты (`ib_timeout_total`) и другие. Также настроены правила для алертов (`alert.rules.yml`).
+- **Grafana**: Предоставляет готовый дашборд "IB-Assistant Overview" для визуализации ключевых метрик.
+
+**Как получить доступ к дашборду:**
+1. Запустите все сервисы: `docker-compose up -d`.
+2. Откройте Grafana в браузере: [http://localhost:3000](http://localhost:3000).
+3. Войдите с учетными данными по умолчанию: `admin` / `admin`.
+4. Перейдите в раздел `Dashboards`. Дашборд "IB-Assistant Overview" должен быть уже доступен, так как он автоматически импортируется при старте контейнера Grafana.
 
 ### Память
 
@@ -155,14 +232,22 @@ flowchart TD
 
 **Динамический k**: `k = max(3, min(10, expected_tokens // 400))` — адаптивное количество результатов поиска в зависимости от ожидаемой длины ответа.
 
-### Expert-GC
+### Expert-GC: Доменные эксперты и Агрегатор
 
-**Экспертная группа** получает план от Planner'а и структурированно его выполняет:
+**Экспертная группа** получает план от Planner'а и структурированно его выполняет. Архитектура была обновлена для повышения качества и надежности ответов.
 
-- **Получает `context.plan[]`** и проходит по шагам.
-- **Помечает выполненные пункты** галочкой ✓.
-- **Системное сообщение**: *"Следуй по шагам плана: шаг1, шаг2, шаг3. Отмечай выполненный пункт галочкой ✓."*
-- **Агенты**: Expert (gpt-4.1), Critic (gpt-4.1-mini), Search (o3-mini).
+- **Динамический выбор эксперта**: На основе слота `product` из диалога, система выбирает одного из двух экспертов:
+    - **`Product_Expert`**: Специализированный агент, который "заточен" на конкретный продукт (например, "IB-v2_Expert"). Его системный промпт содержит указание фокусироваться на этом продукте.
+    - **`General_Expert`**: Агент для общих вопросов, если продукт не указан.
+- **Состав группы**:
+    1. **Доменный эксперт** (Product или General) - ведущий агент.
+    2. **Search** - агент с инструментом `local_search` для поиска по базе знаний.
+    3. **Critic** - агент, оценивающий релевантность и полноту найденной информации.
+    4. **EvidenceAggregator** - финальный агент, который собирает все доказательства, синтезирует из них единый, структурированный ответ и обязательно добавляет блок с цитатами.
+- **Порядок работы**:
+    1. Эксперт инициирует обсуждение.
+    2. Search и Critic предоставляют и оценивают информацию.
+    3. Aggregator имеет последнее слово, чтобы гарантировать, что ответ основан на фактах и содержит ссылки на источники.
 - **Инструменты**: `local_search` для поиска по документации с автоматическими цитатами.
 
 ### Инструмент `web_search`

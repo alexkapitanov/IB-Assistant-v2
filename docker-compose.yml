@@ -1,5 +1,22 @@
 version: "3.9"
 services:
+  archiver:
+    image: ib-assistant-v2-backend
+    command: ["bash","-c","while true; do python scripts/archive_dialogs.py; sleep 86400; done"]
+    volumes:
+      - ./backend:/app/backend
+      - ./scripts:/app/scripts
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_HOST=redis
+      - QDRANT_HOST=qdrant
+      - QDRANT_URL=http://qdrant:6333
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - WEB_SEARCH_TIMEOUT_SEC=3
+    depends_on: [qdrant, minio, backend]
   backend:
     image: ib-assistant-v2-backend
     build:
@@ -10,9 +27,11 @@ services:
       - "8000:8000"
       - "50051:50051"   # gRPC
     volumes:
-      # Монтируем весь проект в /app для доступа к скриптам и документам
-      - ./:/app
-      - chat_db:/data          # SQLite volume
+      - ./backend:/app/backend
+      - ./tests:/app/tests
+      - ./grafana:/app/grafana:ro
+      - ./scripts:/app/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_HOST=redis
@@ -71,13 +90,17 @@ services:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards_data/ib_assistant_overview.json
       - GF_DATASOURCES_DEFAULT_NAME=Loki
       - GF_DATASOURCES_DEFAULT_TYPE=loki
       - GF_DATASOURCES_DEFAULT_URL=http://loki:3100
       - GF_DATASOURCES_DEFAULT_ACCESS=proxy
       - GF_DATASOURCES_DEFAULT_IS_DEFAULT=true
+      - GF_SERVER_ROOT_URL=http://localhost:3000
 
   update_dialog_embeddings:
     image: ib-assistant-v2-backend
@@ -91,6 +114,16 @@ services:
     depends_on:
       - qdrant
       - backend # Убедимся, что backend собрал chat.db
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
 
 volumes:
   chat_db:

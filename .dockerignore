@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# VSCode
+.vscode
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Test files
+tests/
+*.html
+
+# Other services
+frontend/
+grafana/
+prometheus/
+helm/
+
+# Documentation & Config
+*.md
+env.example
+docker-compose.yml
+pytest.ini

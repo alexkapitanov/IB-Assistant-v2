@@ -15,6 +15,13 @@ async def chat_stream(thread_id: str,
     incoming.put_nowait(None) → graceful shutdown.
     """
     import json
+    from backend import status_bus
+
+    # слушаем status_bus параллельно
+    async def status_forward():
+        async for data in status_bus.listen(thread_id):
+            await outgoing.put({"type":"status", **data})
+    asyncio.create_task(status_forward())
 
     # Создаем и настраиваем логгер для этой сессии
     session_logger = logging.getLogger(f"session_{thread_id}")
@@ -32,6 +39,9 @@ async def chat_stream(thread_id: str,
 
     while True:
         msg = await incoming.get()
+        # Считаем входящие запросы
+        from backend import metrics
+        metrics.STARTED.labels(stage="inbound").inc()
         if msg is None:
             break
         try:

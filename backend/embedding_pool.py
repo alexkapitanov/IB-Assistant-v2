@@ -2,10 +2,21 @@ import asyncio
 import os
 from openai import AsyncOpenAI
 
+# backend/embedding_pool.py
+import asyncio
+from openai import AsyncOpenAI
+from backend.openai_helpers import _get_async_client
+
 # --- Клиент OpenAI ---
 # Используем Async-клиент для асинхронных операций
-client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client: AsyncOpenAI | None = None
 MODEL = "text-embedding-ada-002"  # Модель для эмбеддингов
+
+def _ensure_client():
+    """Инициализирует асинхронного клиента, если его нет."""
+    global client
+    if client is None:
+        client = _get_async_client()
 
 # --- Очередь и воркер ---
 # Очередь для задач на получение эмбеддингов
@@ -40,6 +51,8 @@ async def worker():
         futures = [fut for _, fut in batch]
 
         try:
+            # Убеждаемся, что клиент инициализирован
+            _ensure_client()
             # Выполняем запрос к OpenAI API
             response = await client.embeddings.create(model=MODEL, input=texts_to_embed)
             vectors = response.data
