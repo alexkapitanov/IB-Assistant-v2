@@ -82,9 +82,17 @@ def _doc_exists(doc_id: str, col: str = BUCKET_DEF) -> bool:
         # Если коллекция не существует или другая ошибка, считаем, что документа нет
         return False
 
-def vector_exists(doc_id: str, bucket: str = BUCKET_DEF) -> bool:
-    """Проверяет существование вектора (документа) в коллекции Qdrant"""
-    return _doc_exists(doc_id, bucket)
+def vector_exists(key: str, bucket: str = BUCKET_DEF) -> bool:
+    """Проверяет существование вектора (документа) в коллекции Qdrant по ключу S3 (вычисляется doc_id)"""
+    # Вычисляем идентификатор документа на основе ключа
+    doc_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, key))
+    # Повторяем попытку, чтобы учесть задержку индексирования
+    import time
+    for _ in range(3):
+        if _doc_exists(doc_id, bucket):
+            return True
+        time.sleep(0.5)
+    return False
 
 def ingest_path(path: pathlib.Path, bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> bool:
     ensure_collection(bucket)

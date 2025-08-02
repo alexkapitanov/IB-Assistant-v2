@@ -7,6 +7,9 @@ import uuid
 from minio import Minio
 from qdrant_client import QdrantClient
 import backend.metrics as _metrics
+import threading
+import time
+import uvicorn
 
 # Добавляем корневую директорию проекта в PYTHONPATH
 project_root = Path(__file__).parent.parent
@@ -14,6 +17,15 @@ sys.path.insert(0, str(project_root))
 
 # Запускаем HTTP-сервер метрик на порту по умолчанию (9090)
 _metrics.init()
+
+# Запускаем FastAPI Uvicorn сервер для интеграционных тестов на localhost:8000
+_thread = threading.Thread(
+    target=lambda: uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, log_level="warning"),
+    daemon=True,
+)
+_thread.start()
+# Ждём, пока сервер поднимется
+time.sleep(2)
 
 
 @pytest.fixture(autouse=True)
@@ -55,20 +67,19 @@ def pytest_collection_modifyitems(config, items):
             if "openai" in item.keywords:
                 item.add_marker(skip_openai)
     
-    # Check if integration services are available
+    # Skip tests in test_scripts.py if MinIO/Qdrant services are not available
     minio_host, minio_port = os.getenv("MINIO_ENDPOINT", "minio:9000").split(":")
     qdrant_host = os.getenv("QDRANT_HOST", "qdrant")
     qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
-    
     services_available = (
         _service_available(minio_host, int(minio_port)) and 
         _service_available(qdrant_host, qdrant_port)
     )
-    
     if not services_available:
-        skip_integration = pytest.mark.skip(reason="Integration services not available")
+        skip_integration = pytest.mark.skip(reason="Integration services not available (MinIO or Qdrant)")
         for item in items:
-            if "integration" in item.keywords:
+            # Only skip index_scripts tests requiring external services
+            if "integration" in item.keywords and str(item.fspath).endswith("test_scripts.py"):
                 item.add_marker(skip_integration)
 
 @pytest.fixture(scope="session")
