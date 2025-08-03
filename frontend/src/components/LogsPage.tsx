@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface LogEntry {
   id: number;
@@ -16,7 +15,6 @@ export default function LogsPage() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const logIdCounter = useRef(0);
-  const navigate = useNavigate();
 
   // Автоскролл к последнему логу
   const scrollToBottom = () => {
@@ -132,7 +130,10 @@ export default function LogsPage() {
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-white">Логи сессии</h1>
+          <div>
+            <h1 className="text-xl font-semibold text-white">Логи сессии</h1>
+            <p className="text-gray-400 text-sm mt-1">Просмотр логов в реальном времени</p>
+          </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -145,12 +146,6 @@ export default function LogsPage() {
               className="px-3 py-1 text-sm bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors"
             >
               🗑️ Очистить
-            </button>
-            <button
-              onClick={() => navigate('/')}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              💬 Чат
             </button>
           </div>
         </div>

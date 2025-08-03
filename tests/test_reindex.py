@@ -143,7 +143,7 @@ def test_reindex_empty_bucket():
         # Get mc fixture through a simple approach
         from minio import Minio
         mc = Minio(
-            os.getenv("MINIO_ENDPOINT", "minio:9000"),
+            os.getenv("MINIO_ENDPOINT", "localhost:9000"),
             access_key="minioadmin",
             secret_key="minioadmin",
             secure=False,
@@ -155,21 +155,22 @@ def test_reindex_empty_bucket():
         
         # Run reindex on empty bucket
         result = subprocess.run(
-            ["python", "scripts/index_files.py", "--reindex", empty_bucket, ""],
+            ["python", "scripts/index_files.py", "--reindex", "--bucket", empty_bucket, "--prefix", ""],
             cwd=pathlib.Path(__file__).resolve().parents[1],
             env=env,
             capture_output=True,
             text=True,
-            timeout=20
+            timeout=10  # Reduced timeout since we fixed the hanging issue
         )
         
         # Should handle empty bucket gracefully
-        assert result.returncode in [0, 1]  # Either success or expected failure
+        assert result.returncode == 0, f"Script failed with: {result.stderr}"
         
-        if result.returncode == 0:
-            # If successful, should indicate no files to process
-            output = result.stdout + result.stderr
-            assert "empty" in output.lower() or "no files" in output.lower() or "0" in output
+        # Should indicate empty bucket
+        output = result.stdout + result.stderr
+        assert ("empty" in output.lower() or 
+                "nothing to reindex" in output.lower() or 
+                "indexed 0" in output.lower()), f"Unexpected output: {output}"
         
     except Exception as e:
         pytest.skip(f"Empty bucket test skipped: {e}")

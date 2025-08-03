@@ -6,3 +6,7 @@ __pycache__/
 /dist
 .DS_Store
 \n# Environments\n.env\n.env.*\n!frontend/.env\n\n# Pytest\n.pytest_cache/\n\n# VSCode\n.vscode/
+
+# Local-only test files (not for CI)
+tests/test_file_ingest.py
+tests/test_file_ingest_local.py

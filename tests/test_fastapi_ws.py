@@ -138,12 +138,30 @@ async def test_ws_integration():
 
     uri = "ws://localhost:8000/ws"
     async with websockets.connect(uri) as websocket:
-        await websocket.send('{"text": "что такое DLP?"}')
-        response = await websocket.recv()
-        data = json.loads(response)
-        assert "content" in data
-        assert data['content'] is not None, "Content should not be None"
-        assert data['role'] == 'assistant'
+        # Отправляем сообщение в правильном формате
+        await websocket.send('{"message": "что такое DLP?"}')
+        
+        # Получаем несколько сообщений и ищем содержательный ответ
+        content_found = False
+        for _ in range(5):  # Проверяем до 5 сообщений
+            try:
+                response = await asyncio.wait_for(websocket.recv(), timeout=10.0)
+                data = json.loads(response)
+                
+                # Пропускаем session сообщения и статусы
+                if data.get("type") in ["session", "status"]:
+                    continue
+                
+                # Ищем сообщение с контентом
+                if "content" in data and data.get("content"):
+                    content_found = True
+                    assert data['role'] == 'assistant', f"Expected role 'assistant', got {data.get('role')}"
+                    break
+                    
+            except asyncio.TimeoutError:
+                break
+                
+        assert content_found, "No content message received from WebSocket"
 
 @pytest.mark.asyncio
 async def test_ws_error_handling():

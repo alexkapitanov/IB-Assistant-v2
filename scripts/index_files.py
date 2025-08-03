@@ -33,12 +33,12 @@ PREFIX_DEF = "questionnaires/"
 
 # Clients
 mc = Minio(
-    os.getenv("MINIO_ENDPOINT", "minio:9000"),
+    os.getenv("MINIO_ENDPOINT", "localhost:9000"),
     access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
     secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
     secure=False,
 )
-qc = QdrantClient(host=os.getenv("QDRANT_HOST", "qdrant"))
+qc = QdrantClient(host=os.getenv("QDRANT_HOST", "localhost"))
 
 def ensure_collection(col: str = BUCKET_DEF):
     existing = [c.name for c in qc.get_collections().collections]
@@ -126,7 +126,19 @@ def ingest_path(path: pathlib.Path, bucket: str = BUCKET_DEF, prefix: str = PREF
 
 def ingest_minio_objects(bucket: str = BUCKET_DEF, prefix: str = PREFIX_DEF) -> int:
     indexed = 0
-    for obj in mc.list_objects(bucket, prefix=prefix, recursive=True):
+    
+    # Проверяем существование bucket'а
+    if not mc.bucket_exists(bucket):
+        print(f"Bucket '{bucket}' does not exist - nothing to reindex")
+        return 0
+    
+    # Получаем список объектов с проверкой на пустой bucket
+    objects = list(mc.list_objects(bucket, prefix=prefix, recursive=True))
+    if not objects:
+        print(f"Bucket '{bucket}' with prefix '{prefix}' is empty - nothing to reindex")
+        return 0
+    
+    for obj in objects:
         key = obj.object_name
         
         # Проверяем существование по doc_id, сгенерированному из ключа

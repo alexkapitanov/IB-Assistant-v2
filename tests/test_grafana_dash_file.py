@@ -11,4 +11,4 @@ def test_dashboard_json():
 
     data = json.loads(dashboard_path.read_text())
     assert "title" in data, "В дашборде отсутствует поле 'title'"
-    assert data["title"] == "IB Assistant Overview", "Некорректный заголовок дашборда"
+    assert data["title"] == "IB-Assistant Overview", "Некорректный заголовок дашборда"

@@ -1,18 +1,59 @@
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { AppProvider } from "./context/AppContext";
+import { MainLayout } from "./components/MainLayout";
+import ChatPage from "./components/ChatPage";
+import Grafana from "./pages/Grafana";
+import LogsPage from "./components/LogsPage";
 import "./index.css";
 
-// --- Type definitions for global window object ---
-declare global {
-  interface Window {
-    initializeLogStream: (sessionId: string) => void;
+console.log('main.tsx loaded');
+
+// Создание маршрутов
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      {
+        index: true,
+        element: <ChatPage />,
+      },
+      {
+        path: "grafana",
+        element: <Grafana />,
+      },
+      {
+        path: "logs",
+        element: <LogsPage />,
+      },
+    ],
+  },
+]);
+
+function renderApp() {
+  const rootContainer = document.getElementById("root");
+  console.log('Root element:', rootContainer);
+  if (rootContainer) {
+    ReactDOM.createRoot(rootContainer).render(
+      <AppProvider>
+        <RouterProvider router={router} />
+      </AppProvider>
+    );
+    console.log('React rendered');
+  } else {
+    console.error('Root element not found!');
   }
 }
 
-// Render the React app into the chat content area
-const chatContainer = document.getElementById("content-chat");
-if (chatContainer) {
-  ReactDOM.createRoot(chatContainer).render(<App />);
+window.addEventListener('error', (e) => {
+  console.error('Runtime error:', e.error);
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderApp);
+} else {
+  renderApp();
 }
 
 // --- Tab and Log Streaming Logic ---

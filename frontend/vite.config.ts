@@ -5,7 +5,8 @@ export default defineConfig({
   plugins:[react()],
   server:{ 
     port:5173,
-    strictPort: true, // Не позволяет переключаться на другой порт
+    host: true, // Разрешить внешние подключения
+    strictPort: true, // Использовать именно порт 5173
     proxy: {
       "/ws": {
         target: "http://localhost:8000",

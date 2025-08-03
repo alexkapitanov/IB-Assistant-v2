@@ -1,212 +1,117 @@
 {
-  "__inputs": [],
-  "__requires": [],
-  "annotations": {
-    "list": []
-  },
-  "editable": true,
-  "gnetId": null,
-  "graphTooltip": 0,
-  "id": 1,
-  "links": [],
+  "title": "IB-Assistant Overview",
+  "uid": "ib-overview",
+  "tags": ["ib-assistant"],
+  "time": { "from": "now-6h", "to": "now" },
   "panels": [
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
+      "type": "timeseries",
+      "title": "Requests & Stages (r/s)",
+      "datasource": "Prometheus",
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "rate(ib_req_total[5m])",
-          "legendFormat": "__auto",
-          "range": true,
+          "expr": "rate(ib_req_total[1m])",
+          "legendFormat": "{{stage}}",
           "refId": "A"
         }
-      ],
-      "title": "Request Rate",
-      "type": "timeseries"
+      ]
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
+      "type": "timeseries",
+      "title": "Stage Latency P50 / P95 (s)",
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(ib_stage_latency_sec_bucket[5m])) by (le, stage))",
-          "legendFormat": "{{stage}}",
-          "range": true,
+          "expr": "histogram_quantile(0.50, rate(ib_stage_latency_sec_bucket[5m]))",
+          "legendFormat": "P50 {{stage}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(ib_stage_latency_sec_bucket[5m]))",
+          "legendFormat": "P95 {{stage}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Expert-GC Timeouts (5 min rate)",
+      "targets": [
+        {
+          "expr": "rate(ib_timeout_total{kind=\"gc\"}[5m])",
           "refId": "A"
         }
       ],
-      "title": "P95 Stage Latency",
-      "type": "timeseries"
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          { "color": "green", "value": null },
+          { "color": "red",   "value": 0.1 }
+        ]
+      },
+      "unit": "rps"
+    },
+    {
+      "type": "stat",
+      "title": "Web-search Timeouts (5 min rate)",
+      "targets": [
+        {
+          "expr": "rate(ib_timeout_total{kind=\"websearch\"}[5m])",
+          "refId": "A"
+        }
+      ],
+      "unit": "rps"
+    },
+    {
+      "type": "heatmap",
+      "title": "Critic Score Histogram",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.1, ib_critic_score_bucket)",
+          "hide": true,
+          "refId": "A"
+        }
+      ],
+      "dataFormat": "tsbuckets",
+      "xAxis": { "mode": "series" }
+    },
+    {
+      "type": "stat",
+      "title": "SQLite chat_log rows",
+      "targets": [
+        {
+          "expr": "sum(sqlite_table_rows)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Qdrant points (docs vs dialogs)",
+      "targets": [
+        {
+          "expr": "qdrant_collection_points{collection=\"docs\"}",
+          "legendFormat": "docs",
+          "refId": "A"
+        },
+        {
+          "expr": "qdrant_collection_points{collection=\"dialogs\"}",
+          "legendFormat": "dialogs",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Status Bus Throughput",
+      "targets": [
+        {
+          "expr": "rate(ib_req_total{stage=~\"searching|thinking|step\"}[1m])",
+          "legendFormat": "{{stage}}",
+          "refId": "A"
+        }
+      ]
     }
   ],
-  "refresh": "5s",
-  "schemaVersion": 36,
-  "style": "dark",
-  "tags": [],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-15m",
-    "to": "now"
-  },
-  "timepicker": {},
-  "timezone": "browser",
-  "title": "IB Assistant Overview",
-  "uid": "85f5aaa0-3aca-4590-93a6-035591c835e6",
-  "version": 1
+  "refresh": "30s",
+  "schemaVersion": 38
 }

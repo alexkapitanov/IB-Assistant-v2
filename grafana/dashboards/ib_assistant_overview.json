@@ -1,0 +1,117 @@
+{
+  "title": "IB-Assistant Overview",
+  "uid": "ib-overview",
+  "tags": ["ib-assistant"],
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests & Stages (r/s)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(ib_req_total[1m])",
+          "legendFormat": "{{stage}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Stage Latency P50 / P95 (s)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(ib_stage_latency_sec_bucket[5m]))",
+          "legendFormat": "P50 {{stage}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(ib_stage_latency_sec_bucket[5m]))",
+          "legendFormat": "P95 {{stage}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Expert-GC Timeouts (5 min rate)",
+      "targets": [
+        {
+          "expr": "rate(ib_timeout_total{kind=\"gc\"}[5m])",
+          "refId": "A"
+        }
+      ],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          { "color": "green", "value": null },
+          { "color": "red",   "value": 0.1 }
+        ]
+      },
+      "unit": "rps"
+    },
+    {
+      "type": "stat",
+      "title": "Web-search Timeouts (5 min rate)",
+      "targets": [
+        {
+          "expr": "rate(ib_timeout_total{kind=\"websearch\"}[5m])",
+          "refId": "A"
+        }
+      ],
+      "unit": "rps"
+    },
+    {
+      "type": "heatmap",
+      "title": "Critic Score Histogram",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.1, ib_critic_score_bucket)",
+          "hide": true,
+          "refId": "A"
+        }
+      ],
+      "dataFormat": "tsbuckets",
+      "xAxis": { "mode": "series" }
+    },
+    {
+      "type": "stat",
+      "title": "SQLite chat_log rows",
+      "targets": [
+        {
+          "expr": "sum(sqlite_table_rows)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Qdrant points (docs vs dialogs)",
+      "targets": [
+        {
+          "expr": "qdrant_collection_points{collection=\"docs\"}",
+          "legendFormat": "docs",
+          "refId": "A"
+        },
+        {
+          "expr": "qdrant_collection_points{collection=\"dialogs\"}",
+          "legendFormat": "dialogs",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Status Bus Throughput",
+      "targets": [
+        {
+          "expr": "rate(ib_req_total{stage=~\"searching|thinking|step\"}[1m])",
+          "legendFormat": "{{stage}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38
+}

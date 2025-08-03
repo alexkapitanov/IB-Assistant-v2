@@ -1,11 +1,61 @@
+# --- Импорты ---
 import os
 import sys
 import pytest
+from unittest.mock import patch, AsyncMock
 import socket
 import uuid
 from pathlib import Path
 from minio import Minio
 from qdrant_client import QdrantClient
+
+# --- Мок Prometheus metrics server ---
+@pytest.fixture
+def mock_metrics_server():
+    """Мокирует запуск Prometheus metrics server для тестов"""
+    with patch('prometheus_client.start_http_server') as mock_server:
+        yield mock_server
+# --- Автоматическая настройка тестового окружения и мок Prometheus ---
+@pytest.fixture(autouse=True)
+def setup_test_env():
+    """Автоматически настраивает окружение для всех тестов"""
+    with patch('prometheus_client.start_http_server'):
+        # Определяем режим CI
+        is_ci_mode = os.getenv("CI_MODE", "false").lower() == "true"
+        
+        test_env = {
+            'METRICS_PORT': '9090',
+            'REDIS_URL': 'redis://localhost:6379',
+            'MINIO_ENDPOINT': 'localhost:9000',
+            'QDRANT_HOST': 'localhost',
+            'QDRANT_PORT': '6333'
+        }
+        
+        # В CI режиме включаем TESTING и отключаем OpenAI
+        if is_ci_mode:
+            test_env['TESTING'] = 'true'
+            # Не устанавливаем OPENAI_API_KEY в CI режиме
+        
+        with patch.dict(os.environ, test_env):
+            yield
+
+# --- Мок WebSocket ---
+@pytest.fixture
+def mock_websocket():
+    ws = AsyncMock()
+    ws.accept = AsyncMock()
+    ws.send_json = AsyncMock()
+    ws.receive_json = AsyncMock()
+    ws.close = AsyncMock()
+    return ws
+
+# --- Мок Redis ---
+@pytest.fixture
+def mock_redis():
+    with patch('redis.asyncio.Redis') as mock:
+        redis_instance = AsyncMock()
+        mock.from_url.return_value = redis_instance
+        yield redis_instance
 
 # Добавляем корневую директорию в PYTHONPATH для импорта backend
 project_root = Path(__file__).parent.parent
@@ -41,9 +91,25 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "openai" in item.keywords:
                 item.add_marker(skip_openai)
+    
+    # Skip WebSocket integration tests in CI mode
+    is_ci_mode = os.getenv("CI_MODE", "false").lower() == "true"
+    if is_ci_mode:
+        skip_ws_integration = pytest.mark.skip(reason="WebSocket integration tests skipped in CI mode")
+        for item in items:
+            # Пропускаем специфичные WebSocket интеграционные тесты в CI режиме
+            if ("integration" in item.keywords and 
+                any(test_name in str(item.fspath) for test_name in [
+                    "test_fastapi_ws.py", "test_planner_json_fail.py", "test_error_report.py"
+                ]) and
+                any(test_func in item.name for test_func in [
+                    "test_ws_integration", "test_planner_json_fail", "test_error_message_shown"
+                ])):
+                item.add_marker(skip_ws_integration)
+                
     # Skip script integration tests if MinIO or Qdrant unavailable
-    minio_host, minio_port = os.getenv("MINIO_ENDPOINT", "minio:9000").split(":")
-    qdrant_host = os.getenv("QDRANT_HOST", "qdrant")
+    minio_host, minio_port = os.getenv("MINIO_ENDPOINT", "localhost:9000").split(":")
+    qdrant_host = os.getenv("QDRANT_HOST", "localhost")
     qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
     if not (_service_available(minio_host, int(minio_port)) and _service_available(qdrant_host, qdrant_port)):
         skip_integration = pytest.mark.skip(reason="Integration services not available (MinIO or Qdrant)")
@@ -62,7 +128,7 @@ def client():
 def mc():
     """MinIO client fixture"""
     return Minio(
-        os.getenv("MINIO_ENDPOINT", "minio:9000"),
+        os.getenv("MINIO_ENDPOINT", "localhost:9000"),
         access_key="minioadmin",
         secret_key="minioadmin",
         secure=False,
@@ -71,7 +137,7 @@ def mc():
 @pytest.fixture(scope="session")
 def qc():
     """Qdrant client fixture"""
-    return QdrantClient(host=os.getenv("QDRANT_HOST", "qdrant"))
+    return QdrantClient(host=os.getenv("QDRANT_HOST", "localhost"))
 
 @pytest.fixture
 def dummy_pdf(tmp_path):

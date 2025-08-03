@@ -164,14 +164,14 @@ class TestAgentErrorHandling:
         assert isinstance(result, list)
 
     @patch('agents.local_search.embed')
-    @patch('agents.local_search.QdrantClient')
+    @patch('agents.local_search._q')
     def test_local_search_qdrant_error(self, mock_qdrant, mock_embed):
         """Test local search handles Qdrant errors"""
         from agents.local_search import local_search
 
         # Setup mock to raise exception
         mock_embed.return_value = [0.1] * 1536
-        mock_qdrant.return_value.search.side_effect = Exception("Qdrant is down")
+        mock_qdrant.search.side_effect = Exception("Qdrant is down")
 
         # Call the function and assert it returns an empty list
         result = local_search(f"any query {uuid.uuid4()}")

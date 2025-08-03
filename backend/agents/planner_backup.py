@@ -1,4 +1,9 @@
-import autogen, asyncio, time, jsoasync def _call_planner_llm(thread_id: str, user_q: str, slots: dict, history: list = None):
+import autogen
+import asyncio
+import time
+import json
+
+def _call_planner_llm(thread_id: str, user_q: str, slots: dict, history: list = None):
     # Добавляем историю в промпт, если она есть
     history_prompt = ""
     if history:
@@ -15,7 +20,9 @@ import autogen, asyncio, time, jsoasync def _call_planner_llm(thread_id: str, us
     if not all(k in plan for k in ("need_clarify", "clarify", "need_escalate", "draft")):
         raise BadJSON(f"Недостаточно полей в ответе планировщика: {raw}", raw)
 
-    return planckend.openai_helpers import call_llm, count_tokens
+    return plan
+
+from backend.openai_helpers import call_llm, count_tokens
 from backend.memory import get_mem, save_mem
 from backend.agents.critic import ask_critic
 from backend.agents.expert_gc import run_expert_gc

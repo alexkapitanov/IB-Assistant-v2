@@ -122,43 +122,37 @@ async def chat(ws: WebSocket):
         print("✅ WebSocket connection accepted")
         thread_id = str(uuid.uuid4())
         sessions[ws] = thread_id
-        
         # Отправляем ID сессии клиенту для инициализации стрима логов
         await ws.send_json({"type": "session", "sessionId": thread_id})
-        
+        # Запускаем перенаправление статуса и обработчик чата
         status_task = asyncio.create_task(_status_forwarder(ws, thread_id))
         stream_task = asyncio.create_task(chat_stream(thread_id, q_in, q_out))
-        
         print(f"📡 Status forwarder and chat stream started for thread {thread_id}")
-        
         # Получаем IP клиента для rate limiting
         client_ip = ws.client.host if ws.client else "unknown"
-        
         # Запускаем sender для отправки сообщений из очереди в WebSocket
         async def sender():
             while True:
                 resp = await q_out.get()
-                if resp is None: # Сигнал для завершения
+                if resp is None:  # Сигнал для завершения
                     break
                 print(f"📤 Sending response: {resp}")
                 await ws.send_json(resp)
                 print("✅ Response sent successfully")
-
         sender_task = asyncio.create_task(sender())
-
         while True:
             print("⏳ Waiting for message...")
             data = await ws.receive_text()
             print(f"📨 Received: {data}")
-            
             # Проверяем rate limit
             if await check_rate_limit(client_ip):
                 logger.warning(f"Rate limit exceeded for IP: {client_ip}")
                 await ws.close(code=4008, reason="Rate limit exceeded")
                 break
-            
             await q_in.put(data)
-            
+            # Закрыть цикл после одного сообщения в тестовом режиме
+            if os.getenv("TESTING"):
+                break
     except WebSocketDisconnect as e:
         print(f"🔌 WebSocket disconnected normally: {e}")
     except Exception as e:

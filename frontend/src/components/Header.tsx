@@ -10,6 +10,9 @@ export default function Header({ connected }: { connected: boolean }) {
         <span className="font-semibold text-lg">IB Assistant</span>
       </div>
       <div className="flex items-center gap-4">
+        <a href="/grafana/" className="px-4 py-2 hover:bg-muted rounded">
+          📊 Мониторинг
+        </a>
         <ConnectionStatus connected={connected} />
         <ThemeToggle/>
       </div>

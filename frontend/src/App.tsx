@@ -1,14 +1,15 @@
+
 import Bubble from "./components/MessageBubble";
 import Status from "./components/Status";
 import FileDrop from "./components/FileDrop";
 import Header from "./components/Header";
 import useAutoScroll from "./hooks/useAutoScroll";
-import { useChat } from "./hooks/useChat";
+import { useAppContext } from "./context/AppContext";
 import MessageInput from "./components/MessageInput";
+console.log('App component loaded');
 
 export default function App() {
-  const { chat, status, connected, sendMessage, sendFile } = useChat();
-  
+  const { chat, status, connected, send, uploadFile } = useAppContext();
   useAutoScroll([chat, status]);
 
   return (
@@ -23,11 +24,8 @@ export default function App() {
         <Status text={status} />
         <div id="anchor" />
       </main>
-      <MessageInput 
-        onSend={sendMessage} 
-        connected={connected} 
-      />
-      <FileDrop onFile={sendFile} />
+      <MessageInput onSend={send} connected={connected} />
+      <FileDrop onFile={uploadFile} />
     </div>
   );
 }
