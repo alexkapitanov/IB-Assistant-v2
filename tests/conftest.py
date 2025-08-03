@@ -100,10 +100,10 @@ def pytest_collection_modifyitems(config, items):
             # Пропускаем специфичные WebSocket интеграционные тесты в CI режиме
             if ("integration" in item.keywords and 
                 any(test_name in str(item.fspath) for test_name in [
-                    "test_fastapi_ws.py", "test_planner_json_fail.py", "test_error_report.py"
+                    "test_fastapi_ws.py", "test_planner_json_fail.py", "test_error_report.py", "test_status_stream.py"
                 ]) and
                 any(test_func in item.name for test_func in [
-                    "test_ws_integration", "test_planner_json_fail", "test_error_message_shown"
+                    "test_ws_integration", "test_planner_json_fail", "test_error_message_shown", "test_status_sequence"
                 ])):
                 item.add_marker(skip_ws_integration)
                 

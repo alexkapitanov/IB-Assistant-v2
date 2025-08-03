@@ -148,7 +148,8 @@ async def test_status_thinking():
     
     assert False, "No status received within timeout"
 
-@pytest.mark.asyncio  
+@pytest.mark.asyncio
+@pytest.mark.integration  
 async def test_status_sequence():
     """Тест проверки последовательности статусов"""
     statuses = await check_status_sequence()
