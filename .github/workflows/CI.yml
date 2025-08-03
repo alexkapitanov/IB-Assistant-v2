@@ -55,6 +55,7 @@ jobs:
 
       - name: Run pytest
         env:
+          CI_MODE: true  # Включаем CI режим для тестов
           OPENAI_API_KEY: stub
           PYTHONPATH: ${{ github.workspace }}
           REDIS_HOST: localhost
@@ -63,7 +64,7 @@ jobs:
           MINIO_ACCESS_KEY: minioadmin
           MINIO_SECRET_KEY: minioadmin
           DB_PATH: /tmp/test-chatlog.db
-        run: pytest -q        # тесты обязаны быть зелёными
+        run: pytest -q --tb=short --timeout=60        # тесты обязаны быть зелёными
 
       # ---------- Front build ----------
       - name: Set up Node
