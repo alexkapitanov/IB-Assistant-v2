@@ -10,6 +10,7 @@ tiktoken
 python-dotenv
 pytest
 pytest-asyncio        # для async тестов
+pytest-timeout        # для timeout в тестах
 websockets            # для WebSocket тестов
 pydantic>=2           # требуется версия 2+
 pydantic-settings     # для BaseSettings в Pydantic v2

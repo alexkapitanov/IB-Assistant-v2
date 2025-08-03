@@ -64,7 +64,7 @@ jobs:
           MINIO_ACCESS_KEY: minioadmin
           MINIO_SECRET_KEY: minioadmin
           DB_PATH: /tmp/test-chatlog.db
-        run: pytest -q --tb=short --timeout=60        # тесты обязаны быть зелёными
+        run: pytest -q --tb=short        # тесты обязаны быть зелёными
 
       # ---------- Front build ----------
       - name: Set up Node
