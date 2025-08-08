@@ -33,6 +33,7 @@ class Config:
                     "LOG_LEVEL": "INFO",
                     "ARCHIVE_DELETE_AFTER_BACKUP": "true",
                     "OPENAI_API_KEY": "stub",
+                    "CLARIFY_THRESHOLD": "0.6",
                 }
                 value = defaults.get(name)
 
@@ -40,7 +41,7 @@ class Config:
                 raise AttributeError(f"Configuration '{name}' not found in environment variables or defaults")
             
             # Преобразуем типы для числовых значений: сначала в int, потом в float
-            if name.endswith('_SEC') or name.endswith('_TIMEOUT') or name.endswith('_DAYS'):
+            if name.endswith('_SEC') or name.endswith('_TIMEOUT') or name.endswith('_DAYS') or name.endswith('_THRESHOLD'):
                 try:
                     value = int(value)
                 except (ValueError, TypeError):

@@ -1,6 +1,7 @@
 """
 Доменные эксперты для Expert-GC
 """
+
 from autogen import AssistantAgent
 
 # Конфигурация моделей
@@ -28,26 +29,25 @@ AGGREGATOR_PROMPT = """Твоя роль — агрегатор доказате
 Твой ответ должен содержать ТОЛЬКО этот список.
 """
 
+
 def get_product_expert(product_name: str) -> AssistantAgent:
     """Возвращает агента, настроенного на конкретный продукт."""
     return AssistantAgent(
         "ProductExpert",
         llm_config=llm_config_expert,
-        system_message=PRODUCT_EXPERT_PROMPT.format(product=product_name)
+        system_message=PRODUCT_EXPERT_PROMPT.format(product=product_name),
     )
+
 
 def get_general_expert() -> AssistantAgent:
     """Возвращает агента с общими знаниями."""
     return AssistantAgent(
-        "GeneralExpert",
-        llm_config=llm_config_expert,
-        system_message=GENERAL_EXPERT_PROMPT
+        "GeneralExpert", llm_config=llm_config_expert, system_message=GENERAL_EXPERT_PROMPT
     )
+
 
 def get_evidence_aggregator() -> AssistantAgent:
     """Возвращает агента для сбора и проверки ссылок."""
     return AssistantAgent(
-        "EvidenceAggregator",
-        llm_config=llm_config_aggregator,
-        system_message=AGGREGATOR_PROMPT
+        "EvidenceAggregator", llm_config=llm_config_aggregator, system_message=AGGREGATOR_PROMPT
     )

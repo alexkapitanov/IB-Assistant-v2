@@ -1,11 +1,14 @@
-from qdrant_client import QdrantClient
 import os
+
+from qdrant_client import QdrantClient
+
 from backend.embedding import get as get_embedding
 
 # Инициализация клиента Qdrant
 _q = QdrantClient(
     url=f"http://{os.getenv('QDRANT_HOST','qdrant')}:{os.getenv('QDRANT_PORT','6333')}"
 )
+
 
 def local_search(query, top_k: int = 10):
     """
@@ -18,19 +21,14 @@ def local_search(query, top_k: int = 10):
             query_vector = get_embedding(query)
         else:
             query_vector = query
-            
+
         hits = _q.query_points(
             collection_name="ib-docs",
             query=query_vector,
             limit=top_k,
         ).points
         return [
-            {
-                "text": h.payload.get("text", ""),
-                "score": h.score,
-                "meta": h.payload
-            }
-            for h in hits
+            {"text": h.payload.get("text", ""), "score": h.score, "meta": h.payload} for h in hits
         ]
     except Exception as e:
         print(f"❌ Error in local_search: {e}")

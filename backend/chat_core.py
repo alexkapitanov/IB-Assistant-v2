@@ -1,8 +1,9 @@
 import asyncio, uuid
-from agents.dialog_manager import handle_message
+from backend.agents.dialog_manager import handle_message
 from backend.memory import get_mem
 from backend.log_streamer import SessionLogHandler
 from backend.chat_db import save_dialog_full, get_current_thread_messages
+from backend import slots
 import logging
 import traceback
 
@@ -15,13 +16,6 @@ async def chat_stream(thread_id: str,
     incoming.put_nowait(None) → graceful shutdown.
     """
     import json
-    from backend import status_bus
-
-    # слушаем status_bus параллельно
-    async def status_forward():
-        async for data in status_bus.listen(thread_id):
-            await outgoing.put({"type":"status", **data})
-    status_task = asyncio.create_task(status_forward())
 
     # Создаем и настраиваем логгер для этой сессии
     session_logger = logging.getLogger(f"session_{thread_id}")
@@ -41,7 +35,8 @@ async def chat_stream(thread_id: str,
         msg = await incoming.get()
         # Считаем входящие запросы
         from backend import metrics
-        metrics.STARTED.labels(stage="inbound").inc()
+        if hasattr(metrics, 'STARTED'):
+            metrics.STARTED.labels(stage="inbound").inc()
         if msg is None:
             break
         # Обрабатываем входящее сообщение
@@ -54,11 +49,16 @@ async def chat_stream(thread_id: str,
                 continue
 
             # Логируем получение и считаем запрос
-            slots = get_mem(thread_id)
+            mem_slots = get_mem(thread_id)
             session_logger.info(f"Received message: '{user_message}'")
 
+            # Обновляем слоты на основе сообщения пользователя
+            slots.update(thread_id, user_message)
+            current_slots = slots.get(thread_id)
+            session_logger.info(f"Current slots: {current_slots}")
+
             # Обрабатываем сообщение и отправляем ответ
-            resp = await handle_message(thread_id, user_message, slots, session_logger)
+            resp = await handle_message(thread_id, user_message, current_slots, session_logger)
             if resp:
                 await outgoing.put(resp)
             session_logger.info("Response sent to outgoing queue.")
@@ -85,13 +85,6 @@ async def chat_stream(thread_id: str,
             })
     
     session_logger.info("Chat stream finished.")
-    # Отменяем задачу status_forward
-    if 'status_task' in locals():
-        status_task.cancel()
-        try:
-            await status_task
-        except asyncio.CancelledError:
-            pass
     # Сигнал завершения для очереди outgoing
     await outgoing.put(None)
 

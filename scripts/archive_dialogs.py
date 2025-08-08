@@ -66,6 +66,17 @@ def run():
             else:
                 # Если удаление отключено, ничего не делаем
                 return
+                
+        # Update metrics after archiving
+        try:
+            from backend import metrics
+            if hasattr(metrics, 'update_sqlite_rows'):
+                metrics.update_sqlite_rows()
+            if hasattr(metrics, 'update_qdrant_counts'):
+                metrics.update_qdrant_counts()
+        except Exception:
+            pass
+            
     except sqlite3.OperationalError:
         return
 
@@ -83,6 +94,14 @@ def reindex_dialogs():
     if points:
         qdrant.recreate_collection("dialogs", vector_size=len(points[0].vector))
         qdrant.upsert("dialogs", points=points)
+    
+    # Update metrics after reindexing
+    try:
+        from backend import metrics
+        if hasattr(metrics, 'update_qdrant_counts'):
+            metrics.update_qdrant_counts()
+    except Exception:
+        pass
 
 if __name__ == "__main__":
     run()

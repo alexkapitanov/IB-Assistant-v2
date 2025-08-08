@@ -1,11 +1,12 @@
 import asyncio
 from functools import wraps
 
-def with_timeout(timeout_or_fn, timeout_result=None):
+def with_timeout(timeout_or_fn, timeout_result=None, kind="default"):
     """
     Декоратор для асинхронных функций с таймаутом.
     timeout_or_fn: число секунд или функция, возвращающая число секунд.
     timeout_result: возвращаемое значение при таймауте.
+    kind: тип операции для метрик.
     """
     def decorator(fn):
         @wraps(fn)
@@ -15,8 +16,7 @@ def with_timeout(timeout_or_fn, timeout_result=None):
             try:
                 return await asyncio.wait_for(fn(*args, **kwargs), timeout=t)
             except asyncio.TimeoutError:
-                # инкрементируем метрику таймаутов websearch
-                kind = fn.__name__ if fn.__name__ != "web_search" else "websearch"
+                # инкрементируем метрику таймаутов
                 try:
                     metrics.TIMEOUT.labels(kind=kind).inc()
                 except Exception:

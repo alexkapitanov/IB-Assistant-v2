@@ -1,5 +1,6 @@
 from backend.openai_helpers import call_llm
 
+
 async def ask_critic(text: str) -> bool:
     """
     Оценивает полноту ответа по шкале от 0 до 1.
@@ -12,17 +13,19 @@ async def ask_critic(text: str) -> bool:
         f"{text}\n"
         "---"
     )
-    
+
     # Используем o3-mini как быструю и дешевую модель для оценки
     score_raw, _ = await call_llm("o3-mini", prompt)
-    
+
     try:
         # Убираем лишние символы и преобразуем в float
         score = float(score_raw.strip().replace(",", "."))
         # Регистрируем оценку Critic в метриках
         try:
             from backend import metrics
-            metrics.CRITIC.observe(score)
+
+            if hasattr(metrics, 'CRITIC'):
+                metrics.CRITIC.observe(score)
         except Exception:
             pass
         return score >= 0.7

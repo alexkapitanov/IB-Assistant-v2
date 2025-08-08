@@ -2,10 +2,30 @@
 __pycache__/
 *.pyc
 .env
-/node_modules
-/dist
+node_modules
+build
+dist
 .DS_Store
-\n# Environments\n.env\n.env.*\n!frontend/.env\n\n# Pytest\n.pytest_cache/\n\n# VSCode\n.vscode/
+
+# Environments
+.env
+.env.*
+!frontend/.env
+
+# Pytest
+.pytest_cache/
+
+# Ruff cache
+.ruff_cache/
+
+# Coverage
+coverage/
+
+# Vite
+.vite/
+
+# VSCode
+.vscode/
 
 # Local-only test files (not for CI)
 tests/test_file_ingest.py

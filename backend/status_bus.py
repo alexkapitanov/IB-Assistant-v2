@@ -13,40 +13,32 @@ except Exception:
 
 async def publish(thread_id:str, stage:str, detail:str|None=None):
     msg = json.dumps({"thread":thread_id, "stage":stage, "detail":detail})
-    # Публикация в Redis или локальную очередь
-    if _redis_pub:
-        try:
-            await _redis_pub.publish(_channel, msg)
-        except Exception:
-            logging.warning("Redis publish failed, using local queue", exc_info=False)
-    # fallback to local in-memory queue
-    q = _local_queues.setdefault(thread_id, asyncio.Queue())
-    q.put_nowait({"thread": thread_id, "stage": stage, "detail": detail})
+    
     import time
     from backend import metrics
     start = time.monotonic()
-    # Метрики: latency и throughput для статус-буса
-    elapsed = time.monotonic() - start
-    try:
-        metrics.LAT.labels(stage=stage).observe(elapsed)
-        metrics.STATUS_BUS_THROUGHPUT.labels(stage=stage).inc()
-    except Exception:
-        pass
+    
     # Публикация в Redis или локальную очередь
     if _redis_pub:
         try:
             await _redis_pub.publish(_channel, msg)
         except Exception:
             logging.warning("Redis publish failed, using local queue", exc_info=False)
+            # fallback to local in-memory queue on publish error
+            q = _local_queues.setdefault(thread_id, asyncio.Queue())
+            q.put_nowait({"thread": thread_id, "stage": stage, "detail": detail})
     else:
         # fallback to local in-memory queue
         q = _local_queues.setdefault(thread_id, asyncio.Queue())
         q.put_nowait({"thread": thread_id, "stage": stage, "detail": detail})
+    
     # Метрики: latency и throughput для статус-буса
     elapsed = time.monotonic() - start
     try:
-        metrics.LAT.labels(stage=stage).observe(elapsed)
-        metrics.STATUS_BUS_THROUGHPUT.labels(stage=stage).inc()
+        if hasattr(metrics, 'LAT'):
+            metrics.LAT.labels(stage=stage).observe(elapsed)
+        if hasattr(metrics, 'STATUS_BUS_THROUGHPUT'):
+            metrics.STATUS_BUS_THROUGHPUT.labels(stage=stage).inc()
     except Exception:
         pass
 
@@ -72,3 +64,12 @@ async def listen(thread_id:str):
         
 # Alias for backward compatibility
 subscribe = listen
+
+# Backward-compatibility sync wrapper used in some tests
+def post(thread_id: str, stage: str, detail: str | None = None):
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(publish(thread_id, stage, detail))

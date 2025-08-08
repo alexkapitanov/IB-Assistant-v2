@@ -1,14 +1,15 @@
-from backend.embedding_pool import get_embedding_async as get_async_vec
-from backend.qdrant_client import qdr
-import numpy as np
 import logging
-import asyncio
-import time
 
-SIM_HARD = 0.95    # reuse без изменений
-SIM_SOFT = 0.60    # ниже → прямая эскалация
+from backend.embedding_pool import get_embedding_async as get_async_vec
+from backend.qdrant_connection import qdr
+from backend import status_bus
+from backend.agents.web_search import web_search as web_search_tool
 
-async def kb_search(query:str, expected_tokens:int=1500):
+SIM_HARD = 0.95  # reuse без изменений
+SIM_SOFT = 0.60  # ниже → прямая эскалация
+
+
+async def kb_search(query: str, expected_tokens: int = 1500, *, thread_id: str | None = None):
     """
     Выполняет поиск по базе знаний (диалоги и документы).
     Возвращает кортеж (action, data), где action - "reuse" или "escalate".
@@ -24,28 +25,38 @@ async def kb_search(query:str, expected_tokens:int=1500):
         hits = qdr.search(collection_name="dialogs", query_vector=vec, limit=k)
         logging.info(f"Found {len(hits)} similar dialogs.")
         if hits and hits[0].score >= SIM_HARD:
-            logging.info(f"Found a very similar dialog with score {hits[0].score:.4f}. Reusing answer.")
+            logging.info(
+                f"Found a very similar dialog with score {hits[0].score:.4f}. Reusing answer."
+            )
             return "reuse", hits[0].payload["answer"]
     except Exception as e:
         logging.warning(f"Could not search in 'dialogs' collection: {e}")
         hits = []
 
     # 2. Сбор контекста для эскалации
-    context = {
-        "similar_dialogs": [h.payload for h in hits if h.score >= SIM_SOFT]
-    }
+    context = {"similar_dialogs": [h.payload for h in hits if h.score >= SIM_SOFT]}
     logging.info(f"Found {len(context['similar_dialogs'])} dialogs with score >= {SIM_SOFT}.")
 
     # 3. Поиск по документам (RAG)
     try:
         # В README указана коллекция 'docs', используем ее.
         rag_hits = qdr.search(collection_name="docs", query_vector=vec, limit=k)
-        context["rag"] = [h.payload for h in rag_hits] # Сохраняем payload, а не весь объект
+        context["rag"] = [h.payload for h in rag_hits]  # Сохраняем payload, а не весь объект
         logging.info(f"Found {len(rag_hits)} relevant document chunks.")
     except Exception as e:
         logging.error(f"Failed to search in 'docs' collection: {e}")
         context["rag"] = []
 
+    # 4. При отсутствии достаточного контекста попробуем web_search (с публикацией статуса)
+    try:
+        if thread_id:
+            await status_bus.publish(thread_id, "web-search", "Поиск в интернете")
+        # Вызов web_search может вернуть "TIMEOUT" по декоратору; добавим как источник, если не пусто
+        web_md = await web_search_tool(query)
+        if web_md:
+            context["web"] = web_md
+    except Exception as e:
+        logging.warning(f"web_search failed: {e}")
+
     logging.info("Escalating with the collected context.")
     return "escalate", context
-

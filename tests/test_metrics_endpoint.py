@@ -1,8 +1,19 @@
 import pytest
+import requests
 from unittest.mock import patch
 
 @pytest.mark.integration
-def test_metrics_endpoint(client, mock_metrics_server):
+def test_metrics_endpoint():
+    """Test metrics endpoint on port 9310"""
+    try:
+        txt = requests.get("http://localhost:9310/metrics").text
+        assert "ib_req_total" in txt
+    except requests.ConnectionError:
+        # If direct port test fails, fall back to FastAPI client test
+        pytest.skip("Metrics server not available on port 9310")
+
+@pytest.mark.integration 
+def test_metrics_endpoint_fallback(client, mock_metrics_server):
     """Legacy metrics endpoint test updated to use TestClient"""
     response = client.get("/metrics")
     assert response.status_code == 200

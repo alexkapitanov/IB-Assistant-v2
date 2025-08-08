@@ -33,9 +33,18 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Действия при старте
     logger.info("Application startup")
+    print("🔧 Application startup begin")
     await setup_qdrant(recreate_collection=True) # Создаем коллекцию при старте
+    print("✅ Qdrant setup complete")
     # Запускаем Prometheus metrics сервер
+    print("🔧 Calling metrics.init()")
     metrics.init()
+    print("✅ metrics.init() completed")
+    # Инициализируем метрики
+    print("🔧 Updating metrics...")
+    metrics.update_sqlite_rows()
+    metrics.update_qdrant_counts()
+    print("✅ Application startup complete")
     yield
     # Действия при завершении
     logger.info("Application shutdown")
@@ -66,9 +75,19 @@ async def stream_logs(session_id: str):
     """Эндпоинт для стриминга логов сессии через Server-Sent Events."""
     return EventSourceResponse(log_streamer.log_generator(session_id))
 
-async def _safe_send(ws, role, content):
+async def _safe_send(ws: WebSocket, data: Dict[str, Any]):
     """Безопасная отправка сообщения через WebSocket"""
-    await ws.send_json(WsOutgoing(type="chat", role=role, content=content).dict())
+    try:
+        await ws.send_json(data)
+        logger.info(f"📤 Sending response: {data}")
+        print(f"📤 Sending response: {data}")
+        print("✅ Response sent successfully")
+    except WebSocketDisconnect:
+        logger.warning(f"🔌 WebSocket disconnected while trying to send message.")
+        print(f"🔌 WebSocket disconnected while trying to send message.")
+    except Exception as e:
+        logger.error(f"❌ Error sending message: {e}\n{traceback.format_exc()}")
+        print(f"❌ Error sending message: {e}\n{traceback.format_exc()}")
 
 @app.get("/health")
 def health(): 
@@ -171,6 +190,12 @@ async def chat(ws: WebSocket):
             await stream_task
         if q_out:
             await q_out.put(None) # Сигнал для sender_task
+        # Дождаться завершения sender_task, чтобы гарантировать отправку всех сообщений
+        try:
+            if 'sender_task' in locals() and not sender_task.done():
+                await sender_task
+        except Exception:
+            pass
 
         if ws in sessions:
             print(f"🗑️ Removing session for thread {sessions[ws]}")
@@ -178,10 +203,53 @@ async def chat(ws: WebSocket):
         print("✅ WebSocket cleanup complete")
 
 async def _status_forwarder(ws: WebSocket, thread_id: str):
+    """Пересылает статусные сообщения из Redis Pub/Sub в WebSocket"""
+    logger.info(f"📡 Status forwarder started for thread {thread_id}")
+    print(f"📡 Status forwarder started for thread {thread_id}")
     try:
-        async for st in subscribe(thread_id):
-            await ws.send_json(WsOutgoing(type="status", status=st).dict())
+        async for status_data in subscribe(thread_id):
+            logger.info(f"📬 Received status for {thread_id}: {status_data}")
+            print(f"📬 Received status for {thread_id}: {status_data}")
+            # Поддержка как dict, так и строкового статуса из локальной очереди
+            try:
+                if isinstance(status_data, str):
+                    status_value = status_data
+                else:
+                    status_value = status_data.get("stage", status_data.get("status", "unknown"))
+                outgoing_message = WsOutgoing(type="status", status=status_value)
+                await _safe_send(ws, outgoing_message.dict())
+            except Exception as e:
+                logger.error(f"❌ Status forwarder error: {e}\n{traceback.format_exc()}")
+                print(f"❌ Status forwarder error: {e}\n{traceback.format_exc()}")
+
+    except asyncio.CancelledError:
+        logger.info(f"🛑 Status forwarder for thread {thread_id} cancelled.")
+        print(f"🛑 Status forwarder for thread {thread_id} cancelled.")
     except Exception as e:
-        print(f"❌ Status forwarder error: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"💥 Unhandled exception in status forwarder for {thread_id}: {e}\n{traceback.format_exc()}")
+        print(f"💥 Unhandled exception in status forwarder for {thread_id}: {e}\n{traceback.format_exc()}")
+    finally:
+        logger.info(f"🏁 Status forwarder for thread {thread_id} finished.")
+        print(f"🏁 Status forwarder for thread {thread_id} finished.")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import asyncio
+    print("🚀 Starting IB-Assistant backend server...")
+    
+    # Валидация окружения при запуске
+    try:
+        asyncio.run(validate_environment())
+        print("✅ Environment validation passed")
+    except Exception as e:
+        print(f"❌ Environment validation failed: {e}")
+        exit(1)
+    
+    uvicorn.run(
+        "backend.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=False,
+        log_level="info"
+    )

@@ -1,0 +1,287 @@
+{
+  "dashboard": {
+    "uid": "ib-overview-v4",
+    "title": "IB-Assistant Overview",
+    "description": "Мониторинг цепочки DM → Planner → Expert-GC. Все метрики собираются экспортером :9310.",
+    "editable": false,
+    "tags": ["ib-assistant", "prod"],
+    "timepicker": { 
+      "refresh_intervals": ["10s", "30s", "1m", "5m"],
+      "time_options": ["3h", "6h", "24h"]
+    },
+    "theme": "light",
+    "schemaVersion": 38,
+    "graphTooltip": 0,
+    "color": {
+      "mode": "palette-classic"
+    },
+    "links": [],
+    "time": { "from": "now-6h", "to": "now" },
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Requests per Stage",
+        "description": "Скорость входящих запросов. inbound=WebSocket вход пользователя.",
+        "datasource": "Prometheus",
+        "gridPos": { "h": 5, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "expr": "rate(ib_req_total[1m])",
+            "legendFormat": "{{stage}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "textSize": { "title": 16, "value": 14 }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "auto"
+            },
+            "unit": "rps"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Stage Latency P50/95",
+        "description": "Средняя (P50) и хвост (P95) времени каждой стадии.",
+        "datasource": "Prometheus",
+        "gridPos": { "h": 5, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(ib_stage_latency_sec_bucket[5m]))",
+            "legendFormat": "P50 {{stage}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(ib_stage_latency_sec_bucket[5m]))",
+            "legendFormat": "P95 {{stage}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "auto"
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Expert-GC Timeouts",
+        "description": "rate(ib_timeout_total{kind=\"gc\"}) — доля запросов, где Expert-GC превысил 300 с.",
+        "datasource": "Prometheus", 
+        "gridPos": { "h": 4, "w": 12, "x": 0, "y": 5 },
+        "targets": [
+          {
+            "expr": "rate(ib_timeout_total{kind=\"gc\"}[5m]) or on() vector(0)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "textMode": "value_and_name",
+          "textSize": { "value": 22, "title": 14 },
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 0.01 },
+                { "color": "red", "value": 0.05 }
+              ]
+            },
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Web-Search Timeouts",
+        "description": "rate(ib_timeout_total{kind=\"websearch\"}) — доля запросов, где Web-Search превысил лимит.",
+        "datasource": "Prometheus",
+        "gridPos": { "h": 4, "w": 12, "x": 12, "y": 5 },
+        "targets": [
+          {
+            "expr": "rate(ib_timeout_total{kind=\"websearch\"}[5m]) or on() vector(0)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "textMode": "value_and_name",
+          "textSize": { "value": 22, "title": 14 },
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 0.01 },
+                { "color": "red", "value": 0.05 }
+              ]
+            },
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "type": "heatmap",
+        "title": "Critic-Score Heatmap",
+        "description": "Оценка полноты ответа Critic-агента (0-1).",
+        "datasource": "Prometheus",
+        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 9 },
+        "targets": [
+          {
+            "expr": "rate(ib_critic_score_bucket[5m])",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "calculate": false,
+          "cellGap": 1,
+          "cellValues": {},
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "spectrum",
+            "reverse": false,
+            "scale": "exponential",
+            "scheme": "OrRd",
+            "steps": 64
+          },
+          "exemplars": { "color": "rgba(255,0,255,0.7)" },
+          "filterValues": { "le": 1e-9 },
+          "legend": { "show": false },
+          "rowsFrame": { "layout": "auto" },
+          "tooltip": { "show": true, "yHistogram": false },
+          "yAxis": { 
+            "axisPlacement": "left",
+            "unit": "none"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": { "legend": false, "tooltip": false, "vis": false },
+              "scaleDistribution": { "type": "linear" }
+            },
+            "min": 0,
+            "max": 1
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "SQLite Rows",
+        "description": "Кол-во записей в таблице dialog_log (TTL 90 дней).",
+        "datasource": "Prometheus",
+        "gridPos": { "h": 4, "w": 12, "x": 12, "y": 9 },
+        "targets": [
+          {
+            "expr": "sqlite_table_rows{table=\"dialog_log\"}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "textMode": "value_and_name",
+          "textSize": { "value": 22, "title": 14 },
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "value" },
+            "unit": "none"
+          }
+        }
+      },
+      {
+        "type": "stat", 
+        "title": "Qdrant Points",
+        "description": "Вектора в коллекциях docs и dialogs (после nightly re-index).",
+        "datasource": "Prometheus",
+        "gridPos": { "h": 4, "w": 12, "x": 12, "y": 13 },
+        "targets": [
+          {
+            "expr": "qdrant_collection_points{collection=~\".+\"}",
+            "legendFormat": "{{collection}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "textMode": "value_and_name",
+          "textSize": { "value": 22, "title": 14 },
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Status-Bus Throughput",
+        "description": "События progress (searching / step) в Redis канал.",
+        "datasource": "Prometheus",
+        "gridPos": { "h": 4, "w": 12, "x": 0, "y": 15 },
+        "targets": [
+          {
+            "expr": "rate(ib_status_bus_throughput_total[1m])",
+            "legendFormat": "{{stage}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "axisPlacement": "auto",
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "lineInterpolation": "linear", 
+              "lineWidth": 1,
+              "pointSize": 5,
+              "showPoints": "auto"
+            },
+            "unit": "rps"
+          }
+        }
+      }
+    ],
+    "refresh": "30s"
+  },
+  "overwrite": true
+}

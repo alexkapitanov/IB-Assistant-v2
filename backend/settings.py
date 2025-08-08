@@ -4,7 +4,7 @@
 
 import os
 from functools import lru_cache
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 from typing import Optional
 
@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     
     redis_url: str = Field("redis://localhost:6379", description="Redis connection URL")
     redis_host: str = Field("localhost", description="Redis host (legacy)")  # Legacy compatibility
+    # Legacy ports (may come from env as strings)
+    qdrant_port: int = Field(6333, description="Qdrant port (legacy)")
+    redis_port: int = Field(6379, description="Redis port (legacy)")
     
     # MinIO Configuration (legacy compatibility)
     minio_access_key: str = Field("minioadmin", description="MinIO access key")
@@ -46,8 +49,21 @@ class Settings(BaseSettings):
     
     model_config = {
         "env_file": ".env",
-        "case_sensitive": False
+        "case_sensitive": False,
+        # Разрешаем лишние переменные окружения, чтобы не падать на CI с preset env
+        "extra": "allow",
+        # Маппинги для legacy ключей, которые встречаются в тестах/инфре
+        "alias_generator": None,
+        "populate_by_name": True,
     }
+
+    @field_validator("qdrant_port", "redis_port", mode="before")
+    @classmethod
+    def _parse_ports(cls, v):
+        try:
+            return int(v)
+        except Exception:
+            return v
 
 # Legacy constants for backward compatibility
 MAX_TOKENS_SESSION = 20_000

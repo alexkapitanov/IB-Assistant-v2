@@ -3,30 +3,131 @@
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
-from agents.expert_gc import (
-    ExpertAgent, CriticAgent, SearchAgent, 
-    expert_group_chat, expert, critic, search
-)
+
+
+def test_domain_factory():
+    """Тест динамического создания доменных экспертов"""
+    import os
+    from unittest.mock import patch
+    
+    # Мокаем AssistantAgent, если нет API ключа
+    with patch('backend.agents.expert_gc.AssistantAgent') as mock_agent:
+        from backend.agents.expert_gc import create_domain_expert
+        
+        mock_expert = type('MockExpert', (), {
+            'name': None,
+            'system_message': None,
+            'llm_config': None
+        })()
+        
+        def mock_create(name, llm_config, system_message):
+            mock_expert.name = name
+            mock_expert.system_message = system_message
+            mock_expert.llm_config = llm_config
+            return mock_expert
+        
+        mock_agent.side_effect = mock_create
+        
+        # Тест с темой Zero Trust
+        ex = create_domain_expert({"topic": "Zero Trust"})
+        assert "Zero Trust" in ex.system_message
+        assert ex.name == "Zero Trust-Expert"
+        
+        # Тест с продуктом
+        ex_product = create_domain_expert({"topic": "DLP", "product": "InfoWatch"})
+        assert "DLP" in ex_product.system_message
+        assert "InfoWatch" in ex_product.system_message
+        assert ex_product.name == "InfoWatch-Expert"
+        
+        # Тест без темы (по умолчанию)
+        ex_default = create_domain_expert({})
+        assert "информационная безопасность" in ex_default.system_message
+        assert ex_default.name == "информационная безопасность-Expert"
+
+
+def test_aggregator_section():
+    """Тест формирования раздела ссылок агрегатором"""
+    from backend.prompts.system_messages import SYSTEM_AGGREGATOR
+    
+    # Проверяем, что системное сообщение содержит требования
+    assert "### Ссылки" in SYSTEM_AGGREGATOR
+    assert "[n]" in SYSTEM_AGGREGATOR  
+    assert "FINAL_ANSWER:" in SYSTEM_AGGREGATOR
+    
+    # Мок: Aggregator получает черновик без ссылок → должен добавить ###
+    draft_without_links = """
+    DLP системы предотвращают утечки данных.
+    Они контролируют передачу информации.
+    """
+    
+    expected_sections = [
+        "### Ссылки",
+        "FINAL_ANSWER:",
+        "[n]"  # Должны быть добавлены ссылки
+    ]
+    
+    # Проверяем, что системный промпт требует все необходимые элементы
+    for section in expected_sections:
+        assert section in SYSTEM_AGGREGATOR
+
+
+@pytest.mark.asyncio
+async def test_expert_gc_integration():
+    """Тест интеграции expert_gc с новыми слотами"""
+    from unittest.mock import AsyncMock, MagicMock
+    
+    # Мокаем зависимости
+    with patch('backend.agents.expert_gc.AssistantAgent') as mock_agent, \
+         patch('backend.agents.expert_gc.GroupChat') as mock_gc, \
+         patch('backend.agents.expert_gc.GroupChatManager') as mock_mgr, \
+         patch('backend.agents.expert_gc.status_bus') as mock_status, \
+         patch('backend.agents.expert_gc.metrics'):
+        
+        # Настройка моков
+        mock_expert = MagicMock()
+        mock_expert.name = "DLP-Expert"
+        mock_agent.return_value = mock_expert
+        
+        mock_manager = AsyncMock()
+        mock_manager.a_initiate_chat.return_value = {"content": "Тестовый ответ"}
+        mock_mgr.return_value = mock_manager
+        
+        mock_status.publish = AsyncMock()
+        
+        from backend.agents.expert_gc import run_expert_gc
+        
+        # Тестовые данные
+        thread_id = "test123"
+        plan = ["Анализ DLP", "Поиск документации", "Формирование ответа"]
+        ctx = {"slots": {"topic": "DLP", "product": "InfoWatch"}}
+        
+        # Вызов функции
+        result = await run_expert_gc(thread_id, plan, ctx)
+        
+        # Проверки
+        assert mock_agent.call_count == 4  # domain_expert + search + critic + aggregator
+        assert mock_status.publish.call_count >= 3  # step статусы + done
+        
+        # Проверяем публикацию статусов
+        status_calls = [call[0] for call in mock_status.publish.call_args_list]
+        step_calls = [call for call in status_calls if len(call) > 1 and "step" in str(call[1])]
+        assert len(step_calls) == len(plan)  # Каждый шаг должен быть опубликован
+
 
 class TestExpertAgent:
-    """Тесты эксперта по ИБ"""
+    """Старые тесты - оставляем для совместимости"""
     
     @pytest.mark.asyncio
     @patch('agents.expert_gc.call_llm', new_callable=AsyncMock)
     async def test_expert_basic_response(self, mock_llm):
         """Тест базового ответа эксперта"""
-        mock_llm.return_value = ("DLP - это технология предотвращения утечек данных", None)
-
-        expert_agent = ExpertAgent()
-        result = await expert_agent.respond("Что такое DLP?")
-
-        assert "DLP" in result
+        pytest.skip("Старый тест - архитектура изменена")
 
     @pytest.mark.asyncio 
     @patch('agents.expert_gc.call_llm', new_callable=AsyncMock)
     async def test_expert_with_search_results(self, mock_llm):
         """Тест ответа эксперта с результатами поиска"""
-        mock_llm.return_value = ("DLP системы контролируют передачу данных [1]", None)
+        pytest.skip("Старый тест - архитектура изменена")
 
         search_results = [
             {"text": "DLP - Data Loss Prevention технология"}

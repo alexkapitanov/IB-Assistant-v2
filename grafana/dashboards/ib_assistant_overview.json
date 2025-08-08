@@ -1,24 +1,83 @@
 {
-  "title": "IB-Assistant Overview",
-  "uid": "ib-overview",
-  "tags": ["ib-assistant"],
-  "time": { "from": "now-6h", "to": "now" },
+  "color": {
+    "mode": "palette-classic"
+  },
+  "description": "Мониторинг цепочки DM → Planner → Expert-GC. Все метрики собираются экспортером :9310.",
+  "editable": false,
+  "graphTooltip": 0,
+  "id": 6,
+  "links": [],
   "panels": [
     {
-      "type": "timeseries",
-      "title": "Requests & Stages (r/s)",
       "datasource": "Prometheus",
+      "description": "Скорость входящих запросов на каждую стадию цепочки. inbound — сообщения WebSocket от пользователя; остальные линии появятся, когда Router начнёт публиковать свои ib_req_total{stage=…}.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "auto"
+          },
+          "unit": "rps"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "textSize": {
+          "title": 16,
+          "value": 14
+        }
+      },
       "targets": [
         {
           "expr": "rate(ib_req_total[1m])",
           "legendFormat": "{{stage}}",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Requests per Stage",
+      "type": "timeseries"
     },
     {
-      "type": "timeseries",
-      "title": "Stage Latency P50 / P95 (s)",
+      "datasource": "Prometheus",
+      "description": "Время прохождения запроса по стадиям. P50 — медиана, P95 — хвост. Зелёная/жёлтая линия = classify (Decision-Router); синяя/розовая = thinking (Planner + Expert-GC).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "auto"
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.50, rate(ib_stage_latency_sec_bucket[5m]))",
@@ -30,88 +89,317 @@
           "legendFormat": "P95 {{stage}}",
           "refId": "B"
         }
-      ]
+      ],
+      "title": "Stage Latency P50/95",
+      "type": "timeseries"
     },
     {
-      "type": "stat",
-      "title": "Expert-GC Timeouts (5 min rate)",
-      "targets": [
-        {
-          "expr": "rate(ib_timeout_total{kind=\"gc\"}[5m])",
-          "refId": "A"
+      "datasource": "Prometheus",
+      "description": "Частота таймаутов Expert Group Chat за последние 5 минут (ib_timeout_total{kind=\"gc\"} / сек). >0.05 rps ≈ >3 timeouts/мин — признак перегрузки или слишком малого GC_TIMEOUT_SEC.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
         }
-      ],
-      "thresholds": {
-        "mode": "absolute",
-        "steps": [
-          { "color": "green", "value": null },
-          { "color": "red",   "value": 0.1 }
-        ]
       },
-      "unit": "rps"
-    },
-    {
-      "type": "stat",
-      "title": "Web-search Timeouts (5 min rate)",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "textSize": {
+          "title": 14,
+          "value": 22
+        }
+      },
       "targets": [
         {
-          "expr": "rate(ib_timeout_total{kind=\"websearch\"}[5m])",
+          "expr": "rate(ib_timeout_total{kind=\"gc\"}[5m]) or on() vector(0)",
           "refId": "A"
         }
       ],
-      "unit": "rps"
+      "title": "Expert-GC Timeouts",
+      "type": "stat"
     },
     {
-      "type": "heatmap",
-      "title": "Critic Score Histogram",
+      "datasource": "Prometheus",
+      "description": "Доля запросов, где Browser-tool не ответил за WEB_SEARCH_TIMEOUT_SEC и вернул \"TIMEOUT\" (kind=\"websearch\").",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "textSize": {
+          "title": 14,
+          "value": 22
+        }
+      },
       "targets": [
         {
-          "expr": "histogram_quantile(0.1, ib_critic_score_bucket)",
-          "hide": true,
+          "expr": "rate(ib_timeout_total{kind=\"websearch\"}[5m]) or on() vector(0)",
           "refId": "A"
         }
       ],
-      "dataFormat": "tsbuckets",
-      "xAxis": { "mode": "series" }
+      "title": "Web-Search Timeouts",
+      "type": "stat"
     },
     {
-      "type": "stat",
-      "title": "SQLite chat_log rows",
-      "targets": [
-        {
-          "expr": "sum(sqlite_table_rows)",
-          "refId": "A"
+      "datasource": "Prometheus",
+      "description": "Распределение оценок полноты, выставленных Critic-агентом (0 — плохой, 1 — идеальный ответ). Ячейки отражают ib_critic_score_bucket. Ленты < 0.5 — сигнал, что RAG или Search дают нерелевантные факты.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "max": 1,
+          "min": 0
         }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Qdrant points (docs vs dialogs)",
-      "targets": [
-        {
-          "expr": "qdrant_collection_points{collection=\"docs\"}",
-          "legendFormat": "docs",
-          "refId": "A"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "options": {
+        "calculate": false,
+        "cellGap": 1,
+        "cellValues": {},
+        "color": {
+          "exponent": 0.5,
+          "fill": "dark-orange",
+          "mode": "spectrum",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "OrRd",
+          "steps": 64
         },
-        {
-          "expr": "qdrant_collection_points{collection=\"dialogs\"}",
-          "legendFormat": "dialogs",
-          "refId": "B"
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1E-9
+        },
+        "legend": {
+          "show": false
+        },
+        "rowsFrame": {
+          "layout": "auto"
+        },
+        "tooltip": {
+          "show": true,
+          "yHistogram": false
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "unit": "none"
         }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Status Bus Throughput",
+      },
       "targets": [
         {
-          "expr": "rate(ib_req_total{stage=~\"searching|thinking|step\"}[1m])",
+          "expr": "rate(ib_critic_score_bucket[5m])",
+          "refId": "A"
+        }
+      ],
+      "title": "Critic-Score Heatmap",
+      "type": "heatmap"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Количество записей в таблице dialog_log, где хранится полный диалог ≤ DIALOG_TTL_DAYS (по-умолчанию 90 дней). Инкрементируется при каждом новом сообщении пользователя.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "textSize": {
+          "title": 14,
+          "value": 22
+        }
+      },
+      "targets": [
+        {
+          "expr": "sqlite_table_rows{table=\"dialog_log\"}",
+          "refId": "A"
+        }
+      ],
+      "title": "SQLite Rows",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Реальное число векторов в коллекциях: docs — RAG-документы, dialogs — свежие диалоги (после nightly archive + re-index). Метрика обновляется скриптом update_qdrant_counts() после ingest и TTL-архивации.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "textSize": {
+          "title": 14,
+          "value": 22
+        }
+      },
+      "targets": [
+        {
+          "expr": "qdrant_collection_points{collection=~\".+\"}",
+          "legendFormat": "{{collection}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Qdrant Points",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Скорость сообщений прогресса (thinking, searching, step N/M) в Redis-канале status_bus. Высокие пики без роста Requests per Stage — признак циклов в GC или повторных поисков.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "auto"
+          },
+          "unit": "rps"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "targets": [
+        {
+          "expr": "rate(ib_status_bus_throughput_total[1m])",
           "legendFormat": "{{stage}}",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Status-Bus Throughput",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 38
+  "schemaVersion": 38,
+  "tags": [
+    "ib-assistant",
+    "prod"
+  ],
+  "theme": "light",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ],
+    "time_options": [
+      "3h",
+      "6h",
+      "24h"
+    ]
+  },
+  "title": "IB-Assistant Overview",
+  "uid": "ib-overview",
+  "version": 1
 }

@@ -71,3 +71,11 @@ def save_dialog_full(thread_id:str, messages:list[dict]):
     with _conn() as c:
         c.execute("INSERT OR REPLACE INTO dialog_log(thread_id, body, ts) VALUES (?,?,CURRENT_TIMESTAMP)",
                   (thread_id, json.dumps(messages, ensure_ascii=False)))
+    
+    # Update SQLite metrics after insert
+    try:
+        from backend import metrics
+        if hasattr(metrics, 'SQLITE_ROWS'):
+            metrics.SQLITE_ROWS.labels(table="dialog_log").inc()
+    except Exception:
+        pass

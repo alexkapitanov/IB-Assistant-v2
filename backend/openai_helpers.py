@@ -1,10 +1,9 @@
 # backend/openai_helpers.py
 import os
-import openai
 import time
 import json
 import logging
-from openai import OpenAI, AsyncClient
+from openai import OpenAI, AsyncOpenAI
 from backend.utils import is_test_mode
 from backend.token_counter import count_tokens
 from qdrant_client import QdrantClient, models
@@ -14,30 +13,30 @@ logger = logging.getLogger(__name__)
 
 # Глобальные переменные для клиентов, чтобы переиспользовать соединения
 _client: OpenAI | None = None
-_async_client: AsyncClient | None = None
+_async_client: AsyncOpenAI | None = None
 
 def _get_client() -> OpenAI:
     """Ленивая инициализация синхронного OpenAI клиента."""
     global _client
     api_key = config.config.OPENAI_API_KEY
-    if not api_key or (api_key.startswith("test_") or api_key == ""):
-        if api_key != "stub":
-            raise RuntimeError("OPENAI_API_KEY env var missing or dummy")
+    # Не прерываем выполнение для тестовых/стаб-ключей;
+    # клиент создаём только для реальных ключей
+    if api_key in (None, ""):
+        raise RuntimeError("OPENAI_API_KEY env var missing")
     
     if _client is None or _client.api_key != api_key:
         _client = OpenAI(api_key=api_key)
     return _client
 
-def _get_async_client() -> AsyncClient:
+def _get_async_client() -> AsyncOpenAI:
     """Ленивая инициализация асинхронного OpenAI клиента."""
     global _async_client
     api_key = config.config.OPENAI_API_KEY
-    if not api_key or (api_key.startswith("test_") or api_key == ""):
-        if api_key != "stub":
-            raise RuntimeError("OPENAI_API_KEY env var missing or dummy")
+    if api_key in (None, ""):
+        raise RuntimeError("OPENAI_API_KEY env var missing")
 
     if _async_client is None or _async_client.api_key != api_key:
-        _async_client = AsyncClient(api_key=api_key)
+        _async_client = AsyncOpenAI(api_key=api_key)
     return _async_client
 
 async def browser_search(query: str, k: int = 5) -> str:
@@ -45,6 +44,10 @@ async def browser_search(query: str, k: int = 5) -> str:
     Выполняет web-поиск через OpenAI Browser-tool.
     Возвращает markdown-список заголовок+URL+excerpt (k результатов).
     """
+    # В тестовом и stub-режиме возвращаем пустой результат, чтобы не трогать сеть
+    if config.config.OPENAI_API_KEY == "stub" or is_test_mode():
+        return ""
+
     client = _get_async_client()
     resp = await client.chat.completions.create(
         model="o3-mini",
@@ -71,7 +74,14 @@ async def call_llm(model: str, prompt: str, tools: list | None = None, temperatu
     if api_key == "stub":
         completion_tokens = 10
         if "Planner-агент" in prompt:
-            response = '{"need_clarify": false, "clarify": "", "need_escalate": false, "draft": "Тестовый ответ планировщика"}'
+            response = (
+                '{"need_clarify": false, "clarify": "", "need_escalate": false, '
+                '"draft": "Тестовый ответ планировщика", '
+                '"plan": ["Проверить базу знаний", "Сформировать краткий ответ"]}'
+            )
+        elif "Оцени полноту ответа" in prompt:
+            # Для критика возвращаем высокий скор, чтобы одобрить черновик
+            response = "0.9"
         else:
             response = f"[stub] Тестовый ответ для промпта: {prompt[:20]}..."
         _log_token_usage(thread_id, turn_index, model, prompt_tokens, completion_tokens)
