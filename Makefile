@@ -1,7 +1,7 @@
 # Helpers
 PY_DIRS=backend agents scripts
 
-.PHONY: lint typecheck test sweep sweep-clean fix
+.PHONY: lint typecheck test sweep sweep-clean fix archlint
 
 # Lint Python (ruff + black) and Frontend (eslint + prettier)
 lint:
@@ -39,3 +39,9 @@ fix:
 	@if [ -d frontend ]; then \
 	  cd frontend && npm install --silent && npx prettier --write . && npx eslint . --ext .js,.jsx,.ts,.tsx --fix ; \
 	fi
+
+# Architecture lint checks
+archlint:
+	python3 tools/check_models.py
+	python3 tools/check_forbidden_paths.py
+	python3 tools/check_compose.py

@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "started": 1754674007.5774732,
+    "started": 1754674363.6797712,
     "root": "/workspaces/IB-Assistant-v2",
-    "finished": 1754674011.3545034
+    "finished": 1754674367.9595199
   },
   "ruff": {
     "ok": false,
@@ -3411,7 +3411,9 @@
     ]
   },
   "vulture": {
-    "error": "vulture not found"
+    "ok": false,
+    "code": 2,
+    "findings": []
   },
   "ts_prune": {
     "ok": true,
@@ -3437,8 +3439,10 @@
       ],
       "devDependencies": [
         "@types/dompurify",
+        "depcheck",
         "eslint",
         "prettier",
+        "ts-prune",
         "autoprefixer",
         "postcss",
         "typescript"
@@ -3555,97 +3559,337 @@
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3529,
+      "line": 3535,
       "match": "gpt-4o",
       "context": "p.py\",       \"line\": 6,       \"match\": \"gpt-4o\",       \"context\": \"a depcheck - Forbid"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3530,
+      "line": 3536,
       "match": "gpt-4o",
       "context": "a depcheck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3530,
+      "line": 3536,
       "match": "4o-mini",
       "context": "eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re\"     },"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3535,
+      "line": 3541,
       "match": "4o-mini",
       "context": "p.py\",       \"line\": 6,       \"match\": \"4o-mini\",       \"context\": \"eck - Forbidden mod"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3536,
+      "line": 3542,
       "match": "gpt-4o",
       "context": "ext\": \"eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3536,
+      "line": 3542,
       "match": "4o-mini",
       "context": "eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not referenced"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3541,
+      "line": 3547,
       "match": "gpt-4o",
       "context": ".py\",       \"line\": 28,       \"match\": \"gpt-4o\",       \"context\": \"ORBIDDEN_MODELS_REG"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3542,
+      "line": 3548,
       "match": "gpt-4o",
       "context": "BIDDEN_MODELS_REGEX = re.compile(r\\\"\\\\b(gpt-4o|4o-mini)\\\\b\\\", re.IGNORECASE)  # Direct"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3542,
+      "line": 3548,
       "match": "4o-mini",
       "context": "MODELS_REGEX = re.compile(r\\\"\\\\b(gpt-4o|4o-mini)\\\\b\\\", re.IGNORECASE)  # Director\"     "
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3547,
+      "line": 3553,
       "match": "4o-mini",
       "context": ".py\",       \"line\": 28,       \"match\": \"4o-mini\",       \"context\": \"N_MODELS_REGEX = re"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3548,
+      "line": 3554,
       "match": "gpt-4o",
       "context": "t\": \"N_MODELS_REGEX = re.compile(r\\\"\\\\b(gpt-4o|4o-mini)\\\\b\\\", re.IGNORECASE)  # Direct"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3548,
+      "line": 3554,
       "match": "4o-mini",
       "context": "MODELS_REGEX = re.compile(r\\\"\\\\b(gpt-4o|4o-mini)\\\\b\\\", re.IGNORECASE)  # Directories an"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3553,
+      "line": 3559,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3529,       \"match\": \"gpt-4o\",       \"context\": \"p.py\\\",       \\\"lin"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3560,
+      "match": "gpt-4o",
+      "context": ",       \\\"line\\\": 6,       \\\"match\\\": \\\"gpt-4o\\\",       \\\"context\\\": \\\"a depcheck - Fo"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3565,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3530,       \"match\": \"gpt-4o\",       \"context\": \"a depcheck - Forbid"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3566,
+      "match": "gpt-4o",
+      "context": "a depcheck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3566,
+      "match": "4o-mini",
+      "context": "eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re\"     },"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3571,
+      "match": "4o-mini",
+      "context": "n\",       \"line\": 3530,       \"match\": \"4o-mini\",       \"context\": \"eck - Forbidden mod"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3572,
+      "match": "gpt-4o",
+      "context": "ext\": \"eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3572,
+      "match": "4o-mini",
+      "context": "eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re\\\"     }"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3577,
+      "match": "4o-mini",
+      "context": "n\",       \"line\": 3535,       \"match\": \"4o-mini\",       \"context\": \"p.py\\\",       \\\"lin"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3578,
+      "match": "4o-mini",
+      "context": ",       \\\"line\\\": 6,       \\\"match\\\": \\\"4o-mini\\\",       \\\"context\\\": \\\"eck - Forbidden"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3583,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3536,       \"match\": \"gpt-4o\",       \"context\": \"ext\\\": \\\"eck - Forb"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3584,
+      "match": "gpt-4o",
+      "context": "t\\\": \\\"eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3584,
+      "match": "4o-mini",
+      "context": "eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re\"     },"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3589,
+      "match": "4o-mini",
+      "context": "n\",       \"line\": 3536,       \"match\": \"4o-mini\",       \"context\": \"eck - Forbidden mod"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3590,
+      "match": "gpt-4o",
+      "context": "ext\": \"eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3590,
+      "match": "4o-mini",
+      "context": "eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not referenced"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3595,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3541,       \"match\": \"gpt-4o\",       \"context\": \".py\\\",       \\\"line"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3596,
+      "match": "gpt-4o",
+      "context": "       \\\"line\\\": 28,       \\\"match\\\": \\\"gpt-4o\\\",       \\\"context\\\": \\\"ORBIDDEN_MODELS"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3601,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3542,       \"match\": \"gpt-4o\",       \"context\": \"BIDDEN_MODELS_REGEX"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3602,
+      "match": "gpt-4o",
+      "context": "EN_MODELS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Di"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3602,
+      "match": "4o-mini",
+      "context": "LS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Direct\"   "
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3607,
+      "match": "4o-mini",
+      "context": "n\",       \"line\": 3542,       \"match\": \"4o-mini\",       \"context\": \"MODELS_REGEX = re.c"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3608,
+      "match": "gpt-4o",
+      "context": ": \"MODELS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Di"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3608,
+      "match": "4o-mini",
+      "context": "LS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Director\\\""
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3613,
+      "match": "4o-mini",
+      "context": "n\",       \"line\": 3547,       \"match\": \"4o-mini\",       \"context\": \".py\\\",       \\\"line"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3614,
+      "match": "4o-mini",
+      "context": "       \\\"line\\\": 28,       \\\"match\\\": \\\"4o-mini\\\",       \\\"context\\\": \\\"N_MODELS_REGEX "
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3619,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3548,       \"match\": \"gpt-4o\",       \"context\": \"t\\\": \\\"N_MODELS_REG"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3620,
+      "match": "gpt-4o",
+      "context": "\"N_MODELS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Di"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3620,
+      "match": "4o-mini",
+      "context": "LS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Direct\"   "
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3625,
+      "match": "4o-mini",
+      "context": "n\",       \"line\": 3548,       \"match\": \"4o-mini\",       \"context\": \"MODELS_REGEX = re.c"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3626,
+      "match": "gpt-4o",
+      "context": ": \"MODELS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Di"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3626,
+      "match": "4o-mini",
+      "context": "LS_REGEX = re.compile(r\\\\\\\"\\\\\\\\b(gpt-4o|4o-mini)\\\\\\\\b\\\\\\\", re.IGNORECASE)  # Directorie"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3631,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3553,       \"match\": \"gpt-4o\",       \"context\": \"o.py\\\",       \\\"lin"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3632,
+      "match": "gpt-4o",
+      "context": ",       \\\"line\\\": 8,       \\\"match\\\": \\\"gpt-4o\\\",       \\\"context\\\": \\\"eck_output(    "
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3637,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3554,       \"match\": \"gpt-4o\",       \"context\": \"utput(             "
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3638,
+      "match": "gpt-4o",
+      "context": "         [\\\\\\\"grep\\\\\\\", \\\\\\\"-R\\\\\\\", \\\\\\\"gpt-4o\\\\\\\", str(root), \\\\\\\"--include=*.py\\\\\\\","
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3643,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3559,       \"match\": \"gpt-4o\",       \"context\": \".py\\\",       \\\"line"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3644,
+      "match": "gpt-4o",
+      "context": "       \\\"line\\\": 22,       \\\"match\\\": \\\"gpt-4o\\\",       \\\"context\\\": \\\"eck_output(    "
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3649,
+      "match": "gpt-4o",
+      "context": "n\",       \"line\": 3560,       \"match\": \"gpt-4o\",       \"context\": \"utput(             "
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3650,
+      "match": "gpt-4o",
+      "context": "         [\\\\\\\"grep\\\\\\\", \\\\\\\"-R\\\\\\\", \\\\\\\"gpt-4o-mini\\\\\\\", str(root), \\\\\\\"--include=*.py"
+    },
+    {
+      "file": "tools/sweep-report.json",
+      "line": 3655,
       "match": "gpt-4o",
       "context": "o.py\",       \"line\": 8,       \"match\": \"gpt-4o\",       \"context\": \"eck_output(        "
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3554,
+      "line": 3656,
       "match": "gpt-4o",
       "context": "utput(             [\\\"grep\\\", \\\"-R\\\", \\\"gpt-4o\\\", str(root), \\\"--include=*.py\\\", \\\"--i"
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3559,
+      "line": 3661,
       "match": "gpt-4o",
       "context": ".py\",       \"line\": 22,       \"match\": \"gpt-4o\",       \"context\": \"eck_output(        "
     },
     {
       "file": "tools/sweep-report.json",
-      "line": 3560,
+      "line": 3662,
       "match": "gpt-4o",
       "context": "utput(             [\\\"grep\\\", \\\"-R\\\", \\\"gpt-4o-mini\\\", str(root), \\\"--include=*.py\\\", "
     },
