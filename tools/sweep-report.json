@@ -1,0 +1,3604 @@
+{
+  "metadata": {
+    "started": 1754673567.9309702,
+    "root": "/workspaces/IB-Assistant-v2",
+    "finished": 1754673583.4810348
+  },
+  "ruff": {
+    "ok": false,
+    "code": 1,
+    "findings": [
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 23,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/agents/dialog_manager.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from typing import Tuple",
+              "end_location": {
+                "column": 30,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import: `typing.Any`"
+        },
+        "location": {
+          "column": 20,
+          "row": 4
+        },
+        "message": "`typing.Any` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 27,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/agents/dialog_manager.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.config`"
+        },
+        "location": {
+          "column": 21,
+          "row": 6
+        },
+        "message": "`backend.config` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 34,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/agents/expert_gc.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `dataclasses.dataclass`"
+        },
+        "location": {
+          "column": 25,
+          "row": 6
+        },
+        "message": "`dataclasses.dataclass` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 28,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/agents/refine.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 20,
+          "row": 6
+        },
+        "message": "`typing.Optional` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 35,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/agents/refine.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 30,
+          "row": 6
+        },
+        "message": "`typing.Tuple` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/agents/expert_gc.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `os`"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 21,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/chat_core.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import asyncio",
+              "end_location": {
+                "column": 21,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `uuid`"
+        },
+        "location": {
+          "column": 17,
+          "row": 1
+        },
+        "message": "`uuid` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 22,
+          "row": 52
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/chat_core.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 25,
+                "row": 52
+              },
+              "location": {
+                "column": 13,
+                "row": 52
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `mem_slots`"
+        },
+        "location": {
+          "column": 13,
+          "row": 52
+        },
+        "message": "Local variable `mem_slots` is assigned to but never used",
+        "noqa_row": 52,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 28,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/config.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from typing import Dict, Any",
+              "end_location": {
+                "column": 39,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `typing.Optional`"
+        },
+        "location": {
+          "column": 20,
+          "row": 2
+        },
+        "message": "`typing.Optional` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 29,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/embedding.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import os, openai, hashlib, json, redis",
+              "end_location": {
+                "column": 51,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `functools`"
+        },
+        "location": {
+          "column": 20,
+          "row": 1
+        },
+        "message": "`functools` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/embedding_pool.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `os`"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 37,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/env_validator.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from typing import Dict, List, Optional",
+              "end_location": {
+                "column": 47,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `typing.Tuple`"
+        },
+        "location": {
+          "column": 32,
+          "row": 6
+        },
+        "message": "`typing.Tuple` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 21,
+          "row": 218
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/env_validator.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 24,
+                "row": 218
+              },
+              "location": {
+                "column": 13,
+                "row": 218
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `settings`"
+        },
+        "location": {
+          "column": 13,
+          "row": 218
+        },
+        "message": "Local variable `settings` is assigned to but never used",
+        "noqa_row": 218,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 37,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/main.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from fastapi import FastAPI, WebSocket",
+              "end_location": {
+                "column": 57,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 30,
+          "row": 2
+        },
+        "message": "`fastapi.Request` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 57,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/main.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from fastapi import FastAPI, WebSocket",
+              "end_location": {
+                "column": 57,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 50,
+          "row": 2
+        },
+        "message": "`fastapi.Depends` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 43,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/main.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import: `fastapi.responses.JSONResponse`"
+        },
+        "location": {
+          "column": 31,
+          "row": 4
+        },
+        "message": "`fastapi.responses.JSONResponse` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 57,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/main.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.agents.dialog_manager.handle_message`"
+        },
+        "location": {
+          "column": 43,
+          "row": 6
+        },
+        "message": "`backend.agents.dialog_manager.handle_message` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 40,
+          "row": 7
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/main.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 8
+              },
+              "location": {
+                "column": 1,
+                "row": 7
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.chat_db.log_message`"
+        },
+        "location": {
+          "column": 29,
+          "row": 7
+        },
+        "message": "`backend.chat_db.log_message` imported but unused",
+        "noqa_row": 7,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 39,
+          "row": 9
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/main.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from backend.status_bus import subscribe",
+              "end_location": {
+                "column": 50,
+                "row": 9
+              },
+              "location": {
+                "column": 1,
+                "row": 9
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.status_bus.publish`"
+        },
+        "location": {
+          "column": 32,
+          "row": 9
+        },
+        "message": "`backend.status_bus.publish` imported but unused",
+        "noqa_row": 9,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 19
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/main.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 20
+              },
+              "location": {
+                "column": 1,
+                "row": 19
+              }
+            }
+          ],
+          "message": "Remove unused import: `json`"
+        },
+        "location": {
+          "column": 8,
+          "row": 19
+        },
+        "message": "`json` imported but unused",
+        "noqa_row": 19,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 75,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/metrics.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from prometheus_client import Counter, Histogram, Gauge",
+              "end_location": {
+                "column": 75,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `prometheus_client.start_http_server`"
+        },
+        "location": {
+          "column": 58,
+          "row": 3
+        },
+        "message": "`prometheus_client.start_http_server` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/openai_helpers.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `os`"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 25,
+          "row": 61
+        },
+        "filename": "/workspaces/IB-Assistant-v2/backend/ratelimit.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 28,
+                "row": 61
+              },
+              "location": {
+                "column": 13,
+                "row": 61
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `current_time`"
+        },
+        "location": {
+          "column": 13,
+          "row": 61
+        },
+        "message": "Local variable `current_time` is assigned to but never used",
+        "noqa_row": 61,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 46,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/scripts/archive_dialogs.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import sqlite3, json, datetime as dt, io",
+              "end_location": {
+                "column": 50,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `pathlib`"
+        },
+        "location": {
+          "column": 39,
+          "row": 1
+        },
+        "message": "`pathlib` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 9
+        },
+        "filename": "/workspaces/IB-Assistant-v2/test_agents_demo.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 10
+              },
+              "location": {
+                "column": 1,
+                "row": 9
+              }
+            }
+          ],
+          "message": "Remove unused import: `os`"
+        },
+        "location": {
+          "column": 8,
+          "row": 9
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 9,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 31,
+          "row": 16
+        },
+        "filename": "/workspaces/IB-Assistant-v2/test_agents_demo.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 17
+              },
+              "location": {
+                "column": 1,
+                "row": 16
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.status_bus`"
+        },
+        "location": {
+          "column": 21,
+          "row": 16
+        },
+        "message": "`backend.status_bus` imported but unused",
+        "noqa_row": 16,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 8
+        },
+        "filename": "/workspaces/IB-Assistant-v2/test_assistant_routing.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 9
+              },
+              "location": {
+                "column": 1,
+                "row": 8
+              }
+            }
+          ],
+          "message": "Remove unused import: `time`"
+        },
+        "location": {
+          "column": 8,
+          "row": 8
+        },
+        "message": "`time` imported but unused",
+        "noqa_row": 8,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 8
+        },
+        "filename": "/workspaces/IB-Assistant-v2/test_dialog_manager_critic.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 9
+              },
+              "location": {
+                "column": 1,
+                "row": 8
+              }
+            }
+          ],
+          "message": "Remove unused import: `os`"
+        },
+        "location": {
+          "column": 8,
+          "row": 8
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 8,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 47,
+          "row": 18
+        },
+        "filename": "/workspaces/IB-Assistant-v2/test_dialog_manager_critic.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 19
+              },
+              "location": {
+                "column": 1,
+                "row": 18
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.agents.planner.ask_planner`"
+        },
+        "location": {
+          "column": 36,
+          "row": 18
+        },
+        "message": "`backend.agents.planner.ask_planner` imported but unused",
+        "noqa_row": 18,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 60,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_agents.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch, Mock, AsyncMock",
+              "end_location": {
+                "column": 60,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.MagicMock`"
+        },
+        "location": {
+          "column": 51,
+          "row": 2
+        },
+        "message": "`unittest.mock.MagicMock` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 15,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_agents.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `asyncio`"
+        },
+        "location": {
+          "column": 8,
+          "row": 3
+        },
+        "message": "`asyncio` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 20,
+          "row": 231
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_agents.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 232
+              },
+              "location": {
+                "column": 1,
+                "row": 231
+              }
+            }
+          ],
+          "message": "Remove unused import: `time`"
+        },
+        "location": {
+          "column": 16,
+          "row": 231
+        },
+        "message": "`time` imported but unused",
+        "noqa_row": 231,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_api.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `json`"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`json` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 42,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_api.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `fastapi.testclient.TestClient`"
+        },
+        "location": {
+          "column": 32,
+          "row": 3
+        },
+        "message": "`fastapi.testclient.TestClient` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 16,
+          "row": 88
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_api.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 89
+              },
+              "location": {
+                "column": 1,
+                "row": 88
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `headers`"
+        },
+        "location": {
+          "column": 9,
+          "row": 88
+        },
+        "message": "Local variable `headers` is assigned to but never used",
+        "noqa_row": 88,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 16,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_backend.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `tempfile`"
+        },
+        "location": {
+          "column": 8,
+          "row": 3
+        },
+        "message": "`tempfile` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 15,
+          "row": 10
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_dialog_reuse.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 11
+              },
+              "location": {
+                "column": 1,
+                "row": 10
+              }
+            }
+          ],
+          "message": "Remove unused import: `aiohttp`"
+        },
+        "location": {
+          "column": 8,
+          "row": 10
+        },
+        "message": "`aiohttp` imported but unused",
+        "noqa_row": 10,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 23,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_dm_small_talk.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import pytest, uuid",
+              "end_location": {
+                "column": 29,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `asyncio`"
+        },
+        "location": {
+          "column": 16,
+          "row": 1
+        },
+        "message": "`asyncio` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 36,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_dm_small_talk.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.memory.save_mem`"
+        },
+        "location": {
+          "column": 28,
+          "row": 3
+        },
+        "message": "`backend.memory.save_mem` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 43,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_expert_gc.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch, AsyncMock",
+              "end_location": {
+                "column": 54,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.MagicMock`"
+        },
+        "location": {
+          "column": 34,
+          "row": 5
+        },
+        "message": "`unittest.mock.MagicMock` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 14,
+          "row": 10
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_expert_gc.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 11
+              },
+              "location": {
+                "column": 1,
+                "row": 10
+              }
+            }
+          ],
+          "message": "Remove unused import: `os`"
+        },
+        "location": {
+          "column": 12,
+          "row": 10
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 10,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 24,
+          "row": 58
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_expert_gc.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 62
+              },
+              "location": {
+                "column": 1,
+                "row": 58
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `draft_without_links`"
+        },
+        "location": {
+          "column": 5,
+          "row": 58
+        },
+        "message": "Local variable `draft_without_links` is assigned to but never used",
+        "noqa_row": 61,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 64,
+          "row": 81
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_expert_gc.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 64,
+                "row": 81
+              },
+              "location": {
+                "column": 53,
+                "row": 81
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `mock_gc`"
+        },
+        "location": {
+          "column": 57,
+          "row": 81
+        },
+        "message": "Local variable `mock_gc` is assigned to but never used",
+        "noqa_row": 84,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 15,
+          "row": 105
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_expert_gc.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 18,
+                "row": 105
+              },
+              "location": {
+                "column": 9,
+                "row": 105
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `result`"
+        },
+        "location": {
+          "column": 9,
+          "row": 105
+        },
+        "message": "Local variable `result` is assigned to but never used",
+        "noqa_row": 105,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 16,
+          "row": 241
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_expert_gc.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 19,
+                "row": 241
+              },
+              "location": {
+                "column": 9,
+                "row": 241
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `results`"
+        },
+        "location": {
+          "column": 9,
+          "row": 241
+        },
+        "message": "Local variable `results` is assigned to but never used",
+        "noqa_row": 241,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_fastapi_ws.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import: `uuid`"
+        },
+        "location": {
+          "column": 8,
+          "row": 4
+        },
+        "message": "`uuid` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 31,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_fastapi_ws.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import AsyncMock, patch",
+              "end_location": {
+                "column": 49,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.Mock`"
+        },
+        "location": {
+          "column": 27,
+          "row": 5
+        },
+        "message": "`unittest.mock.Mock` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 33,
+          "row": 73
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_fastapi_ws.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 74
+              },
+              "location": {
+                "column": 1,
+                "row": 73
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.main.app`"
+        },
+        "location": {
+          "column": 30,
+          "row": 73
+        },
+        "message": "`backend.main.app` imported but unused",
+        "noqa_row": 73,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 44,
+          "row": 119
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_fastapi_ws.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 120
+              },
+              "location": {
+                "column": 1,
+                "row": 119
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.protocol.WsOutgoing`"
+        },
+        "location": {
+          "column": 34,
+          "row": 119
+        },
+        "message": "`backend.protocol.WsOutgoing` imported but unused",
+        "noqa_row": 119,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 33,
+          "row": 120
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_fastapi_ws.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 121
+              },
+              "location": {
+                "column": 1,
+                "row": 120
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.main.app`"
+        },
+        "location": {
+          "column": 30,
+          "row": 120
+        },
+        "message": "`backend.main.app` imported but unused",
+        "noqa_row": 120,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 33,
+          "row": 169
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_fastapi_ws.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 170
+              },
+              "location": {
+                "column": 1,
+                "row": 169
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.main.app`"
+        },
+        "location": {
+          "column": 30,
+          "row": 169
+        },
+        "message": "`backend.main.app` imported but unused",
+        "noqa_row": 169,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_file_ingest_ci.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import: `uuid`"
+        },
+        "location": {
+          "column": 8,
+          "row": 4
+        },
+        "message": "`uuid` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_grafana_iframe.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import pathlib",
+              "end_location": {
+                "column": 25,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 16,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_grafana_iframe.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import pathlib",
+              "end_location": {
+                "column": 25,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 12,
+          "row": 2
+        },
+        "message": "`json` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 25,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_grafana_port.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import yaml, pathlib",
+              "end_location": {
+                "column": 25,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `re`"
+        },
+        "location": {
+          "column": 23,
+          "row": 1
+        },
+        "message": "`re` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 15,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_grpc_smoke.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import grpclib",
+              "end_location": {
+                "column": 30,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 8,
+          "row": 1
+        },
+        "message": "`asyncio` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 21,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_grpc_smoke.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import grpclib",
+              "end_location": {
+                "column": 30,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 17,
+          "row": 1
+        },
+        "message": "`json` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 16,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_index_files.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import: `tempfile`"
+        },
+        "location": {
+          "column": 8,
+          "row": 4
+        },
+        "message": "`tempfile` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 15,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_index_files.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import: `pathlib`"
+        },
+        "location": {
+          "column": 8,
+          "row": 5
+        },
+        "message": "`pathlib` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_index_files.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `time`"
+        },
+        "location": {
+          "column": 8,
+          "row": 6
+        },
+        "message": "`time` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 91,
+          "row": 13
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_index_files.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from scripts.index_files import ingest_path, ingest_minio_objects, _doc_exists",
+              "end_location": {
+                "column": 103,
+                "row": 13
+              },
+              "location": {
+                "column": 1,
+                "row": 13
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 81,
+          "row": 13
+        },
+        "message": "`scripts.index_files.BUCKET_DEF` imported but unused",
+        "noqa_row": 13,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 103,
+          "row": 13
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_index_files.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from scripts.index_files import ingest_path, ingest_minio_objects, _doc_exists",
+              "end_location": {
+                "column": 103,
+                "row": 13
+              },
+              "location": {
+                "column": 1,
+                "row": 13
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 93,
+          "row": 13
+        },
+        "message": "`scripts.index_files.PREFIX_DEF` imported but unused",
+        "noqa_row": 13,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_ingest_full.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `io`"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`io` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 16,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_ingest_full.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `textwrap`"
+        },
+        "location": {
+          "column": 8,
+          "row": 6
+        },
+        "message": "`textwrap` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 16,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `tempfile`"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`tempfile` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 15,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `pathlib`"
+        },
+        "location": {
+          "column": 8,
+          "row": 3
+        },
+        "message": "`pathlib` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import: `json`"
+        },
+        "location": {
+          "column": 8,
+          "row": 5
+        },
+        "message": "`json` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 32,
+          "row": 7
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 8
+              },
+              "location": {
+                "column": 1,
+                "row": 7
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.patch`"
+        },
+        "location": {
+          "column": 27,
+          "row": 7
+        },
+        "message": "`unittest.mock.patch` imported but unused",
+        "noqa_row": 7,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 20,
+          "row": 145
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 146
+              },
+              "location": {
+                "column": 1,
+                "row": 145
+              }
+            }
+          ],
+          "message": "Remove unused import: `time`"
+        },
+        "location": {
+          "column": 16,
+          "row": 145
+        },
+        "message": "`time` imported but unused",
+        "noqa_row": 145,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 54,
+          "row": 236
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 237
+              },
+              "location": {
+                "column": 1,
+                "row": 236
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.embedding._get_client`"
+        },
+        "location": {
+          "column": 43,
+          "row": 236
+        },
+        "message": "`backend.embedding._get_client` imported but unused",
+        "noqa_row": 236,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 14,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_kb_search.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `pytest`"
+        },
+        "location": {
+          "column": 8,
+          "row": 1
+        },
+        "message": "`pytest` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 31,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_kb_search.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch",
+              "end_location": {
+                "column": 49,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 27,
+          "row": 3
+        },
+        "message": "`unittest.mock.Mock` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 42,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_kb_search.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch",
+              "end_location": {
+                "column": 49,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 33,
+          "row": 3
+        },
+        "message": "`unittest.mock.AsyncMock` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 57,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_kb_search.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from backend.agents.kb_search import kb_search",
+              "end_location": {
+                "column": 67,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 49,
+          "row": 4
+        },
+        "message": "`backend.agents.kb_search.SIM_HARD` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 67,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_kb_search.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from backend.agents.kb_search import kb_search",
+              "end_location": {
+                "column": 67,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 59,
+          "row": 4
+        },
+        "message": "`backend.agents.kb_search.SIM_SOFT` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 31,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_markdown_render.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch",
+              "end_location": {
+                "column": 38,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.Mock`"
+        },
+        "location": {
+          "column": 27,
+          "row": 6
+        },
+        "message": "`unittest.mock.Mock` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 12,
+          "row": 7
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_markdown_render.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 8
+              },
+              "location": {
+                "column": 1,
+                "row": 7
+              }
+            }
+          ],
+          "message": "Remove unused import: `json`"
+        },
+        "location": {
+          "column": 8,
+          "row": 7
+        },
+        "message": "`json` imported but unused",
+        "noqa_row": 7,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 38,
+          "row": 16
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_markdown_render.py",
+        "fix": null,
+        "location": {
+          "column": 32,
+          "row": 16
+        },
+        "message": "`marked.marked` imported but unused; consider using `importlib.util.find_spec` to test for availability",
+        "noqa_row": 16,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 29,
+          "row": 17
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_markdown_render.py",
+        "fix": null,
+        "location": {
+          "column": 20,
+          "row": 17
+        },
+        "message": "`DOMPurify` imported but unused; consider using `importlib.util.find_spec` to test for availability",
+        "noqa_row": 17,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 43,
+          "row": 9
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_metrics_export.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch",
+              "end_location": {
+                "column": 43,
+                "row": 9
+              },
+              "location": {
+                "column": 1,
+                "row": 9
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.AsyncMock`"
+        },
+        "location": {
+          "column": 34,
+          "row": 9
+        },
+        "message": "`unittest.mock.AsyncMock` imported but unused",
+        "noqa_row": 9,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 32,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_no_4o.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import subprocess, pathlib",
+              "end_location": {
+                "column": 32,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `sys`"
+        },
+        "location": {
+          "column": 29,
+          "row": 1
+        },
+        "message": "`sys` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 17,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_performance.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `threading`"
+        },
+        "location": {
+          "column": 8,
+          "row": 3
+        },
+        "message": "`threading` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 52,
+          "row": 242
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_performance.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 243
+              },
+              "location": {
+                "column": 1,
+                "row": 242
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 41,
+          "row": 242
+        },
+        "message": "`scripts.index_files.ingest_path` imported but unused",
+        "noqa_row": 242,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 64,
+          "row": 242
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_performance.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 243
+              },
+              "location": {
+                "column": 1,
+                "row": 242
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 54,
+          "row": 242
+        },
+        "message": "`scripts.index_files.BUCKET_DEF` imported but unused",
+        "noqa_row": 242,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 48,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_planner_json.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.agents.planner`"
+        },
+        "location": {
+          "column": 34,
+          "row": 4
+        },
+        "message": "`backend.agents.planner` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 39,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_planner_json.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import: `backend.json_utils.BadJSON`"
+        },
+        "location": {
+          "column": 32,
+          "row": 5
+        },
+        "message": "`backend.json_utils.BadJSON` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 37,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_planner_json_fail.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import asyncio, websockets, json, pytest",
+              "end_location": {
+                "column": 45,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `os`"
+        },
+        "location": {
+          "column": 35,
+          "row": 1
+        },
+        "message": "`os` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 15,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_getfile.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `asyncio`"
+        },
+        "location": {
+          "column": 8,
+          "row": 3
+        },
+        "message": "`asyncio` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 32,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_getfile.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 27,
+          "row": 5
+        },
+        "message": "`unittest.mock.patch` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 43,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_getfile.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import"
+        },
+        "location": {
+          "column": 34,
+          "row": 5
+        },
+        "message": "`unittest.mock.MagicMock` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 43,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_memory.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch",
+              "end_location": {
+                "column": 43,
+                "row": 2
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.MagicMock`"
+        },
+        "location": {
+          "column": 34,
+          "row": 2
+        },
+        "message": "`unittest.mock.MagicMock` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 49,
+          "row": 3
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_memory.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 4
+              },
+              "location": {
+                "column": 1,
+                "row": 3
+              }
+            }
+          ],
+          "message": "Remove unused import: `agents.dialog_manager.handle_message`"
+        },
+        "location": {
+          "column": 35,
+          "row": 3
+        },
+        "message": "`agents.dialog_manager.handle_message` imported but unused",
+        "noqa_row": 3,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 15,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_memory.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 7
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `asyncio`"
+        },
+        "location": {
+          "column": 8,
+          "row": 6
+        },
+        "message": "`asyncio` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 16,
+          "row": 53
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_memory.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 19,
+                "row": 53
+              },
+              "location": {
+                "column": 9,
+                "row": 53
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `result1`"
+        },
+        "location": {
+          "column": 9,
+          "row": 53
+        },
+        "message": "Local variable `result1` is assigned to but never used",
+        "noqa_row": 53,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F841",
+        "end_location": {
+          "column": 16,
+          "row": 57
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_router_memory.py",
+        "fix": {
+          "applicability": "unsafe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 19,
+                "row": 57
+              },
+              "location": {
+                "column": 9,
+                "row": 57
+              }
+            }
+          ],
+          "message": "Remove assignment to unused variable `result2`"
+        },
+        "location": {
+          "column": 9,
+          "row": 57
+        },
+        "message": "Local variable `result2` is assigned to but never used",
+        "noqa_row": 57,
+        "url": "https://docs.astral.sh/ruff/rules/unused-variable"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 16,
+          "row": 2
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_scripts.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 3
+              },
+              "location": {
+                "column": 1,
+                "row": 2
+              }
+            }
+          ],
+          "message": "Remove unused import: `tempfile`"
+        },
+        "location": {
+          "column": 8,
+          "row": 2
+        },
+        "message": "`tempfile` imported but unused",
+        "noqa_row": 2,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 43,
+          "row": 6
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_scripts.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from unittest.mock import patch",
+              "end_location": {
+                "column": 43,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 6
+              }
+            }
+          ],
+          "message": "Remove unused import: `unittest.mock.MagicMock`"
+        },
+        "location": {
+          "column": 34,
+          "row": 6
+        },
+        "message": "`unittest.mock.MagicMock` imported but unused",
+        "noqa_row": 6,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 14,
+          "row": 4
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_slots_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 5
+              },
+              "location": {
+                "column": 1,
+                "row": 4
+              }
+            }
+          ],
+          "message": "Remove unused import: `pytest`"
+        },
+        "location": {
+          "column": 8,
+          "row": 4
+        },
+        "message": "`pytest` imported but unused",
+        "noqa_row": 4,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 10,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_slots_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import: `re`"
+        },
+        "location": {
+          "column": 8,
+          "row": 5
+        },
+        "message": "`re` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 16,
+          "row": 36
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_slots_integration.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 37
+              },
+              "location": {
+                "column": 1,
+                "row": 36
+              }
+            }
+          ],
+          "message": "Remove unused import: `json`"
+        },
+        "location": {
+          "column": 12,
+          "row": 36
+        },
+        "message": "`json` imported but unused",
+        "noqa_row": 36,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 39,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_status_stream.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import asyncio, json, websockets",
+              "end_location": {
+                "column": 39,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `uuid`"
+        },
+        "location": {
+          "column": 35,
+          "row": 1
+        },
+        "message": "`uuid` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 14,
+          "row": 5
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_stub_llm.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "",
+              "end_location": {
+                "column": 1,
+                "row": 6
+              },
+              "location": {
+                "column": 1,
+                "row": 5
+              }
+            }
+          ],
+          "message": "Remove unused import: `pytest`"
+        },
+        "location": {
+          "column": 8,
+          "row": 5
+        },
+        "message": "`pytest` imported but unused",
+        "noqa_row": 5,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 19,
+          "row": 1
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tests/test_welcome.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "import pathlib",
+              "end_location": {
+                "column": 19,
+                "row": 1
+              },
+              "location": {
+                "column": 1,
+                "row": 1
+              }
+            }
+          ],
+          "message": "Remove unused import: `re`"
+        },
+        "location": {
+          "column": 17,
+          "row": 1
+        },
+        "message": "`re` imported but unused",
+        "noqa_row": 1,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      },
+      {
+        "cell": null,
+        "code": "F401",
+        "end_location": {
+          "column": 52,
+          "row": 22
+        },
+        "filename": "/workspaces/IB-Assistant-v2/tools/repo_sweep.py",
+        "fix": {
+          "applicability": "safe",
+          "edits": [
+            {
+              "content": "from typing import Dict, List, Optional, Set",
+              "end_location": {
+                "column": 52,
+                "row": 22
+              },
+              "location": {
+                "column": 1,
+                "row": 22
+              }
+            }
+          ],
+          "message": "Remove unused import: `typing.Tuple`"
+        },
+        "location": {
+          "column": 47,
+          "row": 22
+        },
+        "message": "`typing.Tuple` imported but unused",
+        "noqa_row": 22,
+        "url": "https://docs.astral.sh/ruff/rules/unused-import"
+      }
+    ]
+  },
+  "vulture": {
+    "error": "vulture not found"
+  },
+  "ts_prune": {
+    "ok": false,
+    "code": 0,
+    "stdout": "src/App.tsx:11 - default\nsrc/components/ChatScrollAnchor.tsx:22 - default\nsrc/components/GrafanaEmbed.tsx:1 - default\nsrc/context/AppContext.tsx:5 - ChatMsg (used in module)\nsrc/hooks/useChat.ts:20 - useChat\nsrc/hooks/useChat.ts:5 - ChatMsg (used in module)\n",
+    "stderr": ""
+  },
+  "depcheck": {
+    "ok": false,
+    "code": 255,
+    "findings": {
+      "dependencies": [
+        "dompurify",
+        "marked",
+        "rehype-raw",
+        "rehype-sanitize"
+      ],
+      "devDependencies": [
+        "@types/dompurify",
+        "eslint",
+        "prettier",
+        "autoprefixer",
+        "postcss",
+        "typescript"
+      ],
+      "missing": {},
+      "using": {
+        "@typescript-eslint/parser": [
+          "/workspaces/IB-Assistant-v2/frontend/.eslintrc.cjs"
+        ],
+        "@typescript-eslint/eslint-plugin": [
+          "/workspaces/IB-Assistant-v2/frontend/.eslintrc.cjs"
+        ],
+        "eslint-plugin-react": [
+          "/workspaces/IB-Assistant-v2/frontend/.eslintrc.cjs"
+        ],
+        "eslint-config-prettier": [
+          "/workspaces/IB-Assistant-v2/frontend/.eslintrc.cjs"
+        ],
+        "vite": [
+          "/workspaces/IB-Assistant-v2/frontend/package.json",
+          "/workspaces/IB-Assistant-v2/frontend/vite.config.ts"
+        ],
+        "react": [
+          "/workspaces/IB-Assistant-v2/frontend/package.json",
+          "/workspaces/IB-Assistant-v2/frontend/src/main.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/hooks/useAutoScroll.ts",
+          "/workspaces/IB-Assistant-v2/frontend/src/hooks/useChat.ts",
+          "/workspaces/IB-Assistant-v2/frontend/src/hooks/useTheme.ts",
+          "/workspaces/IB-Assistant-v2/frontend/src/context/AppContext.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ChatPage.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ChatScrollAnchor.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/FileDrop.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/LogsPage.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MainLayout.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MessageBubble.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MessageInput.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/Navbar.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ThemeToggle.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ThemeToggler.tsx"
+        ],
+        "@tailwindcss/typography": [
+          "/workspaces/IB-Assistant-v2/frontend/tailwind.config.js"
+        ],
+        "tailwindcss": [
+          "/workspaces/IB-Assistant-v2/frontend/tailwind.config.js"
+        ],
+        "@vitejs/plugin-react": [
+          "/workspaces/IB-Assistant-v2/frontend/vite.config.ts"
+        ],
+        "react-dom": [
+          "/workspaces/IB-Assistant-v2/frontend/src/main.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MainLayout.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/Navbar.tsx"
+        ],
+        "@types/react-dom": [
+          "/workspaces/IB-Assistant-v2/frontend/src/main.tsx"
+        ],
+        "react-router-dom": [
+          "/workspaces/IB-Assistant-v2/frontend/src/main.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MainLayout.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/Navbar.tsx"
+        ],
+        "@types/react": [
+          "/workspaces/IB-Assistant-v2/frontend/src/main.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/hooks/useAutoScroll.ts",
+          "/workspaces/IB-Assistant-v2/frontend/src/hooks/useChat.ts",
+          "/workspaces/IB-Assistant-v2/frontend/src/hooks/useTheme.ts",
+          "/workspaces/IB-Assistant-v2/frontend/src/context/AppContext.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ChatPage.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ChatScrollAnchor.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/FileDrop.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/LogsPage.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MessageBubble.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MessageInput.tsx",
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ThemeToggle.tsx"
+        ],
+        "react-markdown": [
+          "/workspaces/IB-Assistant-v2/frontend/src/components/MessageBubble.tsx"
+        ],
+        "lucide-react": [
+          "/workspaces/IB-Assistant-v2/frontend/src/components/ThemeToggler.tsx"
+        ]
+      },
+      "invalidFiles": {
+        "/workspaces/IB-Assistant-v2/frontend/tsconfig.json": "SyntaxError: /workspaces/IB-Assistant-v2/frontend/tsconfig.json: Expected double-quoted property name in JSON at position 187 (line 9 column 5)\n    at parse (<anonymous>)\n    at Object..json (node:internal/modules/cjs/loader:1907:39)\n    at Module.load (node:internal/modules/cjs/loader:1465:32)\n    at Function._load (node:internal/modules/cjs/loader:1282:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n    at Module.require (node:internal/modules/cjs/loader:1487:12)\n    at require (node:internal/modules/helpers:135:16)\n    at readJSON (/home/codespace/.npm/_npx/d2bd3cb5801d0b99/node_modules/depcheck/dist/utils/index.js:24:10)\n    at parseTTypeScript (/home/codespace/.npm/_npx/d2bd3cb5801d0b99/node_modules/depcheck/dist/special/ttypescript.js:16:41)"
+      },
+      "invalidDirs": {}
+    }
+  },
+  "forbidden_models": [
+    {
+      "file": "tools/repo_sweep.py",
+      "line": 6,
+      "match": "gpt-4o",
+      "context": "a depcheck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not re"
+    },
+    {
+      "file": "tools/repo_sweep.py",
+      "line": 6,
+      "match": "4o-mini",
+      "context": "eck - Forbidden model mentions: (gpt-4o|4o-mini) - Dangling files: files not referenced"
+    },
+    {
+      "file": "tools/repo_sweep.py",
+      "line": 28,
+      "match": "gpt-4o",
+      "context": "ORBIDDEN_MODELS_REGEX = re.compile(r\"\\b(gpt-4o|4o-mini)\\b\", re.IGNORECASE)  # Director"
+    },
+    {
+      "file": "tools/repo_sweep.py",
+      "line": 28,
+      "match": "4o-mini",
+      "context": "N_MODELS_REGEX = re.compile(r\"\\b(gpt-4o|4o-mini)\\b\", re.IGNORECASE)  # Directories and "
+    },
+    {
+      "file": "tests/test_no_4o.py",
+      "line": 8,
+      "match": "gpt-4o",
+      "context": "eck_output(             [\"grep\", \"-R\", \"gpt-4o\", str(root), \"--include=*.py\", \"--inclu"
+    },
+    {
+      "file": "tests/test_no_4o.py",
+      "line": 22,
+      "match": "gpt-4o",
+      "context": "eck_output(             [\"grep\", \"-R\", \"gpt-4o-mini\", str(root), \"--include=*.py\", \"--"
+    }
+  ],
+  "dangling_files": {
+    "python": [
+      "backend/upload.py",
+      "backend/chat_grpc.py",
+      "backend/utils.py",
+      "backend/chat_pb2.py",
+      "backend/logging_config.py",
+      "backend/metrics.py",
+      "backend/grpc_server.py",
+      "backend/tracing.py",
+      "backend/config.py",
+      "backend/metrics_exporter.py",
+      "backend/router.py",
+      "backend/slots.py",
+      "backend/utils/error_id.py",
+      "backend/agents/planner_backup.py",
+      "backend/agents/planner_new.py",
+      "backend/agents/file_retrieval.py",
+      "backend/agents/kb_search.py",
+      "backend/agents/refine.py",
+      "backend/agents/local_search.py",
+      "backend/agents/experts.py",
+      "backend/generated/chat_grpc.py",
+      "agents/dialog_manager.py",
+      "agents/refine.py",
+      "agents/critic.py",
+      "agents/local_search.py",
+      "agents/expert_gc.py",
+      "scripts/run_agent_scenarios.py",
+      "scripts/agent_chain_test.py"
+    ],
+    "typescript": [
+      "frontend/src/App.tsx",
+      "frontend/src/vite-env.d.ts",
+      "frontend/src/main.tsx",
+      "frontend/src/types/global.d.ts",
+      "frontend/src/components/ChatScrollAnchor.tsx",
+      "frontend/src/components/GrafanaEmbed.tsx",
+      "frontend/src/hooks/useChat.ts"
+    ]
+  }
+}

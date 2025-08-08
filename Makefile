@@ -1,7 +1,7 @@
 # Helpers
 PY_DIRS=backend agents scripts
 
-.PHONY: lint typecheck test sweep fix
+.PHONY: lint typecheck test sweep sweep-clean fix
 
 # Lint Python (ruff + black) and Frontend (eslint + prettier)
 lint:
@@ -23,7 +23,12 @@ test:
 	pytest -q
 
 # Clean caches and build artifacts
+# Dry-run repository sweep
 sweep:
+	python3 tools/repo_sweep.py
+
+# Clean caches and build artifacts (destructive)
+sweep-clean:
 	rm -rf .pytest_cache .ruff_cache .mypy_cache .coverage htmlcov coverage build dist
 	rm -rf frontend/node_modules frontend/dist frontend/.vite frontend/coverage
 
