@@ -110,18 +110,26 @@ def run_vulture() -> Dict:
 def run_ts_prune() -> Dict:
     if not FRONTEND_DIR.exists():
         return {"skipped": "no frontend dir"}
-    # Prefer local install via npx; try --json or -j
-    for args in (["--json"], ["-j"]):
-        res = run_cmd(["npx", "-y", "ts-prune", *args], cwd=FRONTEND_DIR, timeout=300)
+    # Prefer local install via npx; try with explicit tsconfig and JSON output
+    attempts = [
+        ["-y", "ts-prune", "-p", "tsconfig.json", "-j"],
+        ["-y", "ts-prune", "--json"],
+        ["-y", "ts-prune", "-j"],
+    ]
+    last: Optional[CmdResult] = None
+    for args in attempts:
+        res = run_cmd(["npx", *args], cwd=FRONTEND_DIR, timeout=300)
+        last = res
         if res.ok:
             try:
                 return {"ok": True, "code": 0, "findings": json.loads(res.stdout or "[]")}
             except json.JSONDecodeError:
-                pass
-        # If ts-prune not available
+                # some versions may not support JSON; fall back to raw text parsing
+                lines = [ln.strip() for ln in (res.stdout or "").splitlines() if ln.strip()]
+                return {"ok": True, "code": 0, "findings": lines}
         if res.code == 127 or "command not found" in res.stderr.lower():
             return {"error": "npx/ts-prune not found"}
-    return {"ok": False, "code": res.code, "stdout": res.stdout, "stderr": res.stderr}
+    return {"ok": False, "code": (last.code if last else 1), "stdout": (last.stdout if last else ""), "stderr": (last.stderr if last else "")}
 
 
 def run_depcheck() -> Dict:
