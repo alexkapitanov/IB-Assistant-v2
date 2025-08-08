@@ -4,24 +4,24 @@
 import tiktoken
 from typing import List, Dict, Any
 
-def count_tokens(text: str, model: str = "gpt-4") -> int:
+DEFAULT_MODEL = "gpt-4.1-mini"
+
+
+def count_tokens(text: str, model: str = DEFAULT_MODEL) -> int:
     """
-    Подсчитывает количество токенов в тексте для указанной модели
+    Подсчитывает количество токенов в тексте для указанной модели.
+    Для поддерживаемых моделей используется кодек cl100k_base.
     """
     try:
-        # Для большинства моделей OpenAI используем cl100k_base encoding
-        if "gpt-4" in model or "o3" in model:
-            encoding = tiktoken.get_encoding("cl100k_base")
-        else:
-            # Fallback для других моделей
-            encoding = tiktoken.get_encoding("cl100k_base")
-        
+        # Все текущие разрешённые модели используют совместимый токенизатор
+        encoding = tiktoken.get_encoding("cl100k_base")
         return len(encoding.encode(text))
     except Exception:
         # Простая эвристика если tiktoken не работает
-        return len(text.split()) * 1.3  # Примерно 1.3 токена на слово
+        return int(len(text.split()) * 1.3)  # Примерно 1.3 токена на слово
 
-def count_messages_tokens(messages: List[Dict[str, Any]], model: str = "gpt-4") -> int:
+
+def count_messages_tokens(messages: List[Dict[str, Any]], model: str = DEFAULT_MODEL) -> int:
     """
     Подсчитывает общее количество токенов в списке сообщений
     """
@@ -31,5 +31,5 @@ def count_messages_tokens(messages: List[Dict[str, Any]], model: str = "gpt-4") 
         total += count_tokens(content, model)
         # Добавляем небольшой overhead на структуру сообщения
         total += 4  # ~4 токена на role, name и другие метаданные
-    
+
     return total
