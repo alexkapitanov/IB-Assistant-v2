@@ -68,6 +68,22 @@ OPENAI_API_KEY=sk-your-actual-openai-key-here
 3. **Для разработки** убедитесь, что все сервисы запущены: Redis, Qdrant, MinIO
 4. **При ошибках WebSocket** проверьте логи: `docker-compose logs backend`
 
+## Сервисы
+
+В составе docker-compose присутствуют сервисы:
+
+- backend — FastAPI/gRPC сервер
+- frontend — статика UI, собранная Vite
+- archiver — ночной архиватор диалогов в MinIO
+- update_dialog_embeddings — переиндексация/обновление эмбеддингов диалогов
+- redis — кэш/слоты/шина статусов
+- qdrant — векторное хранилище (RAG)
+- minio — S3-совместимое хранилище
+- jaeger — трассировка (OTLP)
+- loki — логи
+- grafana — дашборды/визуализация
+- prometheus — сбор метрик
+
 ## Quick start
 ```bash
 docker-compose up --build
