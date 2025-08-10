@@ -120,7 +120,7 @@ jobs:
       - name: Install minimal test deps on runner
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio pytest-timeout websockets minio qdrant-client
+          pip install pytest pytest-asyncio pytest-timeout websockets minio qdrant-client prometheus-client
       - name: Build images
         run: |
           docker compose --profile test build fake-openai backend
