@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, Any
+from typing import Any, Dict
 
 
 class Config:
@@ -24,6 +24,9 @@ class Config:
                     "DB_PATH": "/data/chat.db",
                     "GC_TIMEOUT_SEC": "300",
                     "WEB_SEARCH_TIMEOUT_SEC": "20",
+                    "WEB_CACHE_TTL_SEC": "86400",
+                    "WEB_CACHE_NEG_TTL_SEC": "60",
+                    "WEB_CACHE_LOCK_SEC": "30",
                     "MODEL_GPT4": "gpt-4.1",
                     "MODEL_GPT4_MINI": "gpt-4.1-mini",
                     "MODEL_O3_MINI": "o3-mini",
@@ -34,23 +37,31 @@ class Config:
                     "ARCHIVE_DELETE_AFTER_BACKUP": "true",
                     "OPENAI_API_KEY": "stub",
                     "CLARIFY_THRESHOLD": "0.6",
+                    # PII/moderation flags
+                    "PII_SCRUB_ENABLED": "1",
+                    "SCRUB_BEFORE_PERSIST": "0",
+                    "ENABLE_LLM_GUARD": "0",
                 }
                 value = defaults.get(name)
 
             if value is None:
                 raise AttributeError(f"Configuration '{name}' not found in environment variables or defaults")
-            
-            # Преобразуем типы для числовых значений: сначала в int, потом в float
-            if name.endswith('_SEC') or name.endswith('_TIMEOUT') or name.endswith('_DAYS') or name.endswith('_THRESHOLD'):
-                try:
-                    value = int(value)
-                except (ValueError, TypeError):
+
+            # Преобразуем типы: *_SEC, *_TIMEOUT, *_DAYS → int; *_THRESHOLD → float
+            out: Any = value
+            if isinstance(value, str):
+                if name.endswith('_SEC') or name.endswith('_TIMEOUT') or name.endswith('_DAYS'):
                     try:
-                        value = float(value)
+                        out = int(value)
                     except (ValueError, TypeError):
                         pass
-            
-            self._cache[name] = value
+                elif name.endswith('_THRESHOLD'):
+                    try:
+                        out = float(value)
+                    except (ValueError, TypeError):
+                        pass
+
+            self._cache[name] = out
         
         return self._cache[name]
     

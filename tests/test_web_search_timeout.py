@@ -1,6 +1,9 @@
 import asyncio
+
 import pytest
+
 from backend.agents import web_search as ws
+
 
 @pytest.mark.asyncio
 async def test_web_search_timeout(monkeypatch):

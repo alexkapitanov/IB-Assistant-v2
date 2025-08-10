@@ -1,3 +1,17 @@
+test-e2e:
+	OPENAI_BASE_URL=http://fake-openai:8081/v1 OPENAI_API_KEY=test_key_e2e DISABLE_WEB_SEARCH=1 docker compose --profile test up -d fake-openai redis qdrant backend
+	# Wait for backend health
+	for i in $$(seq 1 30); do \
+		if curl -sf http://localhost:8000/health >/dev/null; then \
+			echo "backend is healthy"; \
+			break; \
+		fi; \
+		sleep 1; \
+	done
+	# WS readiness probe
+	python3 scripts/ws_probe.py
+	pytest -q tests/e2e_*_test.py
+	docker compose --profile test down
 # Helpers
 PY_DIRS=backend agents scripts
 

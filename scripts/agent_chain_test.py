@@ -1,10 +1,11 @@
 import asyncio
 import logging
 import uuid
-from backend.agents.planner import ask_planner
+
 from backend.agents.critic import ask_critic
-from backend.agents.expert_gc import run_expert_gc
 from backend.agents.dialog_manager import _classify_intent
+from backend.agents.expert_gc import run_expert_gc
+from backend.agents.planner import ask_planner
 
 # Вопросы разного уровня сложности
 QUESTIONS = [

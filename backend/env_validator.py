@@ -1,16 +1,18 @@
 """Environment validation utilities for IB Assistant v2"""
 
+import asyncio
+import logging
 import os
 import sys
-import asyncio
-from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
-import logging
+from typing import Any, Dict, List, Optional
+
+import qdrant_client
 import redis.asyncio as redis
 from openai import AsyncOpenAI
-import qdrant_client
 from pydantic import ValidationError
-from backend.settings import get_settings, REDIS_URL as DEFAULT_REDIS_URL
+
+from backend.settings import REDIS_URL as DEFAULT_REDIS_URL, get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ class EnvironmentValidator:
         self.settings = get_settings()
         self.results: List[ValidationResult] = []
     
-    async def validate_all(self) -> Dict[str, any]:
+    async def validate_all(self) -> Dict[str, Any]:
         """Run all validation checks"""
         logger.info("Starting environment validation...")
         
@@ -66,7 +68,7 @@ class EnvironmentValidator:
                 self.results.append(ValidationResult(
                     name=f"Required env var: {var_name}",
                     status="fail",
-                    message=f"Missing required environment variable",
+                    message="Missing required environment variable",
                     details=description
                 ))
             elif var_name == "OPENAI_API_KEY" and not value.startswith("sk-"):
@@ -215,7 +217,7 @@ class EnvironmentValidator:
     async def _check_settings_validation(self):
         """Validate Pydantic settings"""
         try:
-            settings = get_settings()
+            _ = get_settings()
             self.results.append(ValidationResult(
                 name="Settings validation",
                 status="pass",
@@ -276,7 +278,7 @@ class EnvironmentValidator:
                     message="⚠ " + message
                 ))
     
-    def _generate_report(self) -> Dict[str, any]:
+    def _generate_report(self) -> Dict[str, Any]:
         """Generate final validation report"""
         pass_count = sum(1 for r in self.results if r.status == "pass")
         warn_count = sum(1 for r in self.results if r.status == "warn")
@@ -303,7 +305,7 @@ class EnvironmentValidator:
             ]
         }
 
-async def validate_environment() -> Dict[str, any]:
+async def validate_environment() -> Dict[str, Any]:
     """Main entry point for environment validation"""
     validator = EnvironmentValidator()
     return await validator.validate_all()

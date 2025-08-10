@@ -2,11 +2,12 @@
 Rate limiting для WebSocket соединений
 """
 import asyncio
-import time
-from typing import Dict, Tuple, Optional
-import redis
-import os
 import logging
+import os
+import time
+from typing import Dict, Optional, Tuple, Optional as TypingOptional
+
+import redis
 
 logger = logging.getLogger(__name__)
 
@@ -58,21 +59,22 @@ class RateLimiter:
         """Проверка лимита через Redis"""
         try:
             key = f"rl:{ip}"
-            current_time = int(time.time())
             
             # Получаем текущий счетчик
-            current_count = await asyncio.get_event_loop().run_in_executor(
+            # Получаем значение синхронно в executor, результат уже str|None
+            current = await asyncio.get_event_loop().run_in_executor(
                 None, redis_client.get, key
             )
             
-            if current_count is None:
+            val: TypingOptional[str] = current  # type: ignore[assignment]
+            if val is None:
                 # Первый запрос в окне
                 await asyncio.get_event_loop().run_in_executor(
                     None, lambda: redis_client.setex(key, window, 1)
                 )
                 return False
             
-            current_count = int(current_count)
+            current_count = int(val)
             if current_count >= limit:
                 return True  # Лимит превышен
             

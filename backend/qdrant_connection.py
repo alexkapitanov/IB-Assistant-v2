@@ -1,6 +1,8 @@
-from qdrant_client import QdrantClient
-from backend.settings import get_settings
 import logging
+
+from qdrant_client import QdrantClient
+
+from backend.settings import get_settings
 
 settings = get_settings()
 qdr = None

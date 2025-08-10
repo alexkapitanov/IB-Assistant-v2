@@ -1,9 +1,11 @@
 import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-import tempfile
-from unittest.mock import patch, MagicMock
-from backend.embedding import get as embed, _get_client
+
+from backend.embedding import _get_client, get as embed
 from backend.memory import get_mem, save_mem
+
 
 class TestEmbedding:
     """Test embedding functionality"""

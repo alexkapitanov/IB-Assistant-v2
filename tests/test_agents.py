@@ -1,8 +1,9 @@
-import pytest
-from unittest.mock import patch, Mock, AsyncMock, MagicMock
-import asyncio
 import uuid
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from qdrant_client.http import models
+
 
 class TestAgents:
     """Test agent functionality"""
@@ -200,8 +201,9 @@ class TestAgentPerformance:
     @pytest.mark.openai
     def test_local_search_performance(self):
         """Test local search performance with multiple queries"""
-        from agents.local_search import local_search
         import time
+
+        from agents.local_search import local_search
         
         queries = [
             "infowatch security",
@@ -226,9 +228,9 @@ class TestAgentPerformance:
     @pytest.mark.openai
     def test_local_search_concurrent(self):
         """Test local search can handle concurrent requests"""
-        from agents.local_search import local_search
         import threading
-        import time
+
+        from agents.local_search import local_search
         
         results = []
         errors = []

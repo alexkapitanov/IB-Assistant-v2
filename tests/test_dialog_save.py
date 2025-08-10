@@ -1,8 +1,17 @@
-import pytest
-import uuid
 import json
 import sqlite3
-from backend.chat_db import log_message, get_current_thread_messages, save_dialog_full, DB_PATH, _conn
+import uuid
+
+import pytest
+
+from backend.chat_db import (
+    DB_PATH,
+    _conn,
+    get_current_thread_messages,
+    log_message,
+    save_dialog_full,
+)
+
 
 @pytest.fixture(scope="function", autouse=True)
 def clean_db():

@@ -5,18 +5,17 @@
 import asyncio
 import logging
 import sys
-import os
-from dotenv import load_dotenv
+
+from dotenv import load_dotenv  # noqa: E402
 
 # Загружаем переменные окружения из .env файла
 load_dotenv()
 
 # Добавляем путь к backend для импорта модулей
-sys.path.append('/workspaces/IB-Assistant-v2/backend')
+sys.path.append('/workspaces/IB-Assistant-v2/backend')  # noqa: E402
 
-from backend.agents.dialog_manager import handle_message
-from backend.agents.planner import ask_planner
-from backend.agents.critic import ask_critic
+from backend.agents.critic import ask_critic  # noqa: E402
+from backend.agents.dialog_manager import handle_message  # noqa: E402
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -69,14 +68,14 @@ async def test_dialog_manager_and_critic():
                 session_logger=logger
             )
             
-            print(f"✅ Dialog Manager ответ:")
+            print("✅ Dialog Manager ответ:")
             print(f"   Тип: {response.get('type', 'unknown')}")
             print(f"   Роль: {response.get('role', 'unknown')}")
             print(f"   Контент: {response.get('content', '')[:100]}{'...' if len(response.get('content', '')) > 100 else ''}")
             
             # Если это простой ответ (draft), тестируем Critic
             if response.get('type') == 'chat' and 'need_escalate' not in str(response):
-                print(f"\n🔍 Тестируем Critic для ответа...")
+                print("\n🔍 Тестируем Critic для ответа...")
                 content = response.get('content', '')
                 if content and len(content.strip()) > 10:  # Только если есть содержательный ответ
                     try:
@@ -86,9 +85,9 @@ async def test_dialog_manager_and_critic():
                     except Exception as e:
                         print(f"   ❌ Ошибка Critic: {e}")
                 else:
-                    print(f"   ⚠️ Недостаточно контента для Critic")
+                    print("   ⚠️ Недостаточно контента для Critic")
             else:
-                print(f"   ℹ️ Ответ эскалирован к Expert Team, Critic не применяется")
+                print("   ℹ️ Ответ эскалирован к Expert Team, Critic не применяется")
                 
         except Exception as e:
             print(f"❌ Ошибка Dialog Manager: {e}")
@@ -126,7 +125,7 @@ async def test_dialog_manager_and_critic():
         except Exception as e:
             print(f"   ❌ Ошибка: {e}")
     
-    print(f"\n🎯 РЕЗЮМЕ:")
+    print("\n🎯 РЕЗЮМЕ:")
     print("- Dialog Manager обрабатывает разные типы сообщений")
     print("- Critic оценивает качество ответов по полноте")
     print("- Простые вопросы → draft + Critic")

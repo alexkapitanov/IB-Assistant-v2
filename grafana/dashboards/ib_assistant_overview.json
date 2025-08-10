@@ -54,6 +54,44 @@
     },
     {
       "datasource": "Prometheus",
+      "description": "Доля попаданий в веб-кэш (hit rate): hit / (hit + miss) за 5 минут.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {"h": 4, "w": 12, "x": 0, "y": 17},
+      "options": {"textMode": "value_and_name", "colorMode": "value", "graphMode": "none"},
+      "targets": [
+        {
+          "expr": "(sum(rate(ib_web_cache_hit_total[5m])))/(sum(rate(ib_web_cache_hit_total[5m])) + sum(rate(ib_web_cache_miss_total[5m]))) or on() vector(0)",
+          "refId": "A"
+        }
+      ],
+      "title": "Web-cache Hit Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Профиль латентности web-search (P50/P95) за 5 минут.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "line", "showPoints": "auto", "lineWidth": 1},
+          "unit": "s"
+        }
+      },
+      "gridPos": {"h": 4, "w": 12, "x": 12, "y": 17},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, rate(ib_web_search_latency_sec_bucket[5m]))", "legendFormat": "P50", "refId": "A"},
+        {"expr": "histogram_quantile(0.95, rate(ib_web_search_latency_sec_bucket[5m]))", "legendFormat": "P95", "refId": "B"}
+      ],
+      "title": "Web-search Latency P50/P95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
       "description": "Время прохождения запроса по стадиям. P50 — медиана, P95 — хвост. Зелёная/жёлтая линия = classify (Decision-Router); синяя/розовая = thinking (Planner + Expert-GC).",
       "fieldConfig": {
         "defaults": {

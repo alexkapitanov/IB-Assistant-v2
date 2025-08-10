@@ -4,15 +4,18 @@
 
 import os
 from functools import lru_cache
+from typing import Optional
+
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
-from typing import Optional
+
 
 class Settings(BaseSettings):
     """Application settings with environment variable support"""
     
     # OpenAI Configuration
-    openai_api_key: str = Field(..., description="OpenAI API key for LLM access")
+    # Делаем поле необязательным для init, значение берём из окружения (по умолчанию пусто/"stub")
+    openai_api_key: str = Field("", description="OpenAI API key for LLM access")
     
     # Model Configuration
     chat_model: str = Field("gpt-4.1", description="Chat model name")
@@ -59,7 +62,7 @@ class Settings(BaseSettings):
 
     @field_validator("qdrant_port", "redis_port", mode="before")
     @classmethod
-    def _parse_ports(cls, v):
+    def _parse_ports(_cls, v):
         try:
             return int(v)
         except Exception:
@@ -89,4 +92,4 @@ REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 @lru_cache()
 def get_settings() -> Settings:
     """Get application settings (cached)"""
-    return Settings()
+    return Settings()  # type: ignore[call-arg]

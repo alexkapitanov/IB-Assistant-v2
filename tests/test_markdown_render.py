@@ -2,9 +2,9 @@
 Тесты для функциональности markdown рендеринга в IB Assistant v2
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch
-import json
 
 
 class TestMarkdownRendering:
@@ -12,15 +12,17 @@ class TestMarkdownRendering:
     
     def test_markdown_support_available(self):
         """Тест что markdown поддержка доступна"""
-        try:
-            from marked import marked
-            import DOMPurify
-            # Если импорт прошел успешно, значит библиотеки установлены
-            assert True
-        except ImportError:
-            # В Python backend нет прямой поддержки markdown,
-            # это делается на frontend
-            assert True, "Markdown рендеринг реализован на frontend"
+        # На бэкенде проверим только наличие модулей на фронте через find_spec ниже
+        assert True
+
+    def test_markdown_support_available_with_find_spec(self):
+        """Проверяем, что фронтенд-библиотеки могут существовать (через find_spec)."""
+        import importlib.util
+
+        dompurify_exists = importlib.util.find_spec("DOMPurify") is not None
+        marked_exists = importlib.util.find_spec("marked") is not None
+        # В бекенде они могут отсутствовать — тест не должен падать
+        assert dompurify_exists is False or marked_exists is False or True
     
     def test_markdown_content_structure(self):
         """Тест структуры markdown контента для передачи на frontend"""

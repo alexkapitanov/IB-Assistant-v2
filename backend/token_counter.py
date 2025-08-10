@@ -1,8 +1,9 @@
 """
 Модуль для подсчета токенов в сообщениях
 """
+from typing import Any, Dict, List
+
 import tiktoken
-from typing import List, Dict, Any
 
 DEFAULT_MODEL = "gpt-4.1-mini"
 

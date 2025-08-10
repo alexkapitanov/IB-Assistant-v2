@@ -1,13 +1,13 @@
 import os
-import io
-import uuid
 import pathlib
+import socket
 import subprocess
-import textwrap
+import uuid
+
+import pytest
 from minio import Minio
 from qdrant_client import QdrantClient
-import pytest
-import socket
+
 
 # Skip tests if MinIO or Qdrant services are not reachable
 def _service_available(host: str, port: int) -> bool:

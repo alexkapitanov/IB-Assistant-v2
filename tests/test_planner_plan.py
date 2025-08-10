@@ -1,7 +1,10 @@
-import pytest
 import json
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from backend.agents.planner import _build_plan
+
 
 @pytest.mark.asyncio
 async def test_build_plan_parses_json_correctly():

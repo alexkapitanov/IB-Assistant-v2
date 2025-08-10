@@ -27,6 +27,34 @@ Or use Makefile helpers:
 * При срабатывании таймаута Search-агент возвращает строку **TIMEOUT**,
   Critic снижает уверенность → Expert-GC переходит к fallback-циклу.
 
+## Web-Search Cache
+
+Веб-поиск кешируется в Redis на основе канонизированного ключа `canonicalize(query, slots)`:
+- Нормализация: обрезка/склейка пробелов, lowercase
+- Учет слотов: `topic` и `product` добавляются как суффиксы к ключу
+- Итоговый ключ: `ws:<sha1(canonical)>`
+
+Поведение:
+- Успешные результаты сохраняются на `WEB_CACHE_TTL_SEC` (по умолчанию 24 часа)
+- Негативный кеш (пустой ответ/таймаут) сохраняется строкой `"TIMEOUT"` на `WEB_CACHE_NEG_TTL_SEC` (по умолчанию 60 сек)
+- Защита от шторма: перед реальным поиском берётся `NX`-lock на `WEB_CACHE_LOCK_SEC` (по умолчанию 30 сек);
+    если лок не получен — ожидаем до 5 секунд заполнения кеша и читаем уже готовые данные
+- Метрики Prometheus:
+    - `ib_web_cache_hit_total`, `ib_web_cache_miss_total`, `ib_web_cache_hit_after_wait_total`
+    - `ib_web_cache_store_total`, `ib_web_cache_store_negative_total`
+    - `ib_web_search_latency_sec` (Histogram)
+
+Формат результата `web_search()`:
+- При успехе: `{ "summary": "...", "sources": [...], "ts": <unix_time> }`
+- При таймауте или пустом результате: строка `"TIMEOUT"`
+
+Сжатие:
+- Если сериализованный payload > 100 КБ, сохраняется в gzip + base64 с префиксом `z:`.
+
+Invalidate:
+- Временно вручную: `redis-cli DEL ws:<sha1>`
+- Планируется утилита: `scripts/ws_cache_invalidate.py` (в будущих задачах).
+
 ### Live-статусы
 
 * Каждый узел публикует progress в Redis `status_bus`.
@@ -68,21 +96,29 @@ OPENAI_API_KEY=sk-your-actual-openai-key-here
 3. **Для разработки** убедитесь, что все сервисы запущены: Redis, Qdrant, MinIO
 4. **При ошибках WebSocket** проверьте логи: `docker-compose logs backend`
 
-## Сервисы
+## Сервисы и порты
 
-В составе docker-compose присутствуют сервисы:
+Активные сервисы в docker-compose:
 
-- backend — FastAPI/gRPC сервер
-- frontend — статика UI, собранная Vite
-- archiver — ночной архиватор диалогов в MinIO
-- update_dialog_embeddings — переиндексация/обновление эмбеддингов диалогов
+- backend — FastAPI/gRPC сервер (экспортирует Prometheus /metrics)
+- frontend — готовая статика UI на Nginx
 - redis — кэш/слоты/шина статусов
 - qdrant — векторное хранилище (RAG)
-- minio — S3-совместимое хранилище
-- jaeger — трассировка (OTLP)
-- loki — логи
-- grafana — дашборды/визуализация
+- minio — S3-совместимое хранилище (+ консоль)
+- grafana — дашборды
 - prometheus — сбор метрик
+
+Порты (host → container):
+
+- Backend API: 8000 → 8000
+- Backend metrics: 9310 → 9310
+- gRPC: 50051 → 50051
+- Frontend: 5173 → 80
+- Qdrant: 6333 → 6333
+- MinIO S3: 9000 → 9000
+- MinIO Console: 9001 → 9001
+- Grafana: 3000 → 3000
+- Prometheus: 9090 → 9090
 
 ## Quick start
 ```bash
@@ -188,6 +224,26 @@ User ► DM-Router/DM-Critic ► KB-Search (reuse?) ► Planner
              └ need_escalate → Expert-GC (multi-round) → Refine ► UI
 
 *Все стадии публикуют status-event; таймауты (web 20 s / GC 300 s) отсекают долгие операции, отправляя системное ⚠️-сообщение.*
+
+## Структура промптов
+
+Все системные промпты собраны в одном модуле: `backend/prompts/system_messages.py`.
+
+- SYSTEM_DOMAIN_EXPERT — системный промпт доменного эксперта (под тему/продукт)
+- SYSTEM_GENERAL_EXPERT — общий эксперт по ИБ
+- SYSTEM_AGGREGATOR — агрегатор доказательств и финального ответа
+
+Использование в коде:
+
+```python
+from backend.prompts.system_messages import (
+    SYSTEM_DOMAIN_EXPERT,
+    SYSTEM_GENERAL_EXPERT,
+    SYSTEM_AGGREGATOR,
+)
+```
+
+Черновики/дубликаты удалены; единый файл упрощает поддержку и поиск по коду.
 
 ### Мониторинг и дашборды
 

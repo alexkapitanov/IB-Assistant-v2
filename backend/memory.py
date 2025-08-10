@@ -1,14 +1,18 @@
-import redis, os, json
+import json
+import os
 import warnings
+from typing import Any, Dict, Optional, Union, cast
+
+import redis
+
 from backend.chat_db import log_message
-from typing import Optional
 
 # Глобальные переменные для ленивой инициализации
 _redis_client: Optional[redis.Redis] = None
-_redis_available = None
-_memory_store = {}
+_redis_available: Optional[bool] = None
+_memory_store: Dict[str, Dict[str, Any]] = {}
 
-def _get_redis_client():
+def _get_redis_client() -> Optional[redis.Redis]:
     """Ленивая инициализация Redis клиента"""
     global _redis_client, _redis_available
     
@@ -19,7 +23,15 @@ def _get_redis_client():
             
             _redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True, socket_timeout=5)
             # Проверяем подключение
-            _redis_client.ping()
+            try:
+                # ping только если клиент создан
+                assert _redis_client is not None
+                _redis_client.ping()
+            except Exception:
+                _redis_client = None
+                _redis_available = False
+                warnings.warn("Redis not available, using in-memory storage for tests")
+                return None
             _redis_available = True
         except (redis.ConnectionError, Exception):
             # Fallback: используем словарь в памяти для тестов
@@ -29,16 +41,16 @@ def _get_redis_client():
     
     return _redis_client if _redis_available else None
 
-def get_mem(tid):
+def get_mem(tid: str) -> Dict[str, Any]:
     """Получение памяти по идентификатору сессии"""
     redis_client = _get_redis_client()
     if redis_client:
         raw = redis_client.get(f"mem:{tid}")
-        return json.loads(raw) if raw else {}
+        return cast(Dict[str, Any], json.loads(raw)) if isinstance(raw, str) else {}
     else:
         return _memory_store.get(tid, {})
 
-def save_mem(tid, slots, ttl=3600):
+def save_mem(tid: str, slots: Dict[str, Any], ttl: int = 3600) -> None:
     """Сохранение памяти по идентификатору сессии с TTL"""
     redis_client = _get_redis_client()
     if redis_client:

@@ -2,7 +2,7 @@
 import asyncio
 import json
 import os
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 # Ensure local imports work
 os.environ.setdefault("OPENAI_API_KEY", "stub")
@@ -33,9 +33,9 @@ class DummyGroupChatManager:
 
 async def run_scenarios():
     # Import backend modules after setting OPENAI_API_KEY
-    from backend.agents.planner import _build_plan
-    from backend.agents.critic import ask_critic
     import backend.agents.expert_gc as egc
+    from backend.agents.critic import ask_critic
+    from backend.agents.planner import _build_plan
 
     # Monkeypatch GroupChat/Manager to dummy to avoid network calls
     egc.GroupChat = DummyGroupChat

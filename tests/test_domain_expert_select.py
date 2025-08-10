@@ -1,6 +1,12 @@
 import pytest
-from backend.agents.expert_gc import create_domain_expert, SYSTEM_EXPERT_TEMPLATE, SYSTEM_GENERAL_EXPERT
+
 from backend import config
+from backend.agents.expert_gc import (
+    SYSTEM_EXPERT_TEMPLATE,
+    SYSTEM_GENERAL_EXPERT,
+    create_domain_expert,
+)
+
 
 # Мокируем autogen, чтобы не требовать его установки для тестов
 class MockAssistantAgent:

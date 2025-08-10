@@ -5,6 +5,7 @@
 import json
 import os
 
+
 def test_dashboard_theme():
     """Проверяет что дашборд настроен на светлую тему и двухколоночную разметку"""
     

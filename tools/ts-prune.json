@@ -1,0 +1,6 @@
+src/App.tsx:11 - default
+src/components/ChatScrollAnchor.tsx:22 - default
+src/components/GrafanaEmbed.tsx:1 - default
+src/context/AppContext.tsx:5 - ChatMsg (used in module)
+src/hooks/useChat.ts:20 - useChat
+src/hooks/useChat.ts:5 - ChatMsg (used in module)

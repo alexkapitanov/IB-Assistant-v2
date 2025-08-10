@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Tuple
+from typing import Tuple
 
-from backend import config
 
 # Placeholder to be monkeypatched in tests
 async def kb_search(question: str):  # type: ignore

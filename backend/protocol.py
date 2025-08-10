@@ -1,5 +1,7 @@
+from typing import Any, List, Literal, Optional, Tuple
+
 from pydantic import BaseModel
-from typing import Literal, Any, List, Tuple, Optional
+
 
 class WsOutgoing(BaseModel):
     type: Literal["status", "chat", "error"]

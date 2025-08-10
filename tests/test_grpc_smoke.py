@@ -1,10 +1,13 @@
-import asyncio, json, grpclib
-import pytest
-from backend.chat_pb2 import ChatMessage
-from backend.chat_grpc import ChatStub
-from backend.grpc_server import Chat
-from grpclib.server import Server
 import socket
+
+import grpclib
+import pytest
+from grpclib.server import Server
+
+from backend.chat_grpc import ChatStub
+from backend.chat_pb2 import ChatMessage
+from backend.grpc_server import Chat
+
 
 def _service_available(host: str, port: int) -> bool:
     try:

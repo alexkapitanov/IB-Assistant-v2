@@ -1,4 +1,9 @@
-import sqlite3, contextlib, os, pathlib, tempfile, json
+import contextlib
+import json
+import os
+import pathlib
+import sqlite3
+import tempfile
 
 # Путь к базе данных - используем переменную окружения для тестов
 default_path = "/data/chatlog.db"

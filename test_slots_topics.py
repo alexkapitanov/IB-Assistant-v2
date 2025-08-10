@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import re
 import json
+import re
 
 # Копируем логику из slots.py для тестирования
 TOPIC_RE = re.compile(r"\b(DLP|SIEM|Zero\s+Trust|Linux\s+hardening|SOC)\b", re.I)

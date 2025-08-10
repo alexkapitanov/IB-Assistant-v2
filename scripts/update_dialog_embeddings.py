@@ -1,10 +1,13 @@
-import sqlite3
-import qdrant_client
-from qdrant_client.models import Distance, VectorParams, PointStruct
-import json
-import tqdm
-from backend.embedding_pool import get_embedding_async
 import asyncio
+import json
+import sqlite3
+
+import qdrant_client
+import tqdm
+from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from backend.embedding_pool import get_embedding_async
+
 
 def main():
     """
@@ -19,12 +22,12 @@ def main():
     # Подключение к Qdrant
     qdr = qdrant_client.QdrantClient("qdrant", port=6333)
 
-        # Проверка и создание коллекции 'dialogs', если она не существует
+    # Проверка и создание коллекции 'dialogs', если она не существует
     try:
         qdr.get_collection(collection_name="dialogs")
         print("Коллекция 'dialogs' уже существует.")
-    except:
-        print("Создание коллекции 'dialogs'...")
+    except Exception as e:
+        print(f"Создание коллекции 'dialogs'... Причина: {e}")
         qdr.create_collection(
             collection_name="dialogs",
             vectors_config=VectorParams(size=1536, distance=Distance.COSINE),

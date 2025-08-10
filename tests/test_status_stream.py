@@ -1,6 +1,9 @@
-import asyncio, json, websockets, uuid
-import pytest
+import asyncio
+import json
 import socket
+
+import pytest
+import websockets
 
 # Пропускаем тесты, если сервер недоступен
 pytestmark = pytest.mark.integration
@@ -13,7 +16,7 @@ def is_server_available():
         result = sock.connect_ex(('localhost', 8000))
         sock.close()
         return result == 0
-    except:
+    except Exception:
         return False
 
 async def run_round():

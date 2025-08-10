@@ -1,9 +1,9 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from agents.dialog_manager import handle_message
-from backend import slots
 import logging
-import asyncio
+from unittest.mock import patch
+
+import pytest
+
+from backend import slots
 
 # Создаем logger для тестов
 test_logger = logging.getLogger("test")
@@ -48,23 +48,23 @@ async def test_router_memory_flow(mock_redis):
     with patch("agents.dialog_manager.handle_message", mock_handle_message):
         # Очищаем слоты перед тестом
         mock_redis.delete(thread_id)
-        
+
         # 1. Отправляем "какие DLP?"
-        result1 = await mock_handle_message(thread_id, "какие DLP?", {}, test_logger)
-        
+        await mock_handle_message(thread_id, "какие DLP?", {}, test_logger)
+
         # 2. Отправляем "сделай функциональное сравнение"
         current_slots = slots.get(thread_id)
-        result2 = await mock_handle_message(thread_id, "сделай функциональное сравнение", current_slots, test_logger)
-        
+        await mock_handle_message(thread_id, "сделай функциональное сравнение", current_slots, test_logger)
+
         # 3. Отправляем "критерии выбери сам..."
         current_slots = slots.get(thread_id)
         slots.update(thread_id, "критерии выбери сам...")
         current_slots = slots.get(thread_id)
         result3 = await mock_handle_message(thread_id, "какой лучше выбрать?", current_slots, test_logger)
-        
+
         # Проверяем, что в последнем ответе нет "Уточните"
         assert "Уточните" not in result3.get("content", ""), f"Unexpected clarification request: {result3}"
-        
+
         # Проверяем, что слоты содержат критерии
         final_slots = slots.get(thread_id)
         assert "criteria" in final_slots, "Criteria should be saved in slots"

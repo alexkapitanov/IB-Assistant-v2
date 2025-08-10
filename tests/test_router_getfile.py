@@ -1,9 +1,9 @@
-import pytest
-from agents.dialog_manager import handle_message
-import asyncio
-import uuid
-from unittest.mock import patch, MagicMock
 import logging
+import uuid
+
+import pytest
+
+from agents.dialog_manager import handle_message
 
 test_logger = logging.getLogger("test_router")
 

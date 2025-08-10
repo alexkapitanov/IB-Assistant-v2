@@ -6,14 +6,12 @@
 import asyncio
 import json
 import sys
-import os
 
 # Добавляем путь к проекту
 sys.path.insert(0, '/workspaces/IB-Assistant-v2')
 
-from backend.agents.expert_gc import run_expert_gc, create_domain_expert
+from backend.agents.expert_gc import create_domain_expert, run_expert_gc
 from backend.slots import update_slots_from_user
-from backend import status_bus
 
 
 async def test_expert_agents():
@@ -66,7 +64,7 @@ async def test_expert_agents():
                 print(f"⚠️ Ожидалась тема '{test_case['expected_topic']}', получена: '{topic}'")
             
             # Создаем доменного эксперта
-            print(f"🤖 Создание доменного эксперта...")
+            print("🤖 Создание доменного эксперта...")
             domain_expert = create_domain_expert(slots)
             print(f"Создан эксперт: {domain_expert.name}")
             print(f"Системное сообщение эксперта: {domain_expert.system_message[:200]}...")
@@ -81,9 +79,9 @@ async def test_expert_agents():
                 # В тестовом режиме просто демонстрируем структуру
                 print("👥 Агенты в группе:")
                 print(f"  - DomainExpert ({domain_expert.name})")
-                print(f"  - Search (поиск фактов)")
-                print(f"  - Critic (оценка полноты)")
-                print(f"  - Aggregator (итоговый ответ)")
+                print("  - Search (поиск фактов)")
+                print("  - Critic (оценка полноты)")
+                print("  - Aggregator (итоговый ответ)")
                 
                 print("💭 Имитация размышлений агентов:")
                 print(f"  DomainExpert: 'Анализирую запрос по теме {topic}...'")
@@ -94,7 +92,7 @@ async def test_expert_agents():
                 # Пытаемся запустить реальную группу
                 try:
                     result = await run_expert_gc(thread_id, plan, ctx)
-                    print(f"✅ Результат работы группы:")
+                    print("✅ Результат работы группы:")
                     print(f"   {str(result)[:300]}...")
                 except ImportError as e:
                     print(f"⚠️ AutoGen недоступен: {e}")

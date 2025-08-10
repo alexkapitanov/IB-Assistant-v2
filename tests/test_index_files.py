@@ -1,16 +1,15 @@
 import os
+import socket
 import sys
 import uuid
-import tempfile
-import pathlib
-import time
+
 import pytest
-import socket
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from scripts.index_files import ingest_path, ingest_minio_objects, _doc_exists, BUCKET_DEF, PREFIX_DEF
+from scripts.index_files import _doc_exists, ingest_minio_objects, ingest_path
+
 
 # Skip tests if MinIO or Qdrant services are not reachable
 def _service_available(host: str, port: int) -> bool:

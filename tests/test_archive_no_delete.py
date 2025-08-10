@@ -1,7 +1,9 @@
-import types
 import sqlite3
+import types
+
 import scripts.archive_dialogs as arch
 from backend import config
+
 
 def test_archive_nothing_recent(tmp_path, monkeypatch):
     # Устанавливаем специфичные для теста значения

@@ -1,8 +1,9 @@
-import pytest
-from subprocess import check_call, check_output
 import os
-import uuid
 import pathlib
+from subprocess import check_call, check_output
+
+import pytest
+
 
 @pytest.mark.integration
 def test_local_ingest_to_minio_and_qdrant_stub(dummy_pdf, mc, qc):

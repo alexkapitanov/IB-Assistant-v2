@@ -1,9 +1,10 @@
-import pytest
-import tempfile
+import os
 import pathlib
 import subprocess
-import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
+import pytest
+
 
 class TestIndexScripts:
     """Test indexing scripts functionality"""
@@ -12,7 +13,7 @@ class TestIndexScripts:
     @pytest.mark.openai
     def test_index_files_script_basic(self, dummy_txt, mc, qc):
         """Test basic index_files.py functionality"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         # Test ingesting a single file
         result = ingest_path(dummy_txt, BUCKET_DEF, "test-prefix/")
@@ -24,7 +25,7 @@ class TestIndexScripts:
     @pytest.mark.openai
     def test_index_files_multiple_formats(self, test_files, mc, qc):
         """Test indexing multiple file formats"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         results = []
         for file_type, file_path in test_files.items():
@@ -37,7 +38,7 @@ class TestIndexScripts:
     @pytest.mark.integration
     def test_index_files_deduplication(self, dummy_txt, mc, qc):
         """Test deduplication functionality"""
-        from scripts.index_files import ingest_path, vector_exists, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path, vector_exists
         
         # First ingestion
         if os.getenv("OPENAI_API_KEY"):
@@ -89,7 +90,7 @@ class TestIndexScripts:
     @pytest.mark.openai
     def test_index_files_empty_file(self, tmp_path, mc, qc):
         """Test handling of empty files"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         # Create empty file
         empty_file = tmp_path / "empty.txt"
@@ -103,7 +104,7 @@ class TestIndexScripts:
     @pytest.mark.openai
     def test_minio_objects_ingestion(self, mc, qc):
         """Test MinIO objects ingestion"""
-        from scripts.index_files import ingest_minio_objects, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_minio_objects
         
         # This test requires MinIO to have some objects
         try:

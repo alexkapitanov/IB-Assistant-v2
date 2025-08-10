@@ -1,9 +1,11 @@
-import pytest
-import subprocess
-import pathlib
-import uuid
 import io
 import os
+import pathlib
+import subprocess
+import uuid
+
+import pytest
+
 
 @pytest.mark.integration
 @pytest.mark.openai

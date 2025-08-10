@@ -3,6 +3,7 @@ import os
 from qdrant_client import QdrantClient
 
 from backend.embedding import get as get_embedding
+from typing import Any, Dict, List
 
 # Инициализация клиента Qdrant
 _q = QdrantClient(
@@ -10,7 +11,7 @@ _q = QdrantClient(
 )
 
 
-def local_search(query, top_k: int = 10):
+def local_search(query: str | list[float], top_k: int = 10) -> List[Dict[str, Any]]:
     """
     Выполняет локальный k-NN поиск в коллекции "ib-docs".
     Принимает запрос в виде строки и преобразует его в вектор эмбеддинга.
@@ -27,9 +28,12 @@ def local_search(query, top_k: int = 10):
             query=query_vector,
             limit=top_k,
         ).points
-        return [
-            {"text": h.payload.get("text", ""), "score": h.score, "meta": h.payload} for h in hits
-        ]
+        results: List[Dict[str, Any]] = []
+        for h in hits:
+            payload = h.payload or {}
+            text = payload.get("text", "") if isinstance(payload, dict) else ""
+            results.append({"text": text, "score": h.score, "meta": payload})
+        return results
     except Exception as e:
         print(f"❌ Error in local_search: {e}")
         # В случае ошибки возвращаем пустой результат

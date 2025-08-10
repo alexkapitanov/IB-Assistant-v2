@@ -1,5 +1,6 @@
 import pytest
-from backend.json_utils import safe_load, BadJSON
+
+from backend.json_utils import BadJSON, safe_load
 
 
 def test_valid_json():

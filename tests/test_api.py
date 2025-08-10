@@ -1,6 +1,6 @@
+
 import pytest
-import json
-from fastapi.testclient import TestClient
+
 
 class TestAPIEndpoints:
     """Test FastAPI endpoints"""
@@ -79,13 +79,13 @@ class TestAPIEndpoints:
 
 class TestCORSAndMiddleware:
     """Test CORS and middleware functionality"""
-    
+
     def test_cors_headers(self, client):
         """Test CORS headers are present"""
         response = client.get("/")
-        
+
         # Check if CORS headers are set (if CORS is configured)
-        headers = response.headers
+        _ = response.headers
         # Don't enforce CORS headers if not configured
         assert response.status_code in [200, 404]
     

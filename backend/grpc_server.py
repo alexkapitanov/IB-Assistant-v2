@@ -1,7 +1,12 @@
-import asyncio, uuid, json
+import asyncio
+import json
+import uuid
+
 from grpclib.server import Server
+
+from backend import chat_grpc, chat_pb2
 from backend.chat_core import chat_stream
-from backend import chat_pb2, chat_grpc
+
 
 class Chat(chat_grpc.ChatBase):
 

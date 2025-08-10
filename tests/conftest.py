@@ -1,13 +1,15 @@
 # --- Импорты ---
 import os
-import sys
-import pytest
-from unittest.mock import patch, AsyncMock
 import socket
+import sys
 import uuid
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
+
+import pytest
 from minio import Minio
 from qdrant_client import QdrantClient
+
 
 # --- Мок Prometheus metrics server ---
 @pytest.fixture
@@ -107,20 +109,21 @@ def pytest_collection_modifyitems(config, items):
                 ])):
                 item.add_marker(skip_ws_integration)
                 
-    # Skip script integration tests if MinIO or Qdrant unavailable
+    # Skip all integration tests if MinIO or Qdrant unavailable
     minio_host, minio_port = os.getenv("MINIO_ENDPOINT", "localhost:9000").split(":")
     qdrant_host = os.getenv("QDRANT_HOST", "localhost")
     qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
     if not (_service_available(minio_host, int(minio_port)) and _service_available(qdrant_host, qdrant_port)):
         skip_integration = pytest.mark.skip(reason="Integration services not available (MinIO or Qdrant)")
         for item in items:
-            if "integration" in item.keywords and "test_scripts.py" in str(item.fspath):
+            if "integration" in item.keywords:
                 item.add_marker(skip_integration)
 
 @pytest.fixture(scope="session")
 def client():
     """FastAPI TestClient fixture"""
     from fastapi.testclient import TestClient
+
     from backend.main import app
     return TestClient(app)
 

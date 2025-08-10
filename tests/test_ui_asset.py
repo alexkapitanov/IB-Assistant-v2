@@ -1,6 +1,8 @@
 import pathlib
 import subprocess
+
 import pytest
+
 
 def test_ui_build_asset_exists():
     """Проверяет что frontend может быть собран и создаёт нужные файлы"""

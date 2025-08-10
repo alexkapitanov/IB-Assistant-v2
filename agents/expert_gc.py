@@ -3,15 +3,17 @@ Provides minimal classes and functions referenced by old tests in tests/test_exp
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, List, Dict
 import builtins
+from typing import Any, Dict, List
+
+"""Legacy shim for tests expecting agents.expert_gc module."""
 
 # Minimal local_search shim import if available
 try:
     from agents.local_search import local_search as _local_search
 except Exception:
-    _local_search = lambda q, top_k=5: []  # type: ignore
+    def _local_search(q, top_k=5):  # type: ignore[override]
+        return []
 
 
 # Stubs mimicking behavior expected by tests

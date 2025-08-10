@@ -1,6 +1,10 @@
-import subprocess, pathlib, textwrap
+import pathlib
 import shutil
+import subprocess
+import textwrap
+
 import pytest
+
 
 def test_backend_docker_build():
     # Build backend Docker image to ensure Dockerfile is valid

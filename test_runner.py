@@ -1,8 +1,10 @@
 
 import asyncio
 import json
-import websockets
 import sys
+
+import websockets
+
 
 async def send_query(uri, query):
     print("--- Начинаю тест ---")

@@ -1,32 +1,16 @@
+version: "3.8"
+
 services:
-  archiver:
-    image: ib-assistant-v2-backend
-    command: ["bash","-c","while true; do python scripts/archive_dialogs.py; sleep 86400; done"]
-    volumes:
-      - ./backend:/app/backend
-      - ./scripts:/app/scripts
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - REDIS_HOST=redis
-      - QDRANT_HOST=qdrant
-      - QDRANT_URL=http://qdrant:6333
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - WEB_SEARCH_TIMEOUT_SEC=3
-    depends_on: [qdrant, minio, backend]
   backend:
     image: ib-assistant-v2-backend
     build:
       context: .
       dockerfile: backend/Dockerfile
-    # Убираем --reload, чтобы сервер не перезагружался при изменении кода во время тестов
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
-      - "9310:9310"    # Prometheus metrics
-      - "50051:50051"   # gRPC
+      - "9310:9310"
+      - "50051:50051"
     volumes:
       - ./backend:/app/backend
       - ./tests:/app/tests
@@ -34,16 +18,24 @@ services:
       - ./scripts:/app/scripts
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - REDIS_HOST=redis
-      - QDRANT_HOST=qdrant
-      - QDRANT_URL=http://qdrant:6333
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - WEB_SEARCH_TIMEOUT_SEC=3
-    depends_on: [redis, qdrant, minio]
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+      DISABLE_WEB_SEARCH: ${DISABLE_WEB_SEARCH}
+      REDIS_HOST: redis
+      TESTING: "true"
+      QDRANT_HOST: qdrant
+      QDRANT_URL: http://qdrant:6333
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      WEB_SEARCH_TIMEOUT_SEC: "3"
+      PII_SCRUB_ENABLED: "1"
+      SCRUB_BEFORE_PERSIST: "0"
+      ENABLE_LLM_GUARD: "0"
+    depends_on:
+      - redis
+      - qdrant
+      - minio
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
@@ -51,46 +43,33 @@ services:
       retries: 3
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       args:
-        - VITE_BACKEND_HOST=backend
-        - VITE_BACKEND_PORT=8000
-    ports: [ "5173:80" ]          # production порт
-    depends_on: [ backend ]
+        VITE_BACKEND_HOST: backend
+        VITE_BACKEND_PORT: 8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
   redis:
     image: redis:7
 
   qdrant:
     image: qdrant/qdrant
-    ports: ["6333:6333"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    ports:
+      - "6333:6333"
 
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    ports: ["9000:9000", "9001:9001"]
-
-  jaeger:
-    image: jaegertracing/all-in-one:latest
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "4317:4317"    # OTLP gRPC receiver
-      - "4318:4318"    # OTLP HTTP receiver
-
-  loki:
-    image: grafana/loki:2.9.0
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
+      - "9000:9000"
+      - "9001:9001"
 
   grafana:
     image: grafana/grafana:latest
@@ -100,36 +79,14 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards
       - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
-      - GF_SERVER_ROOT_URL=http://localhost:5173/grafana
-      - GF_SERVER_SERVE_FROM_SUB_PATH=false
-      - GF_SECURITY_ALLOW_EMBEDDING=true
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/ib_assistant_overview.json
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_DATASOURCES_DEFAULT_NAME=Loki
-      - GF_DATASOURCES_DEFAULT_TYPE=loki
-      - GF_DATASOURCES_DEFAULT_URL=http://loki:3100
-      - GF_DATASOURCES_DEFAULT_ACCESS=proxy
-      - GF_DATASOURCES_DEFAULT_IS_DEFAULT=true
-      # Дополнительные настройки для корректной работы sub-path
-      - GF_SERVER_DOMAIN=localhost
-      - GF_SERVER_HTTP_PORT=3000
-      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
-
-  update_dialog_embeddings:
-    image: ib-assistant-v2-backend
-    command: python scripts/update_dialog_embeddings.py
-    volumes:
-      - ./:/app
-      - chat_db:/data
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - QDRANT_HOST=qdrant
-    depends_on:
-      - qdrant
-      - backend # Убедимся, что backend собрал chat.db
+      GF_SERVER_ROOT_URL: http://localhost:3000/grafana
+      GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/ib_assistant_overview.json
+      GF_SECURITY_ADMIN_PASSWORD: admin
 
   prometheus:
     image: prom/prometheus:v2.47.0
@@ -137,9 +94,14 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
+      - "--config.file=/etc/prometheus/prometheus.yml"
     ports:
       - "9090:9090"
 
-volumes:
-  chat_db:
+  fake-openai:
+    build: ./tests/fake_openai
+    ports:
+      - "8081:8081"
+    profiles:
+      - test
+

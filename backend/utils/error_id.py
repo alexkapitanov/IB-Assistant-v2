@@ -1,4 +1,7 @@
-import uuid, logging, traceback
+import logging
+import traceback
+import uuid
+
 
 def capture(exc: Exception) -> str:
     eid = uuid.uuid4().hex[:12]

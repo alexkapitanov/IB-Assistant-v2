@@ -3,10 +3,12 @@
 Скрипт для синтетической генерации метрик Web-search Timeouts, Status Bus, Expert GC
 """
 import asyncio
-import websockets
 import json
-import time
 import random
+import time
+
+import websockets
+
 
 # --- Web-search Timeouts ---
 async def generate_websearch_timeouts():

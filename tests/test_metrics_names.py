@@ -1,6 +1,7 @@
 import pytest
 import requests
 
+
 @pytest.mark.integration
 def test_metrics_names():
     """Test that all expected metrics are available"""

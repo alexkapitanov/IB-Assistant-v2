@@ -4,10 +4,9 @@
 Проверяем, что одинаковые вопросы получают высокий score (≥0.95) для переиспользования.
 """
 
+import asyncio
 import os
 import sys
-import asyncio
-import aiohttp
 
 # Добавляем backend в путь
 sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))

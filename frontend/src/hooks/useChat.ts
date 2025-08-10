@@ -75,6 +75,14 @@ export function useChat() {
             }
             return;
             default:
+              if ((m as any).type === "error"){
+                const err: any = m as any;
+                const id = err.id ? ` (ID ${err.id})` : "";
+                const text = (err.content as string) || (err.msg as string) || "Неизвестная ошибка";
+                setChat((c) => [...c, { role: "system", content: `⚠️ ${text}${id}` }]);
+                setStatus("");
+                return;
+              }
               if (m.content) {
                 setChat((c) => [...c, { role: m.role ?? "assistant", content: m.content as string }]);
               }

@@ -1,6 +1,7 @@
-import sqlite3
-from prometheus_client import Gauge
 import os
+import sqlite3
+
+from prometheus_client import Gauge
 from qdrant_client import QdrantClient
 
 SQLITE_ROWS = Gauge("sqlite_table_rows", "Rows in SQLite table", ["table"])
@@ -34,7 +35,8 @@ def export_qdrant():
         print(f"Qdrant export error: {e}")
 
 def start_exporter():
-    import threading, time
+    import threading
+    import time
     def loop():
         while True:
             export_sqlite()

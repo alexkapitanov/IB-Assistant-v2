@@ -1,10 +1,8 @@
-import pytest
-import tempfile
-import pathlib
-import time
-import json
 import io
-from unittest.mock import patch
+import time
+
+import pytest
+
 
 class TestSystemIntegration:
     """Test full system integration"""
@@ -14,7 +12,7 @@ class TestSystemIntegration:
     @pytest.mark.slow
     def test_full_document_pipeline(self, client, dummy_txt, mc, qc):
         """Test complete document processing pipeline"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         # Step 1: Index a document
         result = ingest_path(dummy_txt, BUCKET_DEF, "integration-test/")
@@ -76,7 +74,7 @@ class TestSystemIntegration:
     def test_embedding_and_storage_integration(self, dummy_txt, mc, qc):
         """Test embedding generation and vector storage integration"""
         from backend.embedding import get as embed
-        from scripts.index_files import ensure_collection, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ensure_collection
         
         # Generate embedding
         text_content = dummy_txt.read_text()
@@ -140,9 +138,9 @@ class TestSystemPerformance:
     @pytest.mark.openai
     def test_concurrent_indexing(self, test_files, mc, qc):
         """Test system handles concurrent indexing operations"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
         import threading
-        import time
+
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         results = []
         errors = []
@@ -181,7 +179,7 @@ class TestSystemPerformance:
     @pytest.mark.openai
     def test_large_document_processing(self, tmp_path, mc, qc):
         """Test processing of larger documents"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         # Create a large document (about 10KB)
         large_content = "Large document content with lots of text. " * 200
@@ -233,7 +231,6 @@ class TestSystemResilience:
         """Test handling of network timeouts"""
         # This test simulates network issues
         try:
-            from backend.embedding import _get_client
             from qdrant_client import QdrantClient
             
             # Test with invalid host (should timeout quickly)
@@ -252,7 +249,7 @@ class TestSystemResilience:
     @pytest.mark.integration
     def test_corrupted_data_handling(self, tmp_path, mc, qc):
         """Test handling of corrupted or invalid data"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         # Create file with special characters and encoding issues
         corrupted_file = tmp_path / "corrupted.txt"

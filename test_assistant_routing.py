@@ -3,9 +3,10 @@
 Тестирование ассистента: простые вопросы → Dialog Manager + Critic, сложные → Expert Team
 """
 import asyncio
-import websockets
 import json
-import time
+
+import websockets
+
 
 async def test_assistant_question(question, description=""):
     """Отправляет вопрос ассистенту и возвращает ответ с деталями обработки."""

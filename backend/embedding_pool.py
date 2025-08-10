@@ -1,10 +1,9 @@
-import asyncio
-import os
-from openai import AsyncOpenAI
-
 # backend/embedding_pool.py
 import asyncio
+from typing import Any, List, Tuple
+
 from openai import AsyncOpenAI
+
 from backend.openai_helpers import _get_async_client
 
 # --- Клиент OpenAI ---
@@ -20,7 +19,7 @@ def _ensure_client():
 
 # --- Очередь и воркер ---
 # Очередь для задач на получение эмбеддингов
-queue = asyncio.Queue()
+queue: asyncio.Queue[Tuple[str, asyncio.Future[List[float]]]] = asyncio.Queue()
 BATCH_SIZE = 16  # Размер батча для отправки в API
 
 async def worker():
@@ -30,7 +29,7 @@ async def worker():
     """
     while True:
         # Собираем задачи в батч
-        batch = []
+        batch: List[Tuple[str, asyncio.Future[List[float]]]] = []
         try:
             # Ждем первую задачу с таймаутом, чтобы не блокироваться вечно
             first_item = await asyncio.wait_for(queue.get(), timeout=1.0)
@@ -47,18 +46,20 @@ async def worker():
             continue
 
         # Разделяем тексты и фьючерсы
-        texts_to_embed = [text for text, _ in batch]
-        futures = [fut for _, fut in batch]
+        texts_to_embed: List[str] = [text for text, _ in batch]
+        futures: List[asyncio.Future[List[float]]] = [fut for _, fut in batch]
 
         try:
             # Убеждаемся, что клиент инициализирован
             _ensure_client()
             # Выполняем запрос к OpenAI API
+            assert client is not None
             response = await client.embeddings.create(model=MODEL, input=texts_to_embed)
             vectors = response.data
 
             # Распределяем результаты по фьючерсам
             for future, vector in zip(futures, vectors):
+                # vector.embedding is provided by OpenAI SDK; assume List[float]
                 future.set_result(vector.embedding)
         except Exception as e:
             print(f"❌ Error processing embedding batch: {e}")
@@ -69,7 +70,7 @@ async def worker():
 
 # --- Запуск воркера ---
 # Глобальная переменная для отслеживания, запущен ли воркер
-_worker_task = None
+_worker_task: asyncio.Task[Any] | None = None
 
 def _ensure_worker_started():
     """Проверяет, что воркер запущен. Если нет - запускает его."""
@@ -96,6 +97,6 @@ async def get_embedding_async(text: str) -> list[float]:
     _ensure_worker_started()
 
     loop = asyncio.get_running_loop()
-    future = loop.create_future()
+    future: asyncio.Future[List[float]] = loop.create_future()
     await queue.put((text, future))
     return await future

@@ -1,9 +1,11 @@
-import pytest
 import asyncio
 import json
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from backend.chat_core import chat_stream
+
 
 # Dummy metrics with no-op labels and inc
 class DummyMetric:

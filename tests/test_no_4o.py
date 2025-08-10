@@ -1,4 +1,6 @@
-import subprocess, pathlib, sys
+import pathlib
+import subprocess
+
 
 def test_no_4o_left():
     """Тест проверяет отсутствие запрещённой модели в кодовой базе"""

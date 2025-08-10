@@ -4,7 +4,7 @@ Centralizes model and API-key configuration to avoid hard-coded strings across a
 from __future__ import annotations
 
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 from backend import config
 
@@ -39,7 +39,11 @@ def autogen_llm_config(model: str | None = None, *, temperature: float = 0.2) ->
     If model is None, uses mini model by default.
     """
     model = model or model_for("mini")
+    base_url = os.getenv("OPENAI_BASE_URL")
+    cfg: Dict[str, Any] = {"model": model, "api_key": get_api_key()}
+    if base_url:
+        cfg["base_url"] = base_url
     return {
-        "config_list": [{"model": model, "api_key": get_api_key()}],
+        "config_list": [cfg],
         "temperature": temperature,
     }

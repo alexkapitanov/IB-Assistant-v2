@@ -1,6 +1,8 @@
+from unittest.mock import patch
+
 import pytest
 import requests
-from unittest.mock import patch
+
 
 @pytest.mark.integration
 def test_metrics_endpoint():

@@ -1,0 +1,163 @@
+name: Quality Gates
+
+on:
+	push:
+		branches: [ main ]
+	pull_request:
+
+jobs:
+	quality-gates:
+		runs-on: ubuntu-latest
+		services:
+			redis:
+				image: redis:7
+				ports: ['6379:6379']
+			qdrant:
+				image: qdrant/qdrant
+				ports: ['6333:6333']
+			minio:
+				image: bitnami/minio:latest
+				env:
+					MINIO_ROOT_USER: minioadmin
+					MINIO_ROOT_PASSWORD: minioadmin
+				options: >-
+					--health-cmd "curl -f http://localhost:9000/minio/health/ready || exit 1"
+					--health-interval 30s
+					--health-timeout 10s
+					--health-retries 5
+				ports: ['9000:9000']
+
+		steps:
+			- name: Checkout
+				uses: actions/checkout@v4
+
+			- name: Set up Python 3.11
+				uses: actions/setup-python@v5
+				with:
+					python-version: '3.11'
+
+			- name: Install Python dependencies
+				run: |
+					python -m pip install --upgrade pip
+					pip install -r backend/requirements.txt
+					pip install -r requirements-dev.txt
+					python - << 'PY'
+import importlib, sys, subprocess
+try:
+		importlib.import_module('yaml')
+		print('pyyaml ok')
+except Exception:
+		subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyyaml'])
+PY
+
+			- name: Install system tools (nc)
+				run: |
+					sudo apt-get update -qq
+					sudo apt-get install -y netcat-openbsd
+
+			- name: Set up Node.js 20
+				uses: actions/setup-node@v4
+				with:
+					node-version: '20'
+					cache: 'npm'
+					cache-dependency-path: frontend/package-lock.json
+
+			- name: Install frontend deps (for lint/tools)
+				run: |
+					if [ -d frontend ]; then cd frontend && npm ci; fi
+
+			- name: Wait for services
+				run: |
+					echo "Waiting for Qdrant..."
+					timeout 60s bash -c 'until curl -f http://localhost:6333/collections; do sleep 2; done'
+					echo "Waiting for MinIO..."
+					timeout 60s bash -c 'until curl -f http://localhost:9000/minio/health/ready; do sleep 2; done'
+					echo "Waiting for Redis..."
+					timeout 60s bash -c 'until nc -z localhost 6379; do sleep 2; done'
+					echo "All services are ready!"
+
+			- name: Architecture lint
+				run: make archlint
+
+			- name: Repo sweep (dry-run)
+				run: make sweep
+
+			- name: Lint
+				run: make lint
+
+			- name: Tests
+				env:
+					CI_MODE: true
+					OPENAI_API_KEY: stub
+					PYTHONPATH: ${{ github.workspace }}
+					REDIS_HOST: localhost
+					QDRANT_HOST: localhost
+					MINIO_ENDPOINT: localhost:9000
+					MINIO_ACCESS_KEY: minioadmin
+					MINIO_SECRET_KEY: minioadmin
+					DB_PATH: /tmp/test-chatlog.db
+					DISABLE_WEB_SEARCH: '1'
+				run: make test
+
+			- name: Build UI
+				if: always()
+				run: |
+					if [ -d frontend ]; then cd frontend && npm run build; fi
+
+			- name: Build backend image
+				if: always()
+				run: docker build -f backend/Dockerfile -t ib-backend .
+
+			- name: Upload sweep report
+				if: always()
+				uses: actions/upload-artifact@v4
+				with:
+					name: sweep-report
+					path: tools/sweep-report.json
+					if-no-files-found: warn
+
+			- name: Upload ts-prune/depcheck reports (if present)
+				if: always()
+				uses: actions/upload-artifact@v4
+				with:
+					name: ts-deps-reports
+					path: |
+						tools/ts-prune.json
+						tools/depcheck.json
+					if-no-files-found: warn
+
+	# E2E tests with fake OpenAI
+	e2e:
+		runs-on: ubuntu-latest
+		steps:
+			- name: Checkout
+				uses: actions/checkout@v4
+
+			- name: Set up Docker Buildx
+				uses: docker/setup-buildx-action@v3
+
+			- name: Build images
+				run: |
+					docker compose --profile test build fake-openai backend
+
+			- name: Run e2e tests
+				env:
+					OPENAI_BASE_URL: http://localhost:8081/v1
+					OPENAI_API_KEY: test_key_ci
+					DISABLE_WEB_SEARCH: '1'
+				run: |
+					make test-e2e
+
+			- name: Collect logs
+				if: always()
+				run: |
+					docker compose logs backend > backend.log || true
+
+			- name: Upload artifacts
+				if: always()
+				uses: actions/upload-artifact@v4
+				with:
+					name: e2e-artifacts
+					path: |
+						backend.log
+

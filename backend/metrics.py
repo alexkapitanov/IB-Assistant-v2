@@ -1,7 +1,8 @@
+import logging
 import os
 import sqlite3
-from prometheus_client import Counter, Histogram, Gauge, start_http_server
-import logging
+
+from prometheus_client import Counter, Gauge, Histogram
 
 STARTED = Counter("ib_req_total", "Всего запросов", ["stage"])
 TIMEOUT = Counter("ib_timeout_total", "Timeouts", ["kind"])  # gc / websearch
@@ -11,6 +12,14 @@ STATUS_BUS_THROUGHPUT = Counter("ib_status_bus_throughput", "Status Bus throughp
 EXPERT_GC_CALLS = Counter("ib_expert_gc_calls_total", "Количество вызовов Expert-GC")
 SQLITE_ROWS = Gauge("sqlite_table_rows", "Rows in SQLite", ["table"])
 QDRANT_POINTS = Gauge("qdrant_collection_points", "Qdrant vectors", ["collection"])
+
+# Web cache metrics
+WEB_CACHE_HIT = Counter("ib_web_cache_hit_total", "web cache hits")
+WEB_CACHE_MISS = Counter("ib_web_cache_miss_total", "web cache misses")
+WEB_CACHE_HIT_AFTER_WAIT = Counter("ib_web_cache_hit_after_wait_total", "wait → hit")
+WEB_CACHE_STORE = Counter("ib_web_cache_store_total", "stored entries")
+WEB_CACHE_STORE_NEG = Counter("ib_web_cache_store_negative_total", "stored negative")
+WEB_SEARCH_LATENCY = Histogram("ib_web_search_latency_sec", "web search latency (s)")
 
 _initialized = False
 
@@ -51,8 +60,9 @@ def init(port: int = 9310):
 def update_qdrant_counts():
     """Update Qdrant collection points metrics"""
     try:
-        from qdrant_client import QdrantClient
         import os
+
+        from qdrant_client import QdrantClient
         
         qdr = QdrantClient(host=os.getenv("QDRANT_HOST", "localhost"))
         

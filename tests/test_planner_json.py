@@ -1,9 +1,9 @@
-import pytest
-from unittest.mock import patch, AsyncMock
-from backend.agents.planner import ask_planner
-import backend.agents.planner as planner_module
-from backend.json_utils import BadJSON
 import logging
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
+from backend.agents.planner import ask_planner
 
 # Создаем "пустышку" логгера для тестов
 test_logger = logging.getLogger("test_planner")

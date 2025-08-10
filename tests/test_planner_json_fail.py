@@ -1,6 +1,11 @@
-import asyncio, websockets, json, os, pytest
+import asyncio
+import json
 import socket
 from contextlib import closing
+
+import pytest
+import websockets
+
 
 def _check_server_available(host="localhost", port=8000):
     """Check if WebSocket server is available"""

@@ -1,12 +1,13 @@
 """
 Тест для проверки корректной обработки ошибок в WebSocket соединении
 """
-import pytest
-import websockets
-import json
 import asyncio
+import json
 import socket
 from contextlib import closing
+
+import pytest
+import websockets
 
 
 def _check_server_available(host="localhost", port=8000):
@@ -48,7 +49,7 @@ async def test_error_message_shown():
                 except asyncio.TimeoutError:
                     break
                     
-            assert error_found, f"Error message not found in WebSocket responses"
+            assert error_found, "Error message not found in WebSocket responses"
                     
     except asyncio.TimeoutError:
         pytest.fail("Test timed out waiting for error message.")

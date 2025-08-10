@@ -1,9 +1,8 @@
 """
 Тест для проверки stub-LLM режима
 """
-import os
-import pytest
 import asyncio
+import os
 
 
 def test_stub_llm_mode():
@@ -15,6 +14,7 @@ def test_stub_llm_mode():
 
         # Импортируем модуль после установки переменной окружения
         import importlib
+
         import backend.openai_helpers as h
         importlib.reload(h)
 
@@ -38,6 +38,7 @@ def test_stub_llm_with_different_prompts():
         os.environ["OPENAI_API_KEY"] = "stub"
 
         import importlib
+
         import backend.openai_helpers as h
         importlib.reload(h)
 

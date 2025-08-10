@@ -1,9 +1,10 @@
 def test_memory_and_sqlite():
-    import sys, os
+    import os
+    import sys
     # Ensure backend module can be found
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend')))
-    from memory import save_mem, get_mem
-    from chat_db import log_message, _conn
+    from chat_db import _conn, log_message
+    from memory import get_mem, save_mem
     
     # Test memory save and retrieve
     tid = "t123"

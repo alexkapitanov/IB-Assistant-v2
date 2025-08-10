@@ -1,7 +1,9 @@
 
 import asyncio
-import websockets
 import json
+
+import websockets
+
 
 async def send_test_message():
     uri = "ws://localhost:8000/ws"

@@ -3,8 +3,6 @@ Implements refine() that calls backend.openai_helpers.call_llm.
 """
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 from backend.openai_helpers import call_llm
 
 

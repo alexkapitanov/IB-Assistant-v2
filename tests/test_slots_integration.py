@@ -1,7 +1,6 @@
 """
 Тесты для модуля slots.py - извлечение тематик и продуктов
 """
-import pytest
 import re
 
 
@@ -33,8 +32,6 @@ def test_topic_extraction():
 
 def test_slots_update_logic():
     """Тест логики обновления слотов"""
-    import json
-    import re
     
     # Копируем логику из slots.py для тестирования
     TOPIC_RE = re.compile(r"\b(DLP|SIEM|Zero\s+Trust|Linux\s+hardening|SOC)\b", re.I)
@@ -165,8 +162,8 @@ def test_create_domain_expert_integration():
 
 if __name__ == "__main__":
     # Добавляем путь к проекту для импортов
-    import sys
     import os
+    import sys
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     
     # Запуск тестов

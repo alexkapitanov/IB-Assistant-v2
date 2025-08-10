@@ -1,13 +1,13 @@
-import pytest
-import time
-import threading
-import tempfile
-import statistics
-import subprocess
-from concurrent.futures import ThreadPoolExecutor
 import os
 import pathlib
+import statistics
+import subprocess
+import tempfile
+import time
+from concurrent.futures import ThreadPoolExecutor
 from subprocess import check_call
+
+import pytest
 
 try:
     import psutil
@@ -94,7 +94,7 @@ class TestPerformance:
     @pytest.mark.openai
     def test_indexing_performance(self, tmp_path):
         """Test document indexing performance"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
+        from scripts.index_files import BUCKET_DEF, ingest_path
         
         # Create test documents of various sizes
         files = []
@@ -239,7 +239,6 @@ class TestStressTests:
     @pytest.mark.openai
     def test_large_batch_indexing(self, tmp_path):
         """Test indexing large batch of documents"""
-        from scripts.index_files import ingest_path, BUCKET_DEF
         
         # Create multiple test documents
         num_docs = 5  # Reasonable number for CI

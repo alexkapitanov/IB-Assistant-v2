@@ -1,4 +1,5 @@
-import pathlib, re
+import pathlib
+
 
 def test_welcome_in_hook():
     hook_code = pathlib.Path("frontend/src/hooks/useChat.ts").read_text(encoding="utf-8")

@@ -1,7 +1,8 @@
 import asyncio
 import logging
 from collections import deque
-from typing import Dict, Deque, AsyncGenerator
+from typing import AsyncGenerator, Deque, Dict
+
 
 # Простой синглтон для хранения логов в памяти
 class _LogStreamer:

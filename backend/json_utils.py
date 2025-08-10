@@ -1,5 +1,6 @@
 import json
 import re
+from typing import Any, Dict, cast
 
 
 class BadJSON(RuntimeError):
@@ -9,7 +10,7 @@ class BadJSON(RuntimeError):
         self.raw_json = raw_json
 
 
-def safe_load(text: str) -> dict:
+def safe_load(text: str) -> Dict[str, Any]:
     """
     Пытаемся json.loads(); если падает — вырезаем первое {...}
     и пытаемся ещё раз. При неудаче бросаем BadJSON.
@@ -24,12 +25,12 @@ def safe_load(text: str) -> dict:
         BadJSON: Если не удалось распарсить JSON
     """
     try:
-        return json.loads(text)
+        return cast(Dict[str, Any], json.loads(text))
     except json.JSONDecodeError as exc:
         m = re.search(r"\{.*\}", text, re.S)
         if m:
             try:
-                return json.loads(m.group(0))
+                return cast(Dict[str, Any], json.loads(m.group(0)))
             except json.JSONDecodeError:
                 pass
         raise BadJSON(f"{exc}. RAW: {text[:280]}…") from exc

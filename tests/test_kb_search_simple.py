@@ -2,15 +2,17 @@
 """
 Простой тест поиска диалогов внутри backend контейнера
 """
-import pytest
-from unittest.mock import patch, AsyncMock
-from qdrant_client.http.models import ScoredPoint
-
 # Поскольку мы тестируем из корня проекта, нужно добавить backend в путь
 import sys
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from qdrant_client.http.models import ScoredPoint
+
 sys.path.append('.')
 
 from backend.agents.kb_search import kb_search
+
 
 @pytest.mark.parametrize("question", [
     "Что такое ИБ?",

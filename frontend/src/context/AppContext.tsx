@@ -75,8 +75,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setStatus(mapStatus(m.status));
             return;
           }
+          // Явно поддерживаем чатовые сообщения нового протокола
+          if (m.type === "chat") {
+            setChat((c) => [...c, { role: m.role ?? "assistant", content: m.content }]);
+            setStatus("");
+            return;
+          }
           if (m.type === "error") {
-            setChat((c) => [...c, { role: "system", content: `⚠️ ${m.msg} (ID ${m.id})` }]);
+            const id = m.id ? ` (ID ${m.id})` : "";
+            const text = m.content || m.msg || "Неизвестная ошибка";
+            setChat((c) => [...c, { role: "system", content: `⚠️ ${text}${id}` }]);
             setStatus("");
             return;
           }
@@ -109,8 +117,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const send = (message: string) => {
     if (!message.trim() || !connected) return;
-    const wsMessage = { message };
-    wsRef.current?.send(JSON.stringify(wsMessage));
+  // Бэкенд ожидает JSON {"message": string}
+  wsRef.current?.send(JSON.stringify({ message }));
     setChat((c) => [...c, { role: "user", content: message }]);
   };
 

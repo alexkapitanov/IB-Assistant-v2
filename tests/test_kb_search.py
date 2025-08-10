@@ -1,7 +1,7 @@
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
-from backend.agents.kb_search import kb_search, SIM_HARD, SIM_SOFT
+from unittest.mock import patch
+
+from backend.agents.kb_search import kb_search
 
 
 class MockHit:

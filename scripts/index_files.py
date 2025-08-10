@@ -9,23 +9,25 @@ python scripts/index_files.py --paths ib-docs/questionnaires/*.pdf
 # 2. переиндексировать всё, что уже лежит
 python scripts/index_files.py --reindex bucket=ib-docs prefix=questionnaires/
 """
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import argparse
-import os
-import uuid
 import glob
-import pathlib
 import mimetypes
+import os
+import pathlib
+import uuid
 from typing import List
 
+import docx
+import pdfminer.high_level
 from minio import Minio
 from qdrant_client import QdrantClient, models
-from backend.embedding import get as embed
-import pdfminer.high_level
-import docx
 from tqdm import tqdm
+
+from backend.embedding import get as embed
 
 # Configuration
 BUCKET_DEF = "ib-docs"

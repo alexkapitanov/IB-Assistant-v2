@@ -12,7 +12,6 @@ Scan source directories and fail if other model-like tokens are found.
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 from typing import Iterable, List, Set, Tuple
 

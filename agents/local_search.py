@@ -3,7 +3,7 @@ Internally proxies to backend.agents.local_search.local_search.
 """
 from __future__ import annotations
 
-from typing import Any, List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 # Test shims to allow monkeypatching in tests
 _q = object()  # will be patched to Qdrant client

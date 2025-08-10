@@ -1,6 +1,9 @@
-import pytest
 import asyncio
+
+import pytest
+
 from backend.agents import expert_gc
+
 
 @pytest.mark.asyncio
 async def test_gc_timeout(monkeypatch):

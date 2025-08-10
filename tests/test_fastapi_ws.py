@@ -1,8 +1,9 @@
-import pytest
-import json
 import asyncio
-import uuid
-from unittest.mock import Mock, AsyncMock, patch
+import json
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
 
 def test_ws_smoke_unit():
     """Unit test for WebSocket chat function"""
@@ -68,9 +69,8 @@ def test_ws_endpoint_exists():
 @pytest.mark.integration
 @pytest.mark.asyncio
 @patch("backend.chat_core.handle_message", side_effect=Exception("Internal test error"))
-async def test_ws_error_handling(mock_handle_message):
+async def test_ws_error_handling_internal(mock_handle_message):
     """Test WebSocket error handling by mocking an internal exception."""
-    from backend.main import app
     import websockets
 
     def _check_server_available():
@@ -116,8 +116,6 @@ async def test_ws_integration():
     """Integration test that requires actual WebSocket server running (skipped by default)"""
     # This test would connect to a real server if it was running
     # It will be skipped due to integration marker when services aren't available
-    from backend.protocol import WsOutgoing
-    from backend.main import app
     import websockets
     
     def _check_server_available():
@@ -166,7 +164,6 @@ async def test_ws_integration():
 @pytest.mark.asyncio
 async def test_ws_error_handling():
     """Test WebSocket error handling with invalid data"""
-    from backend.main import app
     import websockets
     
     def _check_server_available():
@@ -206,9 +203,10 @@ async def test_ws_error_handling():
 
 def test_ws_status_forwarder_unit():
     """Unit test for WebSocket status forwarder function"""
+    from unittest.mock import AsyncMock, patch
+
     from backend.main import _status_forwarder
     from backend.protocol import WsOutgoing
-    from unittest.mock import AsyncMock, patch
     
     # Create mock WebSocket
     mock_ws = AsyncMock()

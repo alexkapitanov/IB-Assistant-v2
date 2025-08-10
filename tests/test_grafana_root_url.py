@@ -1,5 +1,7 @@
 import os
+
 import yaml
+
 
 def test_grafana_root_url():
     """

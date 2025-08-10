@@ -1,7 +1,9 @@
 
 import asyncio
 import json
+
 import websockets
+
 
 async def send_query(uri, query):
     async with websockets.connect(uri) as websocket:
