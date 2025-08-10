@@ -126,6 +126,14 @@ OPENAI_API_KEY=sk-your-actual-openai-key-here
 docker-compose up --build
 ```
 
+### Production-like run (without fake OpenAI)
+
+```bash
+# Requires OPENAI_API_KEY in env
+export OPENAI_API_KEY=sk-...
+make start-prod
+```
+
 ### Первая индексация
 
 ```bash

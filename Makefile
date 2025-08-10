@@ -1,3 +1,6 @@
+start-prod:
+	@if [ -z "$$OPENAI_API_KEY" ]; then echo "ERROR: OPENAI_API_KEY is required"; exit 1; fi
+	DISABLE_WEB_SEARCH=0 TESTING=false docker compose --profile prod up -d redis qdrant minio backend frontend grafana prometheus
 test-e2e:
 	OPENAI_BASE_URL=http://fake-openai:8081/v1 OPENAI_API_KEY=test_key_e2e DISABLE_WEB_SEARCH=1 E2E_MODE=1 docker compose --profile test up -d fake-openai redis qdrant backend
 	# Wait for backend health

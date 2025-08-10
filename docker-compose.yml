@@ -22,7 +22,7 @@ services:
       OPENAI_BASE_URL: ${OPENAI_BASE_URL}
       DISABLE_WEB_SEARCH: ${DISABLE_WEB_SEARCH}
       REDIS_HOST: redis
-      TESTING: "true"
+  TESTING: ${TESTING:-"false"}
       QDRANT_HOST: qdrant
       QDRANT_URL: http://qdrant:6333
       MINIO_ENDPOINT: minio:9000
@@ -32,7 +32,7 @@ services:
       PII_SCRUB_ENABLED: "1"
       SCRUB_BEFORE_PERSIST: "0"
       ENABLE_LLM_GUARD: "0"
-    depends_on:
+  depends_on:
       - redis
       - qdrant
       - minio
@@ -104,4 +104,16 @@ services:
       - "8081:8081"
     profiles:
       - test
+
+profiles:
+  prod:
+    description: "Production-like profile: backend, frontend, redis, qdrant, minio, grafana, prometheus"
+    services:
+      - backend
+      - frontend
+      - redis
+      - qdrant
+      - minio
+      - grafana
+      - prometheus
 
