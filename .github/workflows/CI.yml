@@ -58,7 +58,7 @@ jobs:
           timeout 60s bash -c 'until nc -z localhost 6379; do sleep 2; done'
           echo "All services are ready!"
 
-      - name: Run pytest
+      - name: Run pytest (unit/integration only)
         env:
           CI_MODE: true  # Включаем CI режим для тестов
           OPENAI_API_KEY: stub
@@ -69,7 +69,7 @@ jobs:
           MINIO_ACCESS_KEY: minioadmin
           MINIO_SECRET_KEY: minioadmin
           DB_PATH: /tmp/test-chatlog.db
-        run: pytest -q --tb=short        # тесты обязаны быть зелёными
+        run: pytest -q --tb=short -k "not e2e"        # исключаем e2e из этого job
 
       # ---------- Front build ----------
       - name: Set up Node
@@ -105,3 +105,22 @@ jobs:
       - name: Run archlint
         run: |
           make archlint
+
+  e2e:
+    name: E2E (fake-openai)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build images
+        run: |
+          docker compose --profile test build fake-openai backend
+      - name: Run E2E
+        env:
+          OPENAI_BASE_URL: http://localhost:8081/v1
+          OPENAI_API_KEY: test_key_ci
+          DISABLE_WEB_SEARCH: '1'
+          E2E_MODE: '1'
+        run: |
+          make test-e2e

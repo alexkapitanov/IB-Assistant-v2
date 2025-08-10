@@ -1,5 +1,5 @@
 test-e2e:
-	OPENAI_BASE_URL=http://fake-openai:8081/v1 OPENAI_API_KEY=test_key_e2e DISABLE_WEB_SEARCH=1 docker compose --profile test up -d fake-openai redis qdrant backend
+	OPENAI_BASE_URL=http://fake-openai:8081/v1 OPENAI_API_KEY=test_key_e2e DISABLE_WEB_SEARCH=1 E2E_MODE=1 docker compose --profile test up -d fake-openai redis qdrant backend
 	# Wait for backend health
 	for i in $$(seq 1 30); do \
 		if curl -sf http://localhost:8000/health >/dev/null; then \

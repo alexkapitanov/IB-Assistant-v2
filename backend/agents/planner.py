@@ -61,15 +61,8 @@ async def _build_plan(q: str, slots: Dict[str, Any], context: str | None = None,
     logger.info("Calling LLM to build a plan.")
     # `ensure_ascii=False` для корректной передачи кириллицы в JSON
     import os
-    # В тестовом режиме возвращаем детерминированный план для эскалации
-    if os.getenv("TESTING", "false").lower() == "true":
-        return {
-            "need_clarify": False,
-            "clarify": "",
-            "need_escalate": True,
-            "draft": "",
-            "plan": ["Шаг 1: собрать факты", "Шаг 2: сформировать ответ"],
-        }
+    # В unit-тестах ожидается конкретный план из мока — не шорткатим.
+    # Спец-режим E2E_MODE не влияет на поведение planner._build_plan.
 
     raw, _ = await call_llm(
         "gpt-4.1",

@@ -107,6 +107,7 @@ OPENAI_API_KEY=sk-your-actual-openai-key-here
 - minio — S3-совместимое хранилище (+ консоль)
 - grafana — дашборды
 - prometheus — сбор метрик
+ - fake-openai — тестовый сервис для детерминированных ответов (профиль docker compose: test)
 
 Порты (host → container):
 

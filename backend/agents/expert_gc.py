@@ -184,7 +184,9 @@ async def run_expert_gc(thread_id: str, plan: list[str], ctx: dict):
     """
     # В тестовом режиме возвращаем детерминированный ответ без запуска autogen
     import os
-    if os.getenv("TESTING", "false").lower() == "true":
+    # В E2E-режиме (docker-compose + fake-openai) возвращаем детерминированный ответ,
+    # но в обычных unit-тестах НЕ шорткатим, чтобы моки AssistantAgent сработали.
+    if os.getenv("E2E_MODE", "false").lower() == "true":
         await status_bus.publish(thread_id, "done", None)
         return {
             "type": "chat",
